@@ -1,4 +1,7 @@
 [core]
     remote = gdrive-remote
-['remote "gdrive-remote"']
+[remote "gdrive-remote"]
     url = gdrive://1-442e10cHPfGP_MhFZeFga5NChqTK60O
+[remote "gdrive-remote-2"]
+    url = gdrive://mlops-tec-dvc
+
