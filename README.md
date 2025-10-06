@@ -95,18 +95,44 @@ poetry install
 poetry shell
 ```
 
-### 3. Configurar DVC
+### 3. Configurar Credenciales con Google Secret Manager
 
 ```bash
-# Inicializar DVC (ya está configurado)
-dvc pull  # Descargar datos y modelos desde remote
+# Autenticarse en GCP
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project mlops-atreides-2025
 
-# Si es primera vez, configurar remote (GCS)
-dvc remote add -d gcs gs://energy-opt-dvc-remote
-dvc remote modify gcs credentialpath path/to/service-account.json
+# Cargar secretos del proyecto (DVC, MLflow, API keys, etc.)
+python scripts/setup_secrets.py load --project-id mlops-atreides-2025
+
+# Ver guía completa: docs/SECRET_MANAGER_SETUP.md
 ```
 
-### 4. Verificar Instalación
+### 4. Configurar DVC con Google Cloud Storage
+
+```bash
+# Opción 1: Script automático (recomendado)
+# Windows:
+.\scripts\setup_dvc_credentials.ps1
+
+# Linux/Mac:
+./scripts/setup_dvc_credentials.sh
+
+# Opción 2: Manual
+gcloud auth application-default login
+dvc remote modify --local gcs-remote credentialpath "$env:APPDATA\gcloud\application_default_credentials.json"
+
+# Verificar configuración
+dvc remote list
+
+# Descargar datos y modelos desde remote
+dvc pull
+```
+
+**📖 Ver guía completa:** [docs/DVC_SETUP.md](docs/DVC_SETUP.md)
+
+### 5. Verificar Instalación
 
 ```bash
 # Ejecutar tests
@@ -196,9 +222,37 @@ poetry run pytest -m "not slow"
 
 ## 🔧 Configuración
 
-### Variables de Entorno
+### Variables de Entorno y Secretos
 
-Crear archivo `.env` en la raíz del proyecto:
+**🔐 Este proyecto usa Google Secret Manager para gestionar credenciales de forma segura.**
+
+✅ **NO** se usan archivos `.env` para credenciales
+✅ Todo el equipo accede a las mismas configuraciones
+✅ Cero riesgo de commits accidentales de credenciales
+
+Ver [docs/SECRET_MANAGER_SETUP.md](docs/SECRET_MANAGER_SETUP.md) para configuración completa.
+
+#### Quickstart para Nuevos Miembros
+
+```bash
+# 1. Autenticarse en GCP
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project mlops-atreides-2025
+
+# 2. Cargar secretos
+python scripts/setup_secrets.py load --project-id mlops-atreides-2025
+
+# 3. Verificar
+echo $GCP_PROJECT_ID
+echo $GCS_BUCKET_NAME
+```
+
+### Configuración Local (Solo para Desarrollo sin GCP)
+
+**Nota**: Si tienes acceso a GCP, usa Secret Manager en su lugar.
+
+Para desarrollo local sin acceso a GCP, crear archivo `.env`:
 
 ```bash
 # MLflow
@@ -299,6 +353,11 @@ gcloud run deploy energy-opt-api \
 
 ## 📚 Documentación
 
+### Guías de Configuración
+- **[Configuración de DVC con GCS](docs/DVC_SETUP.md)** - Setup rápido de DVC para el equipo
+- **[Google Secret Manager Setup](docs/SECRET_MANAGER_SETUP.md)** - Gestión segura de credenciales
+
+### Documentación del Proyecto
 - [Plan de Proyecto](context/PlaneacionProyecto.md)
 - [ML Canvas](docs/ml_canvas.md) (pendiente)
 - [API Documentation](http://localhost:8000/docs) (Swagger UI)
@@ -337,6 +396,6 @@ Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 ---
 
-**Proyecto desarrollado como parte del curso de MLOps - Maestría en Ciencia de Datos**
+**Proyecto desarrollado como parte del curso de MLOps**
 
 *Última actualización: Octubre 2025*

@@ -303,3 +303,6 @@ desktop.ini
 !/data/raw/.gitkeep
 !/data/processed/.gitkeep
 !/data/external/.gitkeep
+
+# DVC local configuration (contains user-specific paths)
+.dvc/config.local
