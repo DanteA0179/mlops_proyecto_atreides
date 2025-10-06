@@ -1,7 +1,11 @@
 [core]
-    remote = gdrive-remote
-[remote "gdrive-remote"]
+    remote = gcs-remote
+[cache]
+    type = copy
+['remote "gdrive-remote"']
     url = gdrive://1-442e10cHPfGP_MhFZeFga5NChqTK60O
-[remote "gdrive-remote-2"]
+['remote "gdrive-remote-2"']
     url = gdrive://mlops-tec-dvc
-
+['remote "gcs-remote"']
+    url = gs://energy-opt-dvc-remote/dvc-storage
+    projectname = mlops-equipo-37
