@@ -205,3 +205,101 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ============================================
+# ML/Data Science Specific
+# ============================================
+
+# DVC (Data Version Control)
+/dvc.lock
+.dvc/tmp
+.dvc/cache
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Weights & Biases
+wandb/
+
+# Large model files (use DVC instead)
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.pb
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.keras
+
+# Data files (use DVC instead)
+*.csv
+*.parquet
+*.feather
+*.arrow
+*.json
+*.jsonl
+*.xml
+*.sqlite
+*.db
+*.duckdb
+*.duckdb.wal
+
+# Notebook outputs
+*.nbconvert.ipynb
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# DuckDB
+*.duckdb.wal
+
+# Evidently reports
+evidently_reports/
+*.evidently.json
+
+# Prefect
+.prefect/
+
+# Docker
+*.tar
+docker-compose.override.yml
+
+# Cloud credentials
+*credentials*.json
+*.pem
+*.key
+service-account*.json
+gcp-*.json
+
+# Experiment artifacts
+experiments/
+artifacts/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+/data/raw/*.csv
+/data/processed/*.parquet
+!/data/raw/.gitkeep
+!/data/processed/.gitkeep
+!/data/external/.gitkeep
