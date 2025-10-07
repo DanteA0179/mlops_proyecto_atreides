@@ -1,0 +1,126 @@
+services:
+  # ============================================================================
+  # API Service - FastAPI Application
+  # ============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: energy-optimization-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=info
+      - WORKERS=4
+    volumes:
+      # Mount source code for development (hot reload)
+      - ./src:/app/src
+      # Mount models directory
+      - ./models:/app/models
+      # Mount data directory (read-only for API)
+      - ./data:/app/data:ro
+    command: >
+      uvicorn src.api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - energy-net
+
+  # ============================================================================
+  # MLflow Service - Experiment Tracking
+  # ============================================================================
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.0
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - ./mlflow:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - energy-net
+
+  # ============================================================================
+  # Prefect Server - Workflow Orchestration
+  # ============================================================================
+  prefect:
+    image: prefecthq/prefect:3-python3.11
+    container_name: prefect-server
+    ports:
+      - "4200:4200"
+    environment:
+      - PREFECT_API_URL=http://prefect:4200/api
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+      - PREFECT_UI_API_URL=http://localhost:4200/api
+    volumes:
+      - prefect-data:/root/.prefect
+    command: prefect server start --host 0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - energy-net
+
+  # ============================================================================
+  # DuckDB Web Interface (Optional) - Data Exploration
+  # ============================================================================
+  duckdb-web:
+    image: datacatering/duckdb:latest
+    container_name: duckdb-web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data:ro
+    environment:
+      - DUCKDB_DATABASE=/data/steel.duckdb
+    restart: unless-stopped
+    networks:
+      - energy-net
+    profiles:
+      - debug
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  energy-net:
+    driver: bridge
+    name: energy-optimization-network
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  mlflow-data:
+    name: mlflow-data
+  prefect-data:
+    name: prefect-data

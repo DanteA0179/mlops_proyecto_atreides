@@ -93,7 +93,7 @@ pytest
 Para problemas de acceso o configuración:
 - **Scrum Master:** Dante
 - **MLOps Engineer:** Arthur
-- **Canal de Slack:** #mlops-proyecto-atreides
+- **Canal de WhatsApp:**
 
 ## 🔗 Enlaces Útiles
 

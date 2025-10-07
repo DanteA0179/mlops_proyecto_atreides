@@ -132,9 +132,44 @@ dvc pull
 
 **📖 Ver guía completa:** [docs/DVC_SETUP.md](docs/DVC_SETUP.md)
 
-### 5. Verificar Instalación
+### 5. Ejecutar la API con Docker (Recomendado)
 
 ```bash
+# Opción 1: Docker Compose (más fácil)
+docker-compose up -d
+
+# Verificar que la API está corriendo
+curl http://localhost:8000/health
+
+# Ver logs
+docker-compose logs -f api
+
+# Opción 2: Docker build manual
+docker build -t energy-optimization-api:latest .
+docker run -d -p 8000:8000 --name energy-api energy-optimization-api:latest
+```
+
+**📖 Ver guía completa:** [docs/DOCKER_SETUP.md](docs/DOCKER_SETUP.md)
+
+### 6. Ejecutar la API Localmente (Desarrollo)
+
+```bash
+# Opción 1: Uvicorn con hot reload
+poetry run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Opción 2: Ejecutar el main.py directamente
+poetry run python src/api/main.py
+
+# Acceder a la documentación interactiva
+# http://localhost:8000/docs
+```
+
+### 7. Verificar Instalación
+
+```bash
+# Ejecutar script de verificación US-003
+poetry run python scripts/verify_us003.py
+
 # Ejecutar tests
 poetry run pytest
 
