@@ -306,3 +306,9 @@ desktop.ini
 
 # DVC local configuration (contains user-specific paths)
 .dvc/config.local
+
+# Service account credentials (for CI/CD)
+config/
+!config/.gitkeep
+
+config/gcs-service-account.json
