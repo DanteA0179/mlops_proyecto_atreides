@@ -78,8 +78,8 @@ Desarrollar un sistema MLOps completo que:
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone https://github.com/your-org/energy-optimization-copilot.git
-cd energy-optimization-copilot
+git https://github.com/DanteA0179/mlops_proyecto_atreides.git
+cd mlops_proyecto_atreides
 ```
 
 ### 2. Configurar Entorno con Poetry
