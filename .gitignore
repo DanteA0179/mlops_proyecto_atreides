@@ -312,3 +312,6 @@ config/
 !config/.gitkeep
 
 config/gcs-service-account.json
+
+# Documentation drafts/temporary (US-005-006)
+docs/US-005-006/
