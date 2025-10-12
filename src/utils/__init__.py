@@ -48,6 +48,16 @@ from .visualization import (
     visualize_type_validation,
 )
 
+# Data Cleaning
+from .data_cleaning import (
+    convert_data_types,
+    correct_range_violations,
+    handle_null_values,
+    remove_duplicates,
+    treat_outliers,
+    validate_cleaned_data,
+)
+
 __all__ = [
     # Data Quality
     "load_dataset",
@@ -80,4 +90,11 @@ __all__ = [
     "visualize_duplicate_comparison",
     "visualize_range_violations",
     "visualize_distribution_comparison",
+    # Data Cleaning
+    "convert_data_types",
+    "handle_null_values",
+    "correct_range_violations",
+    "treat_outliers",
+    "remove_duplicates",
+    "validate_cleaned_data",
 ]

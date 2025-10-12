@@ -1,0 +1,5 @@
+outs:
+- md5: a08d459298521823f78695d32637be5f
+  size: 360347
+  hash: md5
+  path: steel_cleaned.parquet
