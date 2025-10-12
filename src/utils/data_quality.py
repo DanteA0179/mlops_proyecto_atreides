@@ -63,6 +63,16 @@ def analyze_nulls(df: pl.DataFrame, dataset_name: str = "Dataset") -> pl.DataFra
     """
     total_rows = df.shape[0]
     
+    # Handle empty DataFrame
+    if total_rows == 0:
+        print(f"\n⚠️ WARNING: {dataset_name} is empty (0 rows)!")
+        return pl.DataFrame({
+            'column': df.columns,
+            'null_count': [0] * len(df.columns),
+            'null_percentage': [0.0] * len(df.columns),
+            'total_rows': [0] * len(df.columns)
+        })
+    
     null_counts = []
     for col in df.columns:
         null_count = df[col].null_count()
