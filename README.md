@@ -151,7 +151,32 @@ docker run -d -p 8000:8000 --name energy-api energy-optimization-api:latest
 
 **📖 Ver guía completa:** [docs/DOCKER_SETUP.md](docs/DOCKER_SETUP.md)
 
-### 6. Ejecutar la API Localmente (Desarrollo)
+### 6. Cargar Datos a DuckDB (Opcional pero Recomendado)
+
+```bash
+# Cargar datos limpios a DuckDB para exploración SQL interactiva
+poetry run python src/data/load_to_duckdb.py
+
+# Esto crea: data/steel.duckdb con tabla 'steel_cleaned'
+```
+
+**Uso en Python:**
+```python
+from src.data.load_to_duckdb import create_database, query_to_dataframe
+
+# Conectar a DB
+conn = create_database("data/steel.duckdb")
+
+# Query interactivo
+df = query_to_dataframe(conn, """
+    SELECT Load_Type, AVG(Usage_kWh) as avg_usage
+    FROM steel_cleaned
+    GROUP BY Load_Type
+""")
+print(df)
+```
+
+### 7. Ejecutar la API Localmente (Desarrollo)
 
 ```bash
 # Opción 1: Uvicorn con hot reload
@@ -164,7 +189,7 @@ poetry run python src/api/main.py
 # http://localhost:8000/docs
 ```
 
-### 7. Verificar Instalación
+### 8. Verificar Instalación
 
 ```bash
 # Ejecutar script de verificación US-003
@@ -172,6 +197,9 @@ poetry run python scripts/verify_us003.py
 
 # Ejecutar tests
 poetry run pytest
+
+# Ejecutar tests específicos de DuckDB
+poetry run pytest tests/unit/test_load_to_duckdb.py -v
 
 # Verificar linting
 poetry run ruff check .

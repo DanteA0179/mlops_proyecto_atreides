@@ -315,3 +315,9 @@ config/gcs-service-account.json
 
 # Documentation drafts/temporary (US-005-006)
 docs/US-006/
+docs/US-007/
+docs/tareas_segunda_entrega/
+
+#specs
+specs/
+
