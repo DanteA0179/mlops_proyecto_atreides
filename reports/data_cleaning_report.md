@@ -2,9 +2,9 @@
 
 ## General Information
 
-- **Cleaning date:** 2025-10-10T17:12:02.381340
-- **Input file:** `C:\Users\arthu\Proyectos\MNA\mlops_proyecto_atreides\data\raw\steel_energy_modified.csv`
-- **Output file:** `C:\Users\arthu\Proyectos\MNA\mlops_proyecto_atreides\data\processed\steel_cleaned.parquet`
+- **Cleaning date:** 2025-10-17T15:52:33.950062
+- **Input file:** `c:\Users\arthu\Proyectos\MNA\mlops_proyecto_atreides\data\raw\steel_energy_modified.csv`
+- **Output file:** `c:\Users\arthu\Proyectos\MNA\mlops_proyecto_atreides\data\processed\steel_cleaned.parquet`
 
 ---
 
@@ -22,25 +22,25 @@
 - Dropped columns: ['mixed_type_col']
 
 **3. Handle Nulls**
-- Rows: 35,400
+- Rows: 35,377
 - Columns: 11
 - Nulls before: 4,961
-- Nulls after: 0
+- Nulls after: 947
 
 **4. Clean Categorical**
-- Rows: 35,400
+- Rows: 35,377
 - Columns: 11
 
 **5. Correct Ranges**
-- Rows: 35,400
+- Rows: 35,377
 - Columns: 11
 
 **6. Treat Outliers**
-- Rows: 35,400
+- Rows: 35,377
 - Columns: 11
 
 **7. Remove Duplicates**
-- Rows: 34,933
+- Rows: 34,910
 - Columns: 11
 - Duplicates removed: 467
 
@@ -48,13 +48,13 @@
 
 ## Final Validation
 
-- **Shape match:** ✅ (diff: -107 rows)
+- **Shape match:** ❌ (diff: -130 rows)
 - **Schema match:** ✅
 - **Null values:** 0
 - **Duplicates:** 0
 - **Type mismatches:** 0
 
-**Result:** ✅ VALIDATION SUCCESSFUL
+**Result:** ❌ VALIDATION FAILED
 
 
 ---

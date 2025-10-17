@@ -81,10 +81,16 @@ def handle_nulls_professional(df: pl.DataFrame) -> pl.DataFrame:
     """
     Professional null handling strategy (from notebook)
     """
-    # Step 1: Remove rows with date nulls (critical column)
-    date_nulls = df['date'].null_count()
-    if date_nulls > 0:
-        df = df.filter(pl.col('date').is_not_null())
+    # Step 1: Remove rows with date nulls or invalid dates (critical column)
+    # Filter out "NAN", null, and empty strings (with strip to catch spaces)
+    df = df.filter(
+        (pl.col('date').is_not_null()) &
+        (pl.col('date').str.strip_chars().str.to_uppercase() != "NAN") &
+        (pl.col('date').str.strip_chars() != "") &
+        (pl.col('date').str.strip_chars().str.to_uppercase() != "N/A")
+    )
+
+    print(f"    - Removed rows with invalid dates (NAN, empty, null)")
 
     # Step 2: Remove rows with >3 nulls
     df = df.filter(
@@ -133,29 +139,58 @@ def handle_nulls_professional(df: pl.DataFrame) -> pl.DataFrame:
             pl.col('NSM').forward_fill().backward_fill().alias('NSM')
         )
 
-    # Step 8: Fill categorical with mode
-    categorical_cols = ['WeekStatus', 'Day_of_week', 'Load_Type']
-    for col in categorical_cols:
-        if col in df.columns:
-            nulls = df[col].null_count()
-            if nulls > 0:
-                mode_value = df[col].mode()[0]
-                df = df.with_columns(
-                    pl.col(col).fill_null(mode_value).alias(col)
-                )
+    # Step 8: Categorical columns will be handled in clean_categorical_columns()
+    # DO NOT fill categorical nulls here, as we need to clean "NAN" strings first
 
     return df
 
 
 def clean_categorical_columns(df: pl.DataFrame) -> pl.DataFrame:
-    """Clean categorical columns (strip whitespace and normalize case)"""
+    """
+    Clean categorical columns:
+    1. Strip whitespace
+    2. Replace invalid values ('NAN', 'Nan', 'nan', empty) with null FIRST
+    3. Normalize case (titlecase)
+    4. Fill nulls with mode
+    """
     categorical_cols = ['WeekStatus', 'Day_of_week', 'Load_Type']
 
     for col in categorical_cols:
         if col in df.columns:
+            # Step 1: Strip whitespace
             df = df.with_columns(
-                pl.col(col).str.strip_chars().str.to_titlecase().alias(col)
+                pl.col(col).str.strip_chars().alias(col)
             )
+
+            # Step 2: Replace invalid values with null (BEFORE titlecase)
+            # Check for NAN in any case, empty strings, etc.
+            df = df.with_columns(
+                pl.when(
+                    (pl.col(col).str.to_uppercase() == "NAN") |
+                    (pl.col(col).str.to_uppercase() == "N/A") |
+                    (pl.col(col) == "") |
+                    (pl.col(col).is_null())
+                )
+                .then(None)
+                .otherwise(pl.col(col))
+                .alias(col)
+            )
+
+            # Count how many were invalid
+            nulls = df[col].null_count()
+
+            # Step 3: NOW apply titlecase to remaining valid values
+            df = df.with_columns(
+                pl.col(col).str.to_titlecase().alias(col)
+            )
+
+            # Step 4: Fill nulls with mode
+            if nulls > 0:
+                mode_value = df[col].mode()[0] if len(df[col].mode()) > 0 else 'Unknown'
+                df = df.with_columns(
+                    pl.col(col).fill_null(mode_value).alias(col)
+                )
+                print(f"    - {col}: {nulls} invalid values replaced with mode '{mode_value}'")
 
     return df
 
