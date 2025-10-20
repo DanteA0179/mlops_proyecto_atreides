@@ -58,6 +58,16 @@ from .data_cleaning import (
     validate_cleaned_data,
 )
 
+# Temporal Features
+from .temporal_features import (
+    create_all_temporal_features,
+    create_cyclical_encoding,
+    create_is_weekend,
+    extract_day_of_week_numeric,
+    extract_hour_from_nsm,
+    validate_temporal_features,
+)
+
 __all__ = [
     # Data Quality
     "load_dataset",
@@ -97,4 +107,11 @@ __all__ = [
     "treat_outliers",
     "remove_duplicates",
     "validate_cleaned_data",
+    # Temporal Features
+    "extract_hour_from_nsm",
+    "extract_day_of_week_numeric",
+    "create_is_weekend",
+    "create_cyclical_encoding",
+    "create_all_temporal_features",
+    "validate_temporal_features",
 ]

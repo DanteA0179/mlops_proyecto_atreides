@@ -282,7 +282,170 @@ print(f"Common features: {comparison['common_features']}")
 
 **Overlap:** 100% de las top 5 features aparecen en ambos métodos, indicando consenso robusto.
 
-## 📝 Desarrollo
+## �️ Feature Engineering
+
+El proyecto incluye un sistema completo de ingeniería de features temporales que transforma datos de tiempo en representaciones óptimas para modelos de Machine Learning.
+
+### Features Temporales (US-011)
+
+Se crearon **7 features temporales** a partir del dataset limpio:
+
+#### Features Directos
+1. **`hour`** (0-23): Hora del día extraída de NSM (Number of Seconds from Midnight)
+2. **`day_of_week`** (0-6): Día de la semana numérico (Lunes=0, Domingo=6)
+3. **`is_weekend`** (bool): Indicador de fin de semana (Sábado/Domingo)
+
+#### Features Cíclicos (Cyclical Encoding)
+4. **`cyclical_hour_sin`**: sin(2π × hour / 24)
+5. **`cyclical_hour_cos`**: cos(2π × hour / 24)
+6. **`cyclical_day_sin`**: sin(2π × day / 7)
+7. **`cyclical_day_cos`**: cos(2π × day / 7)
+
+### ¿Por Qué Codificación Cíclica?
+
+**Problema**: Los features de tiempo son cíclicos, pero los valores numéricos directos los tratan como lineales:
+- Hora 23 está cerca de Hora 0 (1 hora de diferencia)
+- Pero numéricamente: |23 - 0| = 23 ❌
+
+**Solución**: Mapear features temporales al círculo unitario usando trigonometría:
+- Preserva periodicidad: hora 23 ≈ hora 0
+- Mantiene ortogonalidad: sin²(θ) + cos²(θ) = 1
+- Permite a modelos ML entender proximidad temporal correctamente
+
+### Uso con Sklearn Transformers (POO)
+
+```python
+from src.features import TemporalFeatureEngineer
+
+# Opción 1: Transformer completo (todos los features)
+engineer = TemporalFeatureEngineer(
+    nsm_col='NSM',
+    day_name_col='Day_of_week'
+)
+
+df_featured = engineer.fit_transform(df)
+# Output: 7 nuevas columnas agregadas
+
+# Opción 2: Uso en sklearn Pipeline
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+
+pipeline = Pipeline([
+    ('temporal', TemporalFeatureEngineer()),
+    ('scaler', StandardScaler()),
+    ('model', RandomForestRegressor())
+])
+
+pipeline.fit(X_train, y_train)
+predictions = pipeline.predict(X_test)
+```
+
+### Uso con Funciones de Utilidad
+
+```python
+from src.features import (
+    create_all_temporal_features,
+    validate_temporal_features
+)
+
+# Crear todos los features de una vez
+df_featured = create_all_temporal_features(
+    df,
+    nsm_col='NSM',
+    day_name_col='Day_of_week'
+)
+
+# Validar que todos los features fueron creados correctamente
+validation = validate_temporal_features(df_featured)
+
+if validation['valid']:
+    print("✅ Todos los features temporales son válidos")
+else:
+    print(f"❌ Problemas encontrados: {validation}")
+```
+
+### Transformers Individuales
+
+```python
+from src.features import (
+    HourExtractor,
+    DayOfWeekEncoder,
+    WeekendIndicator,
+    CyclicalEncoder
+)
+
+# Extraer solo hora
+hour_extractor = HourExtractor(nsm_col='NSM')
+df = hour_extractor.fit_transform(df)
+
+# Codificación cíclica genérica (reutilizable!)
+# Ejemplo 1: Hora
+hour_encoder = CyclicalEncoder(column='hour', period=24)
+df = hour_encoder.fit_transform(df)
+
+# Ejemplo 2: Mes (¡funciona para cualquier feature cíclico!)
+month_encoder = CyclicalEncoder(column='month', period=12)
+df = month_encoder.fit_transform(df)
+
+# Ejemplo 3: Dirección del viento
+wind_encoder = CyclicalEncoder(column='wind_direction', period=360)
+df = wind_encoder.fit_transform(df)
+```
+
+### Notebooks de Análisis
+
+- **`notebooks/exploratory/06_temporal_feature_engineering.ipynb`** - Análisis completo con:
+  - Explicación matemática de codificación cíclica
+  - Visualizaciones (gráficos polares, mapas de calor)
+  - Análisis de correlación con variable objetivo
+  - Patrones de consumo por hora y día
+
+### Resultados Clave
+
+**Correlaciones con `Usage_kWh`:**
+- `cyclical_hour_cos`: **-0.44** (correlación más fuerte)
+- `cyclical_hour_sin`: -0.24
+- `day_of_week`: -0.22
+- `hour`: +0.22
+- `cyclical_day_sin`: +0.21
+- `cyclical_day_cos`: -0.07
+
+**Insight**: Las features cíclicas (`cyclical_hour_cos`) capturan patrones temporales mejor que features lineales (`hour`), con correlaciones casi 2× más fuertes.
+
+### Dataset Generado
+
+- **Input**: `data/processed/steel_cleaned.parquet` (34,910 × 11)
+- **Output**: `data/processed/steel_featured.parquet` (34,910 × 18)
+- **Tamaño**: 0.72 MB (compresión Snappy)
+- **Validación**: ✅ 8 checks automáticos (rangos, tipos, ortogonalidad)
+
+### Scripts Ejecutables
+
+```bash
+# Generar dataset con features temporales
+poetry run python src/features/build_features.py
+
+# Outputs generados:
+# - data/processed/steel_featured.parquet
+# - reports/feature_engineering_report.md
+# - reports/feature_engineering_log.json
+```
+
+### Testing
+
+```bash
+# Tests de transformers (98.51% coverage)
+poetry run pytest tests/unit/test_temporal_transformers.py -v
+
+# Tests de funciones utilitarias (89.32% coverage)
+poetry run pytest tests/unit/test_temporal_features.py -v
+
+# Todos los tests de features temporales
+poetry run pytest tests/unit/test_temporal* -v
+```
+
+## �📝 Desarrollo
 
 ### Flujo de Trabajo
 

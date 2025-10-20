@@ -1,0 +1,5 @@
+outs:
+- md5: c9811899f55ef287efdb273a395adc6e
+  size: 756945
+  hash: md5
+  path: steel_featured.parquet
