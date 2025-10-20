@@ -247,6 +247,10 @@ wandb/
 *.duckdb
 *.duckdb.wal
 
+# Exceptions: Keep small metrics/results files (not raw data)
+!reports/metrics/*.csv
+!reports/metrics/*.json
+
 # Notebook outputs
 *.nbconvert.ipynb
 

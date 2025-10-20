@@ -209,6 +209,79 @@ poetry run black --check .
 poetry run mypy src/
 ```
 
+## 🔍 Feature Importance Analysis
+
+El proyecto incluye un módulo completo para análisis de importancia de features que ayuda a identificar las variables más predictivas del consumo energético.
+
+### Uso Rápido
+
+```python
+import polars as pl
+from src.utils.feature_importance import (
+    calculate_mutual_information,
+    calculate_pearson_correlation,
+    plot_feature_importance,
+    compare_importance_methods
+)
+
+# Cargar datos
+df = pl.read_parquet("data/processed/steel_cleaned.parquet")
+
+# Calcular mutual information (captura relaciones no lineales)
+mi_scores = calculate_mutual_information(df, target_column="Usage_kWh")
+print(mi_scores.head(10))
+
+# Calcular correlaciones de Pearson (relaciones lineales)
+correlations = calculate_pearson_correlation(df, target_column="Usage_kWh")
+print(correlations.head(10))
+
+# Visualizar top 10 features
+fig = plot_feature_importance(
+    mi_scores,
+    score_column='mi_score',
+    method_name='Mutual Information',
+    top_n=10,
+    output_path='reports/figures/mutual_information_top10.png'
+)
+
+# Comparar ambos métodos
+comparison = compare_importance_methods(mi_scores, correlations, top_n=10)
+print(f"Overlap: {comparison['overlap_percentage']:.1f}%")
+print(f"Common features: {comparison['common_features']}")
+```
+
+### Notebooks de Análisis
+
+- **`notebooks/exploratory/05_feature_importance_analysis.ipynb`** - Análisis completo con visualizaciones y conclusiones en español
+
+### Funciones Disponibles
+
+| Función | Descripción |
+|---------|-------------|
+| `calculate_mutual_information()` | Calcula mutual information scores (relaciones no lineales) |
+| `calculate_pearson_correlation()` | Calcula correlaciones de Pearson (relaciones lineales) |
+| `plot_feature_importance()` | Genera gráficos de barras horizontales de top N features |
+| `get_top_features()` | Extrae lista de nombres de top N features |
+| `compare_importance_methods()` | Compara rankings de MI vs correlación |
+
+### Resultados Clave
+
+**Top 5 Features por Mutual Information:**
+1. CO2(tCO2) - 1.214
+2. Lagging_Current_Power_Factor - 1.204
+3. Lagging_Current_Reactive.Power_kVarh - 0.823
+4. NSM - 0.450
+5. Leading_Current_Power_Factor - 0.413
+
+**Top 5 Features por Correlación de Pearson:**
+1. CO2(tCO2) - 0.894
+2. Lagging_Current_Reactive.Power_kVarh - 0.782
+3. Lagging_Current_Power_Factor - 0.358
+4. Leading_Current_Power_Factor - 0.328
+5. Leading_Current_Reactive_Power_kVarh - -0.295
+
+**Overlap:** 100% de las top 5 features aparecen en ambos métodos, indicando consenso robusto.
+
 ## 📝 Desarrollo
 
 ### Flujo de Trabajo
