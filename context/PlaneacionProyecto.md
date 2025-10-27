@@ -1484,7 +1484,9 @@ Una historia de usuario está "Done" cuando:
   - [x] Documento `docs/ML_Canvas.md` con 9 secciones completas
   - [x] Validado por todo el equipo
   - [x] Exportado a PDF
-- **Estimación:** 3 story points (4 hrs)
+  - [x] Una vez seleccionado el modelo campeón (el de mejor RMSE), se debe realizar un análisis de explicabilidad con la librería SHAP.
+  - [x] El gráfico de resumen de SHAP (importancia global de features) debe ser guardado como un artefacto en la corrida correspondiente de MLflow.
+- **Estimación:** 4 story points (5 hrs)
 - **Template a seguir:** (ver sección 4.3 de este documento)
 
 **US-016: Presentación ejecutiva Sprint 1**
