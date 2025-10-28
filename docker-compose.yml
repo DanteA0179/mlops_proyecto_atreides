@@ -40,7 +40,7 @@ services:
   # MLflow Service - Experiment Tracking
   # ============================================================================
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.11.0
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: mlflow-server
     ports:
       - "5000:5000"
