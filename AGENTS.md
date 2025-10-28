@@ -653,6 +653,103 @@ Antes de considerar una tarea completada:
 
 ---
 
+## 🚨 Código Natural - Evitar Marcadores de IA
+
+### ❌ NO usar elementos que delatan código generado por IA
+
+**Evitar estos patrones típicos de IA**:
+
+```python
+# ❌ NO usar emojis en comentarios
+# 🔍 Load the data
+# ✅ Process the results
+# 🚀 Train the model
+
+# ❌ NO usar separadores decorativos
+print("="*70)
+print("-"*50)
+print("*"*80)
+
+# ❌ NO usar comentarios excesivamente descriptivos
+# Step 1: Initialize the connection
+# Step 2: Load the data
+# Step 3: Process the results
+
+# ❌ NO usar banners ASCII
+# ============================================
+# SECTION: DATA LOADING
+# ============================================
+```
+
+**✅ Usar código natural y profesional**:
+
+```python
+# Load and validate data
+df = pl.read_parquet("data/processed/steel_cleaned.parquet")
+
+# Calculate summary statistics
+summary = df.describe()
+
+# Train model with cross-validation
+model.fit(X_train, y_train)
+```
+
+### ✅ Estilo de Comentarios Profesional
+
+```python
+# ✅ Correcto - Comentarios concisos y técnicos
+# Filter outliers using IQR method
+df_clean = df.filter((pl.col('value') > q1) & (pl.col('value') < q3))
+
+# Calculate rolling average for smoothing
+df = df.with_columns(pl.col('usage').rolling_mean(window_size=7))
+
+# ❌ Incorrecto - Comentarios obvios o decorativos
+# Now we will filter the outliers from our dataset using the IQR method
+# This is an important step in our data cleaning process
+df_clean = df.filter((pl.col('value') > q1) & (pl.col('value') < q3))
+```
+
+### ✅ Output y Logging Natural
+
+```python
+# ✅ Correcto - Mensajes informativos simples
+logger.info(f"Loaded {len(df)} records")
+logger.info(f"Training completed in {elapsed:.2f}s")
+
+# ❌ Incorrecto - Mensajes decorativos
+logger.info("="*70)
+logger.info("🎯 Starting training process...")
+logger.info("="*70)
+```
+
+### ✅ Separación de Secciones en Notebooks
+
+```python
+# ✅ Correcto - Usar markdown cells para secciones
+# En Markdown cell:
+## 2. Data Loading
+
+# En Code cell:
+df = pl.read_parquet("data/processed/steel_cleaned.parquet")
+
+# ❌ Incorrecto - Separadores en código
+print("\n" + "="*70)
+print("SECTION 2: DATA LOADING")
+print("="*70 + "\n")
+df = pl.read_parquet("data/processed/steel_cleaned.parquet")
+```
+
+### Reglas Generales
+
+1. **Sin emojis** en código o comentarios
+2. **Sin separadores decorativos** (=, -, *)
+3. **Comentarios concisos** y técnicos, no narrativos
+4. **Mensajes de log simples** y directos
+5. **Usar markdown cells** para estructura en notebooks, no prints decorativos
+
+---
+
 **Versión**: 1.0  
 **Última actualización**: 2025-10-16  
 **Mantenido por**: MLOps Team - Proyecto Atreides
