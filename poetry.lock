@@ -739,6 +739,46 @@ files = [
 ]
 
 [[package]]
+name = "boto3"
+version = "1.40.60"
+description = "The AWS SDK for Python"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "boto3-1.40.60-py3-none-any.whl", hash = "sha256:5d0e5153ddc4660091838ca255b0fc1ab70ec5b04bf7d578106ae709d31e38aa"},
+    {file = "boto3-1.40.60.tar.gz", hash = "sha256:fd3fa9de730c0f4d8a584d6b5313755923a9e181496fa6b09bbf78011e6c2ab3"},
+]
+
+[package.dependencies]
+botocore = ">=1.40.60,<1.41.0"
+jmespath = ">=0.7.1,<2.0.0"
+s3transfer = ">=0.14.0,<0.15.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
+
+[[package]]
+name = "botocore"
+version = "1.40.60"
+description = "Low-level, data-driven core of boto 3."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "botocore-1.40.60-py3-none-any.whl", hash = "sha256:385336791e37c200020a8991fbefcf1afd6836f27966d007b6e4c8bc96a4173d"},
+    {file = "botocore-1.40.60.tar.gz", hash = "sha256:85443f1829d9240d16ba346781956ebcd104dd8e91742c2901a9b2ace198a829"},
+]
+
+[package.dependencies]
+jmespath = ">=0.7.1,<2.0.0"
+python-dateutil = ">=2.1,<3.0.0"
+urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""}
+
+[package.extras]
+crt = ["awscrt (==0.27.6)"]
+
+[[package]]
 name = "cachetools"
 version = "6.2.0"
 description = "Extensible memoizing collections and decorators"
@@ -1016,6 +1056,32 @@ files = [
     {file = "charset_normalizer-3.4.3-py3-none-any.whl", hash = "sha256:ce571ab16d890d23b5c278547ba694193a45011ff86a9162a71307ed9f86759a"},
     {file = "charset_normalizer-3.4.3.tar.gz", hash = "sha256:6fce4b8500244f6fcb71465d4a4930d132ba9ab8e71a7859e6a5d59851068d14"},
 ]
+
+[[package]]
+name = "chronos-forecasting"
+version = "2.0.0"
+description = "Chronos: Pretrained models for time series forecasting"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "chronos_forecasting-2.0.0-py3-none-any.whl", hash = "sha256:4d17254fb60a8a4d215556af2277472abdd3824746f062567633cd68895c0e90"},
+    {file = "chronos_forecasting-2.0.0.tar.gz", hash = "sha256:74f2bbf00d09ea84447e800a62e21a25f59018935f5b81a94cd418ec5abe35a2"},
+]
+
+[package.dependencies]
+accelerate = ">=0.34,<2"
+boto3 = "*"
+einops = ">=0.7.0,<1"
+numpy = ">=1.21,<3"
+scikit-learn = ">=1.6.0,<2"
+torch = ">=2.0,<3"
+transformers = ">=4.49,<5"
+
+[package.extras]
+dev = ["datasets (>=3.0,<4)", "fev (>=0.6.1)", "gluonts[pro] (>=0.16,<1.0)", "joblib", "pandas (>=2.0,<2.4)", "rich", "tensorboard", "typer", "typer-config"]
+test = ["fev (>=0.6.1)", "numpy (>=1.21,<3)", "pandas (>=2.0,<2.4)", "pytest (>=8.0,<9.0)"]
+typecheck = ["mypy (>=1.9,<2.0)"]
 
 [[package]]
 name = "click"
@@ -2160,6 +2226,18 @@ test = ["configobj", "django", "flask (>=0.12)", "hvac (>=1.1.0)", "pytest", "py
 toml = ["toml"]
 vault = ["hvac"]
 yaml = ["ruamel.yaml"]
+
+[[package]]
+name = "einops"
+version = "0.8.1"
+description = "A new flavour of deep learning operations"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "einops-0.8.1-py3-none-any.whl", hash = "sha256:919387eb55330f5757c6bea9165c5ff5cfe63a642682ea788a6d472576d81737"},
+    {file = "einops-0.8.1.tar.gz", hash = "sha256:de5d960a7a761225532e0f1959e5315ebeafc0cd43394732f103ca44b9837e84"},
+]
 
 [[package]]
 name = "email-validator"
@@ -3864,6 +3942,18 @@ files = [
 [package.dependencies]
 humanize = ">=3.14.0"
 jinja2 = "*"
+
+[[package]]
+name = "jmespath"
+version = "1.0.1"
+description = "JSON Matching Expressions"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980"},
+    {file = "jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe"},
+]
 
 [[package]]
 name = "joblib"
@@ -8785,6 +8875,24 @@ files = [
 ]
 
 [[package]]
+name = "s3transfer"
+version = "0.14.0"
+description = "An Amazon S3 Transfer Manager"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456"},
+    {file = "s3transfer-0.14.0.tar.gz", hash = "sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125"},
+]
+
+[package.dependencies]
+botocore = ">=1.37.4,<2.0a.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
+
+[[package]]
 name = "safetensors"
 version = "0.6.2"
 description = ""
@@ -11149,4 +11257,4 @@ dask = ["prefect-dask"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "f73e5812ddf2778abbca71c9c552ab212b030c21029e8892b8a71a8f8040040e"
+content-hash = "55ab132324a8457751e76e8fa697a4760fa01ed6a5b4c4f7942e8ccb3f3e693c"

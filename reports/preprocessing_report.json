@@ -1,0 +1,380 @@
+{
+  "timestamp": "2025-10-20 15:44:51",
+  "config": {
+    "input_data": "data/processed/steel_featured.parquet",
+    "output_dir": "data/processed",
+    "models_dir": "models/preprocessing",
+    "reports_dir": "reports",
+    "split_ratio": {
+      "train": 0.7,
+      "val": 0.15,
+      "test": 0.15
+    },
+    "target_col": "Usage_kWh",
+    "numeric_features": [
+      "NSM",
+      "CO2(tCO2)",
+      "Lagging_Current_Reactive.Power_kVarh",
+      "Leading_Current_Reactive_Power_kVarh",
+      "Lagging_Current_Power_Factor",
+      "Leading_Current_Power_Factor"
+    ],
+    "categorical_features": [
+      "Load_Type"
+    ],
+    "exclude_from_scaling": [
+      "hour_sin",
+      "hour_cos",
+      "day_sin",
+      "day_cos",
+      "week_sin",
+      "week_cos",
+      "month_sin",
+      "month_cos"
+    ],
+    "binary_features": {
+      "WeekStatus": {
+        "Weekday": 0,
+        "Weekend": 1
+      }
+    },
+    "stratification_bins": 10,
+    "random_state": 42
+  },
+  "eda": {
+    "n_rows": 34910,
+    "n_columns": 18,
+    "columns": [
+      "date",
+      "Usage_kWh",
+      "Lagging_Current_Reactive.Power_kVarh",
+      "Leading_Current_Reactive_Power_kVarh",
+      "CO2(tCO2)",
+      "Lagging_Current_Power_Factor",
+      "Leading_Current_Power_Factor",
+      "NSM",
+      "WeekStatus",
+      "Day_of_week",
+      "Load_Type",
+      "hour",
+      "day_of_week",
+      "is_weekend",
+      "cyclical_hour_sin",
+      "cyclical_hour_cos",
+      "cyclical_day_sin",
+      "cyclical_day_cos"
+    ],
+    "dtypes": {
+      "date": "String",
+      "Usage_kWh": "Float64",
+      "Lagging_Current_Reactive.Power_kVarh": "Float64",
+      "Leading_Current_Reactive_Power_kVarh": "Float64",
+      "CO2(tCO2)": "Float64",
+      "Lagging_Current_Power_Factor": "Float64",
+      "Leading_Current_Power_Factor": "Float64",
+      "NSM": "Int64",
+      "WeekStatus": "String",
+      "Day_of_week": "String",
+      "Load_Type": "String",
+      "hour": "Int32",
+      "day_of_week": "Int32",
+      "is_weekend": "Boolean",
+      "cyclical_hour_sin": "Float64",
+      "cyclical_hour_cos": "Float64",
+      "cyclical_day_sin": "Float64",
+      "cyclical_day_cos": "Float64"
+    },
+    "feature_types": {
+      "numeric": [
+        "Lagging_Current_Reactive.Power_kVarh",
+        "Leading_Current_Reactive_Power_kVarh",
+        "CO2(tCO2)",
+        "Lagging_Current_Power_Factor",
+        "Leading_Current_Power_Factor",
+        "NSM",
+        "hour",
+        "cyclical_hour_sin",
+        "cyclical_hour_cos",
+        "cyclical_day_sin",
+        "cyclical_day_cos"
+      ],
+      "categorical": [
+        "WeekStatus",
+        "Day_of_week",
+        "Load_Type"
+      ],
+      "boolean": [
+        "is_weekend"
+      ],
+      "datetime": [],
+      "excluded": [
+        "Usage_kWh",
+        "date",
+        "day_of_week"
+      ]
+    },
+    "categorical_analysis": {
+      "Load_Type": {
+        "n_categories": 3,
+        "categories": [
+          "Light_Load",
+          "Maximum_Load",
+          "Medium_Load"
+        ],
+        "value_counts": {
+          "Light_Load": 18169,
+          "Maximum_Load": 7159,
+          "Medium_Load": 9582
+        },
+        "encoding_size": 2,
+        "most_common": "Light_Load",
+        "least_common": "Maximum_Load",
+        "total_count": 34910,
+        "distribution": {
+          "Light_Load": 0.5204525923804068,
+          "Maximum_Load": 0.20507018046405043,
+          "Medium_Load": 0.27447722715554285
+        }
+      }
+    },
+    "numeric_statistics": {
+      "NSM": {
+        "mean": 42967.48942996276,
+        "std": 25058.955768325737,
+        "min": 0.0,
+        "max": 86400.0,
+        "median": 43200.0,
+        "q25": 21600.0,
+        "q75": 64800.0
+      },
+      "CO2(tCO2)": {
+        "mean": 0.011849183615010028,
+        "std": 0.0165869462350927,
+        "min": 0.0,
+        "max": 0.06,
+        "median": 0.0,
+        "q25": 0.0,
+        "q75": 0.02
+      },
+      "Lagging_Current_Reactive.Power_kVarh": {
+        "mean": 13.604201518189631,
+        "std": 17.302696889801368,
+        "min": 0.0,
+        "max": 76.79,
+        "median": 5.04,
+        "q25": 2.34,
+        "q75": 23.4
+      },
+      "Leading_Current_Reactive_Power_kVarh": {
+        "mean": 4.033510312231453,
+        "std": 7.638052254708736,
+        "min": 0.0,
+        "max": 26.89,
+        "median": 0.0,
+        "q25": 0.0,
+        "q75": 2.74
+      },
+      "Lagging_Current_Power_Factor": {
+        "mean": 80.78599326840447,
+        "std": 18.917563445603207,
+        "min": 0.0,
+        "max": 100.0,
+        "median": 88.24,
+        "q25": 63.56,
+        "q75": 99.41
+      },
+      "Leading_Current_Power_Factor": {
+        "mean": 84.50174663420223,
+        "std": 30.330746315297247,
+        "min": 0.0,
+        "max": 100.0,
+        "median": 100.0,
+        "q25": 99.72,
+        "q75": 100.0
+      }
+    }
+  },
+  "split_validation": {
+    "validation": {
+      "valid": false,
+      "checks": {
+        "sizes": {
+          "train": true,
+          "val": true,
+          "test": true
+        },
+        "no_leakage": {
+          "train_val_no_overlap": false,
+          "train_test_no_overlap": false,
+          "val_test_no_overlap": false
+        },
+        "distributions": {
+          "train_val_similar": true,
+          "train_test_similar": true
+        }
+      },
+      "statistics": {
+        "target_distributions": {
+          "train": {
+            "mean": 28.686566613468646,
+            "std": 35.49834928171147
+          },
+          "val": {
+            "mean": 28.68580213903743,
+            "std": 35.505972579037795
+          },
+          "test": {
+            "mean": 28.738647444465656,
+            "std": 35.52525055235299
+          }
+        },
+        "sizes": {
+          "train": {
+            "count": 24437,
+            "proportion": 0.7
+          },
+          "val": {
+            "count": 5236,
+            "proportion": 0.14998567745631625
+          },
+          "test": {
+            "count": 5237,
+            "proportion": 0.15001432254368377
+          },
+          "total": 34910
+        }
+      },
+      "issues": [
+        "Data leakage detected: train-val overlap=17, train-test overlap=16, val-test overlap=5"
+      ]
+    },
+    "statistics": {
+      "train": {
+        "numeric": {
+          "Usage_kWh": {
+            "mean": 28.686566613468646,
+            "std": 35.49834928171147,
+            "min": 2.59,
+            "max": 149.65,
+            "median": 4.64
+          }
+        },
+        "categorical": {}
+      },
+      "val": {
+        "numeric": {
+          "Usage_kWh": {
+            "mean": 28.68580213903743,
+            "std": 35.505972579037795,
+            "min": 2.59,
+            "max": 149.65,
+            "median": 4.61
+          }
+        },
+        "categorical": {}
+      },
+      "test": {
+        "numeric": {
+          "Usage_kWh": {
+            "mean": 28.738647444465656,
+            "std": 35.52525055235299,
+            "min": 2.59,
+            "max": 149.65,
+            "median": 4.57
+          }
+        },
+        "categorical": {}
+      }
+    }
+  },
+  "pipeline_summary": {
+    "n_features_in": 18,
+    "n_features_out": 9,
+    "numeric_features": [
+      "NSM",
+      "CO2(tCO2)",
+      "Lagging_Current_Reactive.Power_kVarh",
+      "Leading_Current_Reactive_Power_kVarh",
+      "Lagging_Current_Power_Factor",
+      "Leading_Current_Power_Factor"
+    ],
+    "scaled_features": [
+      "NSM",
+      "CO2(tCO2)",
+      "Lagging_Current_Reactive.Power_kVarh",
+      "Leading_Current_Reactive_Power_kVarh",
+      "Lagging_Current_Power_Factor",
+      "Leading_Current_Power_Factor"
+    ],
+    "excluded_from_scaling": [
+      "hour_sin",
+      "hour_cos",
+      "day_sin",
+      "day_cos",
+      "week_sin",
+      "week_cos",
+      "month_sin",
+      "month_cos"
+    ],
+    "categorical_features": [
+      "Load_Type"
+    ],
+    "binary_features": {
+      "WeekStatus": {
+        "Weekday": 0,
+        "Weekend": 1
+      }
+    },
+    "ohe_features": [
+      "Load_Type_Maximum_Load",
+      "Load_Type_Medium_Load"
+    ],
+    "ohe_categories": {
+      "Load_Type": [
+        "Light_Load",
+        "Maximum_Load",
+        "Medium_Load"
+      ]
+    },
+    "scaling_statistics": {
+      "NSM": {
+        "mean": 43003.70082252322,
+        "std": 25002.895051732445
+      },
+      "CO2(tCO2)": {
+        "mean": 0.01181732618570201,
+        "std": 0.01656042757145193
+      },
+      "Lagging_Current_Reactive.Power_kVarh": {
+        "mean": 13.564653599050617,
+        "std": 17.28972973993976
+      },
+      "Leading_Current_Reactive_Power_kVarh": {
+        "mean": 4.078923558538282,
+        "std": 7.685793393711114
+      },
+      "Lagging_Current_Power_Factor": {
+        "mean": 80.81183976483747,
+        "std": 18.97088455880165
+      },
+      "Leading_Current_Power_Factor": {
+        "mean": 84.3237954740762,
+        "std": 30.466797456138636
+      }
+    }
+  },
+  "output_shapes": {
+    "train": {
+      "rows": 24437,
+      "features": 9
+    },
+    "val": {
+      "rows": 5236,
+      "features": 9
+    },
+    "test": {
+      "rows": 5237,
+      "features": 9
+    }
+  }
+}
