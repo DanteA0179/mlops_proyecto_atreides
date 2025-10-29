@@ -1,0 +1,69 @@
+{
+  "timestamp": "2025-10-17T15:52:33.950062",
+  "input_file": "data\\raw\\steel_energy_modified.csv",
+  "output_file": "data\\processed\\steel_cleaned.parquet",
+  "steps": [
+    {
+      "step": 1,
+      "name": "load_data",
+      "rows": 35740,
+      "columns": 12
+    },
+    {
+      "step": 2,
+      "name": "convert_types",
+      "dropped_columns": [
+        "mixed_type_col"
+      ],
+      "rows": 35740,
+      "columns": 11
+    },
+    {
+      "step": 3,
+      "name": "handle_nulls",
+      "nulls_before": 4961,
+      "nulls_after": 947,
+      "rows": 35377,
+      "columns": 11
+    },
+    {
+      "step": 4,
+      "name": "clean_categorical",
+      "rows": 35377,
+      "columns": 11
+    },
+    {
+      "step": 5,
+      "name": "correct_ranges",
+      "range_rules_applied": 3,
+      "absolute_conversions": 4,
+      "rows": 35377,
+      "columns": 11
+    },
+    {
+      "step": 6,
+      "name": "treat_outliers",
+      "columns_treated": 4,
+      "method": "cap",
+      "percentiles": "1%-99%",
+      "rows": 35377,
+      "columns": 11
+    },
+    {
+      "step": 7,
+      "name": "remove_duplicates",
+      "duplicates_removed": 467,
+      "rows": 34910,
+      "columns": 11
+    }
+  ],
+  "validation": {
+    "shape_match": false,
+    "row_count_diff": -130,
+    "schema_match": true,
+    "null_count": 0,
+    "duplicate_count": 0,
+    "type_mismatches": [],
+    "all_checks_passed": false
+  }
+}

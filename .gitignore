@@ -218,6 +218,10 @@ __marimo__/
 # MLflow
 mlruns/
 mlartifacts/
+mlflow/
+
+# Chronos-2 temporary checkpoints
+chronos-2-finetuned/
 
 # Weights & Biases
 wandb/
@@ -233,6 +237,7 @@ wandb/
 *.onnx
 *.tflite
 *.keras
+*.safetensors
 
 # Data files (use DVC instead)
 *.csv
@@ -250,6 +255,8 @@ wandb/
 # Exceptions: Keep small metrics/results files (not raw data)
 !reports/metrics/*.csv
 !reports/metrics/*.json
+!reports/**/*.json
+!models/foundation/**/*.json
 
 # Notebook outputs
 *.nbconvert.ipynb

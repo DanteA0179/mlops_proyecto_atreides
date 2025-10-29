@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-10-20T14:23:44.567968",
+  "input": {
+    "path": "data\\processed\\steel_cleaned.parquet",
+    "rows": 34903,
+    "columns": 11
+  },
+  "output": {
+    "path": "data\\processed\\steel_featured.parquet",
+    "rows": 34910,
+    "columns": 18,
+    "size_mb": 0.72
+  },
+  "features_created": [
+    "hour",
+    "day_of_week",
+    "is_weekend",
+    "cyclical_hour_sin",
+    "cyclical_hour_cos",
+    "cyclical_day_sin",
+    "cyclical_day_cos"
+  ],
+  "statistics": {
+    "hour": {
+      "type": "numeric",
+      "mean": 11.557891721569751,
+      "std": 6.950475069614822,
+      "min": 0.0,
+      "max": 23.0,
+      "median": 12.0
+    },
+    "day_of_week": {
+      "type": "numeric",
+      "mean": 2.9639358350042966,
+      "std": 2.0138140138451224,
+      "min": 0.0,
+      "max": 6.0,
+      "median": 3.0
+    },
+    "is_weekend": {
+      "type": "boolean",
+      "true_count": 9844,
+      "false_count": 25066,
+      "true_percentage": 28.198224004583217
+    },
+    "cyclical_hour_sin": {
+      "type": "numeric",
+      "mean": -0.0015203128221363067,
+      "std": 0.7056594333509926,
+      "min": -1.0,
+      "max": 1.0,
+      "median": 0.0
+    },
+    "cyclical_hour_cos": {
+      "type": "numeric",
+      "mean": 0.004536345810803209,
+      "std": 0.7085552339730453,
+      "min": -1.0,
+      "max": 1.0,
+      "median": 6.123233995736766e-17
+    },
+    "cyclical_day_sin": {
+      "type": "numeric",
+      "mean": 0.00012088670030130915,
+      "std": 0.7028909503366162,
+      "min": -0.9749279121818236,
+      "max": 0.9749279121818236,
+      "median": 0.0
+    },
+    "cyclical_day_cos": {
+      "type": "numeric",
+      "mean": 0.011340081795795025,
+      "std": 0.7112273490873938,
+      "min": -0.9009688679024191,
+      "max": 1.0,
+      "median": -0.22252093395631434
+    }
+  },
+  "correlations": {
+    "hour": 0.21835503943217652,
+    "day_of_week": -0.2220648087172408,
+    "cyclical_hour_sin": -0.2421076190387959,
+    "cyclical_hour_cos": -0.4416747747948979,
+    "cyclical_day_sin": 0.21102070684280338,
+    "cyclical_day_cos": -0.07279936260051718
+  },
+  "validation": {
+    "valid": true,
+    "missing_features": [],
+    "invalid_ranges": {}
+  }
+}
