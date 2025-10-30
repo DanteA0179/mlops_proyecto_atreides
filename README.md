@@ -37,32 +37,66 @@ Desarrollar un sistema MLOps completo que:
 ## 🏗️ Arquitectura
 
 ```
-├── data/                   # Datos (versionados con DVC)
-│   ├── raw/               # Datos originales (sucio)
-│   ├── processed/         # Datos limpios
-│   └── external/          # Datos externos
-├── notebooks/             # Jupyter notebooks
-│   ├── exploratory/       # EDA
-│   └── experimental/      # Experimentos
-├── src/                   # Código fuente
-│   ├── data/             # Scripts de procesamiento
-│   ├── features/         # Feature engineering
-│   ├── models/           # Entrenamiento y evaluación
-│   ├── api/              # FastAPI backend
-│   ├── monitoring/       # Drift detection (Evidently)
-│   └── utils/            # Utilidades
-├── models/                # Modelos entrenados (versionados con DVC)
-│   ├── baselines/        # XGBoost, LightGBM
-│   └── foundation/       # Chronos, TimesFM
-├── tests/                 # Tests (pytest)
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── reports/               # Reportes y visualizaciones
-│   ├── figures/
-│   └── metrics/
-├── .github/workflows/     # CI/CD (GitHub Actions)
-└── config/                # Configuraciones
+  │
+  ├── data/                          # Datos versionados con DVC
+  │   ├── raw/                       # Dataset original (dirty)
+  │   ├── processed/                 # cleaned → featured → train/val/test
+  │   └── external/                  # Datos de terceros
+  │
+  ├── src/                           # Código de producción
+  │   ├── data/                      # Pipeline de limpieza
+  │   │   ├── clean_data.py          # US-006: Limpieza principal
+  │   │   └── load_to_duckdb.py      # SQLite/DuckDB para exploración
+  │   │
+  │   ├── features/                  # Ingeniería de features
+  │   │   ├── build_features.py      # US-011: 7 features temporales
+  │   │   ├── temporal_transformers.py  # Transformers sklearn
+  │   │   └── temporal_features.py   # Funciones de utilidad
+  │   │
+  │   ├── models/                    # Entrenamiento de modelos
+  │   │   ├── train_xgboost.py       # US-013: Baseline XGBoost
+  │   │   ├── train_chronos2.py      # US-014: Zero-shot inference
+  │   │   └── train_chronos2_finetuned.py  # Fine-tuning Chronos
+  │   │
+  │   ├── utils/                     # 20+ módulos de utilidades
+  │   │   ├── mlflow_utils.py        # Integración MLflow
+  │   │   ├── data_cleaning.py       # Funciones de limpieza
+  │   │   ├── feature_importance.py  # MI & Pearson
+  │   │   └── model_evaluation.py    # Métricas y reportes
+  │   │
+  │   ├── api/                       # Backend FastAPI
+  │   │   └── main.py                # Endpoints REST
+  │   │
+  │   ├── flows/                     # Workflows Prefect
+  │   │   └── example_flow.py        # Orquestación de tareas
+  │   │
+  │   └── monitoring/                # Drift detection (Evidently)
+  │
+  ├── models/                        # Modelos entrenados (DVC)
+  │   ├── baselines/                 # XGBoost, LightGBM
+  │   └── foundation/                # Chronos checkpoints
+  │
+  ├── notebooks/                     # EDA & experimentación
+  │   ├── exploratory/               # Análisis exploratorio
+  │   └── experiments/               # Pruebas de modelos
+  │
+  ├── tests/                         # Suite de testing
+  │   ├── unit/                      # Tests unitarios
+  │   ├── integration/               # Tests de integración
+  │   └── e2e/                       # Tests end-to-end
+  │
+  ├── reports/                       # Reportes generados
+  │   ├── figures/                   # Gráficos PNG
+  │   └── *.md, *.json               # Reportes de métricas
+  │
+  ├── config/                        # Archivos de configuración
+  ├── scripts/                       # Scripts de utilidad
+  ├── docs/                          # Documentación
+  │
+  ├── docker-compose.yml             # Orquestación local
+  ├── Dockerfile                     # Imagen de producción
+  ├── Dockerfile.api                 # Imagen optimizada para API
+  └── pyproject.toml                 # Poetry dependencies
 ```
 
 ## 🚀 Quickstart
