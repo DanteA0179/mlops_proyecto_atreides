@@ -218,6 +218,10 @@ __marimo__/
 # MLflow
 mlruns/
 mlartifacts/
+mlflow/
+
+# Chronos-2 temporary checkpoints
+chronos-2-finetuned/
 
 # Weights & Biases
 wandb/
@@ -233,6 +237,7 @@ wandb/
 *.onnx
 *.tflite
 *.keras
+*.safetensors
 
 # Data files (use DVC instead)
 *.csv
@@ -246,6 +251,12 @@ wandb/
 *.db
 *.duckdb
 *.duckdb.wal
+
+# Exceptions: Keep small metrics/results files (not raw data)
+!reports/metrics/*.csv
+!reports/metrics/*.json
+!reports/**/*.json
+!models/foundation/**/*.json
 
 # Notebook outputs
 *.nbconvert.ipynb
@@ -314,4 +325,10 @@ config/
 config/gcs-service-account.json
 
 # Documentation drafts/temporary (US-005-006)
-docs/US-005-006/
+docs/US-006/
+docs/US-007/
+docs/tareas_segunda_entrega/
+
+#specs
+specs/
+
