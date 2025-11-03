@@ -1,18 +1,20 @@
 """
-XGBoost Baseline Model Training Script.
+LightGBM Baseline Model Training Script.
 
-This script trains an XGBoost baseline model with hyperparameter optimization,
+This script trains a LightGBM baseline model with hyperparameter optimization,
 cross-validation, and comprehensive evaluation. All results are logged to MLflow.
 
 Usage:
-    poetry run python src/models/train_xgboost.py [--n-trials 100] [--cv-folds 5]
+    poetry run python src/models/train_lightgbm.py [--n-trials 100] [--cv-folds 5]
 """
 
 import argparse
+import json
 import logging
 import os
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 # Disable MLflow emoji output on Windows to avoid encoding issues
@@ -22,11 +24,11 @@ import numpy as np
 import polars as pl
 
 import mlflow
-from src.models.xgboost_trainer import (
+from src.models.lightgbm_trainer import (
     evaluate_model,
     get_feature_names_from_pipeline,
-    optimize_xgboost_with_optuna,
-    train_xgboost_with_cv,
+    optimize_lightgbm_with_optuna,
+    train_lightgbm_with_cv,
 )
 from src.utils.mlflow_utils import (
     log_cv_results,
@@ -73,7 +75,9 @@ def setup_directories() -> None:
     logger.info("Created output directories")
 
 
-def load_preprocessed_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]:
+def load_preprocessed_data() -> (
+    tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]
+):
     """
     Load preprocessed data from US-012.
 
@@ -106,7 +110,7 @@ def load_preprocessed_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     X_test = test_df.select(feature_cols).to_numpy()
     y_test = test_df.select(target_col).to_numpy().ravel()
 
-    logger.info(f"Features: {feature_cols}")
+    logger.info(f"Features: {len(feature_cols)} columns")
     logger.info("Data loaded successfully")
 
     return X_train, y_train, X_val, y_val, X_test, y_test, feature_cols
@@ -114,7 +118,7 @@ def load_preprocessed_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
 
 def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> None:
     """
-    Main training pipeline.
+    Main training pipeline for LightGBM.
 
     Parameters
     ----------
@@ -127,20 +131,19 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         If None, generates timestamp-based version
     """
     try:
-        logger.info("Starting XGBoost Baseline Model Training - US-013")
+        logger.info("Starting LightGBM Baseline Model Training - US-015")
 
         # Import GPU info from trainer module
-        from src.models.xgboost_trainer import DEVICE_INFO, GPU_AVAILABLE
+        from src.models.lightgbm_trainer import DEVICE_INFO, GPU_AVAILABLE
 
         logger.info(f"Compute device: {DEVICE_INFO}")
         if GPU_AVAILABLE:
-            logger.info("GPU acceleration enabled for XGBoost")
+            logger.info("GPU acceleration enabled for LightGBM")
         else:
-            logger.info("Using CPU for XGBoost training")
+            logger.info("Using CPU for LightGBM training")
 
         # Generate model version if not provided
         if model_version is None:
-            from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             model_version = f"v_{timestamp}"
 
@@ -149,7 +152,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         # Setup directories and MLflow
         setup_directories()
         experiment_id = setup_mlflow_experiment(
-            experiment_name="steel_energy_xgboost_baseline",
+            experiment_name="steel_energy_lightgbm_baseline",
             tracking_uri="http://localhost:5000",
         )
 
@@ -157,23 +160,26 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         X_train, y_train, X_val, y_val, X_test, y_test, feature_names = load_preprocessed_data()
 
         # Start MLflow run with versioned name
-        run_name = f"xgboost_baseline_{model_version}"
+        run_name = f"lightgbm_baseline_{model_version}"
         with mlflow.start_run(run_name=run_name) as run:
             run_id = run.info.run_id
             logger.info(f"MLflow Run ID: {run_id}")
-            logger.info(f"MLflow Run URL: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}")
+            logger.info(
+                f"MLflow Run URL: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}"
+            )
 
             # Add tags
             mlflow.set_tags(
                 {
                     "experiment_type": "baseline",
-                    "model_type": "xgboost",
+                    "model_type": "lightgbm",
                     "model_version": model_version,
                     "dataset_version": "steel_preprocessed_v1",
                     "optimization": "optuna",
-                    "user_story": "US-013",
+                    "user_story": "US-015",
                     "n_trials": n_trials,
                     "cv_folds": cv_folds,
+                    "gpu_enabled": str(GPU_AVAILABLE),
                 }
             )
 
@@ -185,7 +191,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             logger.info(f"Starting hyperparameter optimization with Optuna ({n_trials} trials)")
             start_time = time.time()
 
-            optimization_results = optimize_xgboost_with_optuna(
+            optimization_results = optimize_lightgbm_with_optuna(
                 X_train=X_train,
                 y_train=y_train,
                 X_val=X_val,
@@ -205,7 +211,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             mlflow.log_metric("best_trial_number", optimization_results["study"].best_trial.number)
 
             # Save trials history with version
-            trials_path = METRICS_DIR / f"optuna_trials_{model_version}.csv"
+            trials_path = METRICS_DIR / f"optuna_trials_lightgbm_{model_version}.csv"
             optimization_results["trials_df"].write_csv(trials_path)
             logger.info(f"Saved trials history to {trials_path}")
 
@@ -221,7 +227,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             best_params = optimization_results["best_params"]
             log_model_params(best_params)
 
-            cv_results = train_xgboost_with_cv(
+            cv_results = train_lightgbm_with_cv(
                 X_train=X_train,
                 y_train=y_train,
                 model_params=best_params,
@@ -264,9 +270,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             log_model_metrics(train_metrics, prefix="train_")
 
             # Save test metrics to JSON with version
-            test_metrics_path = METRICS_DIR / f"xgboost_test_metrics_{model_version}.json"
-            import json
-
+            test_metrics_path = METRICS_DIR / f"lightgbm_test_metrics_{model_version}.json"
             with open(test_metrics_path, "w") as f:
                 json.dump(test_metrics, f, indent=2)
 
@@ -277,7 +281,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             except Exception as e:
                 logger.warning(f"Could not log metrics to MLflow: {e}")
 
-            # Extract feature importance (only gain - most informative)
+            # Extract feature importance (gain and split)
             logger.info("Extracting feature importance")
 
             # Get transformed feature names
@@ -285,46 +289,70 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
                 cv_results["model"], feature_names
             )
 
-            # Extract importance (gain is most informative, weight/cover are redundant)
-            importance_dict = log_feature_importance(
+            # Extract importance (gain - most informative)
+            importance_gain = log_feature_importance(
                 model=cv_results["model"],
                 feature_names=transformed_features,
                 importance_type="gain",
             )
 
-            # Create and save plot with version
-            fig_path = FIGURES_DIR / f"xgboost_feature_importance_{model_version}.png"
-            fig = plot_feature_importance(
-                importance_dict=importance_dict,
-                top_n=10,
-                importance_type="gain",
-                save_path=fig_path,
+            # Also extract split importance for LightGBM (shows frequency of use)
+            importance_split = log_feature_importance(
+                model=cv_results["model"],
+                feature_names=transformed_features,
+                importance_type="split",
             )
 
-            # Log plot as artifact
+            # Create and save plots with version
+            import matplotlib.pyplot as plt
+
+            # Gain importance plot
+            fig_path_gain = FIGURES_DIR / f"lightgbm_feature_importance_gain_{model_version}.png"
+            fig_gain = plot_feature_importance(
+                importance_dict=importance_gain,
+                top_n=10,
+                importance_type="gain",
+                save_path=fig_path_gain,
+            )
+
             try:
-                mlflow.log_artifact(str(fig_path), artifact_path="plots")
-                logger.info("Logged feature importance plot to MLflow")
+                mlflow.log_artifact(str(fig_path_gain), artifact_path="plots")
+                logger.info("Logged feature importance (gain) plot to MLflow")
             except Exception as e:
                 logger.warning(f"Could not log plot to MLflow: {e}")
 
-            import matplotlib.pyplot as plt
-            plt.close(fig)
+            plt.close(fig_gain)
+
+            # Split importance plot
+            fig_path_split = FIGURES_DIR / f"lightgbm_feature_importance_split_{model_version}.png"
+            fig_split = plot_feature_importance(
+                importance_dict=importance_split,
+                top_n=10,
+                importance_type="split",
+                save_path=fig_path_split,
+            )
+
+            try:
+                mlflow.log_artifact(str(fig_path_split), artifact_path="plots")
+                logger.info("Logged feature importance (split) plot to MLflow")
+            except Exception as e:
+                logger.warning(f"Could not log plot to MLflow: {e}")
+
+            plt.close(fig_split)
 
             # Create evaluation visualizations
             logger.info("Creating evaluation visualizations")
 
             # Predictions vs Actual with version
             y_test_pred = cv_results["model"].predict(X_test)
-            pred_path = FIGURES_DIR / f"xgboost_predictions_{model_version}.png"
+            pred_path = FIGURES_DIR / f"lightgbm_predictions_{model_version}.png"
             fig_pred = plot_predictions_vs_actual(
                 y_true=y_test,
                 y_pred=y_test_pred,
-                title=f"XGBoost {model_version}: Predictions vs Actual (Test Set)",
+                title=f"LightGBM {model_version}: Predictions vs Actual (Test Set)",
                 save_path=pred_path,
             )
 
-            # Log plot as artifact
             try:
                 mlflow.log_artifact(str(pred_path), artifact_path="plots")
                 logger.info("Logged predictions plot to MLflow")
@@ -334,14 +362,13 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             plt.close(fig_pred)
 
             # Residuals plot with version
-            resid_path = FIGURES_DIR / f"xgboost_residuals_{model_version}.png"
+            resid_path = FIGURES_DIR / f"lightgbm_residuals_{model_version}.png"
             fig_resid = plot_residuals(
                 y_true=y_test,
                 y_pred=y_test_pred,
                 save_path=resid_path,
             )
 
-            # Log plot as artifact
             try:
                 mlflow.log_artifact(str(resid_path), artifact_path="plots")
                 logger.info("Logged residuals plot to MLflow")
@@ -352,12 +379,12 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
 
             # Save model to disk with version
             logger.info("Saving model")
-            model_path = MODELS_DIR / f"xgboost_{model_version}.pkl"
+            model_path = MODELS_DIR / f"lightgbm_{model_version}.pkl"
             model_info = save_and_log_model(
                 model=cv_results["model"],
                 model_path=model_path,
-                artifact_name=f"xgboost_{model_version}",
-                log_to_mlflow=True,
+                artifact_name=f"lightgbm_{model_version}",
+                log_to_mlflow=False,  # Don't log large model to MLflow
             )
 
             logger.info(f"Model saved to: {model_info['model_path']}")
@@ -366,24 +393,16 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             # Generate evaluation report
             logger.info("Generating evaluation report")
 
-            # Get feature importance for report (use gain)
-            importance_dict = log_feature_importance(
-                model=cv_results["model"],
-                feature_names=transformed_features,
-                importance_type="gain",
-            )
-
-            report_path = REPORTS_DIR / f"xgboost_evaluation_{model_version}.md"
+            report_path = REPORTS_DIR / f"lightgbm_evaluation_{model_version}.md"
             create_evaluation_report(
                 metrics=test_metrics,
                 cv_scores=cv_results["cv_scores"],
-                feature_importance=importance_dict,
+                feature_importance=importance_gain,  # Use gain importance
                 output_path=report_path,
-                model_name=f"XGBoost Baseline {model_version}",
+                model_name=f"LightGBM Baseline {model_version}",
             )
             logger.info(f"Evaluation report saved to: {report_path}")
 
-            # Log report as artifact
             try:
                 mlflow.log_artifact(str(report_path), artifact_path="reports")
                 logger.info("Logged evaluation report to MLflow")
@@ -392,19 +411,33 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
 
             # Final summary
             logger.info("Training completed successfully")
-            logger.info(f"Test Set Results: RMSE={test_metrics['rmse']:.4f}, MAE={test_metrics['mae']:.4f}, R2={test_metrics['r2']:.4f}, MAPE={test_metrics['mape']:.2f}%")
+            logger.info(
+                f"Test Set Results: "
+                f"RMSE={test_metrics['rmse']:.4f}, "
+                f"MAE={test_metrics['mae']:.4f}, "
+                f"R2={test_metrics['r2']:.4f}, "
+                f"MAPE={test_metrics['mape']:.2f}%"
+            )
 
-            # Check if target met
-            target_rmse = 0.205
-            if test_metrics["rmse"] < target_rmse:
-                logger.info(f"Target met: RMSE ({test_metrics['rmse']:.4f}) < {target_rmse}")
-            else:
-                gap = ((test_metrics["rmse"] / target_rmse) - 1) * 100
-                logger.info(f"Target not met: RMSE ({test_metrics['rmse']:.4f}) is {gap:.2f}% above target ({target_rmse})")
+            # Compare with XGBoost baseline (if available)
+            xgb_metrics_path = METRICS_DIR / "xgboost_test_metrics_v1.json"
+            if xgb_metrics_path.exists():
+                with open(xgb_metrics_path) as f:
+                    xgb_metrics = json.load(f)
+
+                improvement = (
+                    (xgb_metrics["rmse"] - test_metrics["rmse"]) / xgb_metrics["rmse"]
+                ) * 100
+                if improvement > 0:
+                    logger.info(f"LightGBM improves over XGBoost by {improvement:.2f}% (RMSE)")
+                else:
+                    logger.info(f"LightGBM is {abs(improvement):.2f}% worse than XGBoost (RMSE)")
 
             logger.info(f"Model saved to: {model_path}")
             logger.info(f"Report saved to: {report_path}")
-            logger.info(f"MLflow Run: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}")
+            logger.info(
+                f"MLflow Run: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}"
+            )
 
     except Exception as e:
         logger.error(f"Training failed with error: {e}", exc_info=True)
@@ -413,7 +446,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Train XGBoost baseline model with hyperparameter optimization"
+        description="Train LightGBM baseline model with hyperparameter optimization"
     )
     parser.add_argument(
         "--n-trials",

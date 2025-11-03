@@ -1,0 +1,5 @@
+outs:
+- md5: 40f965180e787d0db08b4c8302ec89c1
+  size: 831541
+  hash: md5
+  path: lightgbm_model.pkl

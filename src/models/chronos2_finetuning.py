@@ -7,7 +7,6 @@ https://github.com/amazon-science/chronos-forecasting/blob/main/notebooks/chrono
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import polars as pl
 from chronos import Chronos2Pipeline
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 def finetune_chronos2(
     pipeline: Chronos2Pipeline,
     df_train: pl.DataFrame,
-    df_val: Optional[pl.DataFrame] = None,
+    df_val: pl.DataFrame | None = None,
     target_col: str = "Usage_kWh",
     prediction_length: int = 1,
     num_steps: int = 1000,
@@ -28,8 +27,8 @@ def finetune_chronos2(
     batch_size: int = 32,
     logging_steps: int = 10,
     gradient_accumulation_steps: int = 1,
-    past_covariates: Optional[list[str]] = None,
-    future_covariates: Optional[list[str]] = None,
+    past_covariates: list[str] | None = None,
+    future_covariates: list[str] | None = None,
 ) -> Chronos2Pipeline:
     """
     Fine-tune Chronos-2 model on custom data.
@@ -78,7 +77,7 @@ def finetune_chronos2(
     logger.info("="*70)
     logger.info("Chronos-2 Fine-Tuning")
     logger.info("="*70)
-    
+
     # Prepare training data
     logger.info("Preparing training data")
     train_inputs = prepare_chronos_finetuning_data(
@@ -87,11 +86,11 @@ def finetune_chronos2(
         past_covariates=past_covariates,
         future_covariates=future_covariates,
     )
-    
+
     train_stats = validate_finetuning_data(train_inputs)
     logger.info(f"Training series: {train_stats['n_series']}")
     logger.info(f"Avg length: {train_stats['avg_length']:.0f} timesteps")
-    
+
     # Prepare validation data (optional)
     validation_inputs = None
     if df_val is not None:
@@ -102,10 +101,10 @@ def finetune_chronos2(
             past_covariates=past_covariates,
             future_covariates=future_covariates,
         )
-        
+
         val_stats = validate_finetuning_data(validation_inputs)
         logger.info(f"Validation series: {val_stats['n_series']}")
-    
+
     # Fine-tune
     logger.info("="*70)
     logger.info("Starting fine-tuning")
@@ -115,13 +114,13 @@ def finetune_chronos2(
     logger.info(f"  Gradient accumulation: {gradient_accumulation_steps}")
     logger.info(f"  Prediction length: {prediction_length}")
     logger.info("="*70)
-    
+
     # Clear GPU cache before training
     if pipeline.model.device.type == "cuda":
         import torch
         torch.cuda.empty_cache()
         logger.info("GPU cache cleared before training")
-    
+
     try:
         finetuned_pipeline = pipeline.fit(
             inputs=train_inputs,
@@ -133,13 +132,13 @@ def finetune_chronos2(
             gradient_accumulation_steps=gradient_accumulation_steps,
             logging_steps=logging_steps,
         )
-        
+
         logger.info("="*70)
         logger.info("Fine-tuning completed successfully!")
         logger.info("="*70)
-        
+
         return finetuned_pipeline
-    
+
     except Exception as e:
         logger.error(f"Fine-tuning failed: {e}")
         raise RuntimeError(f"Fine-tuning failed: {e}") from e
@@ -164,24 +163,24 @@ def save_finetuned_pipeline(
     """
     save_path = Path(save_path)
     save_path.mkdir(parents=True, exist_ok=True)
-    
+
     logger.info(f"Saving fine-tuned model to: {save_path}")
-    
+
     try:
         # Chronos-2 pipelines can be saved like HuggingFace models
         pipeline.model.save_pretrained(save_path)
-        
+
         # Also save tokenizer if available
         if hasattr(pipeline, 'tokenizer'):
             pipeline.tokenizer.save_pretrained(save_path)
-        
+
         logger.info(f"Model saved successfully to: {save_path}")
-        
+
         # Log file size
         total_size = sum(f.stat().st_size for f in save_path.rglob('*') if f.is_file())
         size_mb = total_size / (1024 * 1024)
         logger.info(f"Total size: {size_mb:.2f} MB")
-        
+
     except Exception as e:
         logger.error(f"Failed to save model: {e}")
         raise RuntimeError(f"Model save failed: {e}") from e
@@ -208,22 +207,22 @@ def load_finetuned_pipeline(
         ... )
     """
     load_path = Path(load_path)
-    
+
     if not load_path.exists():
         raise FileNotFoundError(f"Model not found at: {load_path}")
-    
+
     logger.info(f"Loading fine-tuned model from: {load_path}")
-    
+
     try:
         pipeline = Chronos2Pipeline.from_pretrained(
             str(load_path),
             device_map=device,
         )
-        
+
         logger.info(f"Model loaded successfully from: {load_path}")
-        
+
         return pipeline
-    
+
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
         raise RuntimeError(f"Model load failed: {e}") from e
