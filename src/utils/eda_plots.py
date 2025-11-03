@@ -2,7 +2,7 @@
 EDA Plotting Utilities
 
 Reusable interactive plotting functions using Plotly for exploratory data analysis.
-Following project standards for code reusability and clean code.
+
 """
 
 import polars as pl
