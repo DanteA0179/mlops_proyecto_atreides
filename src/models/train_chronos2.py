@@ -13,12 +13,12 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import mlflow
 import numpy as np
 import polars as pl
 import torch
 from chronos import Chronos2Pipeline
 
+import mlflow
 from src.utils.model_evaluation import calculate_regression_metrics
 
 logging.basicConfig(
@@ -85,12 +85,12 @@ def evaluate_chronos2(
     y_true = df[target_col].to_numpy()
     predictions = []
     n_predictions = len(y_true) - context_length
-    
+
     # Limit predictions if max_predictions is set
     if max_predictions is not None:
         n_predictions = min(n_predictions, max_predictions)
         logger.info(f"Limiting to {max_predictions} predictions for quick testing")
-    
+
     n_batches = (n_predictions + batch_size - 1) // batch_size
 
     logger.info(f"Generating {n_predictions} predictions in {n_batches} batches")

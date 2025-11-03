@@ -1,0 +1,5 @@
+outs:
+- md5: 91f5372e56a811cfe996034067457eee
+  size: 4025
+  hash: md5
+  path: preprocessing_pipeline.pkl

@@ -9,11 +9,11 @@ This module provides complete ML pipelines that combine:
 Following best practices for reproducibility and maintainability.
 """
 
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.model_selection import cross_val_score
 import numpy as np
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.features.build_features import create_feature_engineering_pipeline
 
@@ -67,17 +67,17 @@ def create_preprocessing_pipeline():
     >>> X_transformed = preprocessor.fit_transform(X_train)
     """
     feature_groups = get_feature_groups()
-    
+
     # Numeric transformer
     numeric_transformer = Pipeline(steps=[
         ('scaler', StandardScaler())
     ])
-    
+
     # Categorical transformer
     categorical_transformer = Pipeline(steps=[
         ('onehot', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'))
     ])
-    
+
     # Column transformer
     preprocessor = ColumnTransformer(
         transformers=[
@@ -86,7 +86,7 @@ def create_preprocessing_pipeline():
         ],
         remainder='passthrough'  # Keep other columns (temporal features)
     )
-    
+
     return preprocessor
 
 
@@ -126,17 +126,17 @@ def create_full_pipeline(model, model_name='model'):
     """
     # Feature engineering
     feature_engineer = create_feature_engineering_pipeline()
-    
+
     # Preprocessing
     preprocessor = create_preprocessing_pipeline()
-    
+
     # Complete pipeline
     full_pipeline = Pipeline(steps=[
         ('feature_engineering', feature_engineer),
         ('preprocessing', preprocessor),
         (model_name, model)
     ])
-    
+
     return full_pipeline
 
 
@@ -169,8 +169,8 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
         - test_mae: MAE on test set
         - test_cv_percent: Coefficient of variation on test set
     """
-    from sklearn.metrics import mean_squared_error, mean_absolute_error
-    
+    from sklearn.metrics import mean_absolute_error, mean_squared_error
+
     # Cross-validation
     cv_scores = cross_val_score(
         pipeline, X_train, y_train,
@@ -179,15 +179,15 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
         n_jobs=-1
     )
     cv_rmse = -cv_scores
-    
+
     # Train and evaluate on test set
     pipeline.fit(X_train, y_train)
     y_pred = pipeline.predict(X_test)
-    
+
     test_rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     test_mae = mean_absolute_error(y_test, y_pred)
     test_cv = (test_rmse / y_test.mean()) * 100
-    
+
     results = {
         'cv_rmse_mean': cv_rmse.mean(),
         'cv_rmse_std': cv_rmse.std(),
@@ -195,7 +195,7 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
         'test_mae': test_mae,
         'test_cv_percent': test_cv
     }
-    
+
     return results
 
 
@@ -211,21 +211,21 @@ def print_pipeline_structure(pipeline):
     print("\n" + "="*60)
     print("PIPELINE STRUCTURE")
     print("="*60)
-    
+
     for i, (name, step) in enumerate(pipeline.steps, 1):
         print(f"\nStep {i}: {name}")
         print(f"  Type: {type(step).__name__}")
-        
+
         if hasattr(step, 'transformers'):
             print("  Transformers:")
             for trans_name, trans, cols in step.transformers:
                 print(f"    - {trans_name}: {type(trans).__name__}")
                 if isinstance(cols, list):
                     print(f"      Columns: {', '.join(cols)}")
-        
+
         if hasattr(step, 'steps'):
             print("  Sub-steps:")
             for sub_name, sub_step in step.steps:
                 print(f"    - {sub_name}: {type(sub_step).__name__}")
-    
+
     print("\n" + "="*60)
