@@ -1,0 +1,5 @@
+outs:
+- md5: 65e72df0cbcff88d9524bb354f35e593
+  size: 1323079
+  hash: md5
+  path: xgboost_pipeline.pkl

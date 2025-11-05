@@ -1,0 +1,110 @@
+# Chronos-2 Fine-Tuned Configuration (With Covariates)
+# Model: amazon/chronos-t5-small (120M parameters)
+# Approach: Fine-tuning with 9 past covariates for multivariate forecasting
+
+model:
+  type: chronos2_covariates
+  version: v1.0
+  variant: amazon/chronos-t5-small  # 120M parameters
+  base_model: amazon/chronos-t5-small
+
+# Data paths (preprocessed from US-012)
+data:
+  train: data/processed/steel_preprocessed_train.parquet
+  val: data/processed/steel_preprocessed_val.parquet
+  test: data/processed/steel_preprocessed_test.parquet
+  target_col: Usage_kWh
+
+# Chronos-2 fine-tuning parameters (WITH past covariates)
+chronos:
+  # Inference parameters
+  context_length: 512           # Historical window size
+  prediction_length: 1          # Predict 1 step ahead (15 min)
+  num_samples: 20               # Probabilistic scenarios
+  temperature: 1.0              # Sampling temperature
+  
+  # Fine-tuning parameters
+  num_steps: 1000               # Training steps (10 for quick test, 1000+ for production)
+  learning_rate: 0.00001        # 1e-5
+  batch_size: 8                 # Batch size (limited by GPU memory)
+  gradient_accumulation_steps: 4  # Effective batch size = 8 * 4 = 32
+  warmup_steps: 50              # LR warmup
+  max_grad_norm: 1.0            # Gradient clipping
+  
+  # Covariates configuration (from US-014)
+  # IMPORTANT: During fine-tuning, only past_covariates are used
+  # During inference, future_covariates can be used if available
+  past_covariates:
+    - WeekStatus                              # Weekend vs weekday
+    - Load_Type_Maximum_Load                  # Load type dummy
+    - Load_Type_Medium_Load                   # Load type dummy
+    - NSM                                     # Seconds from midnight (temporal)
+    - CO2(tCO2)                              # CO2 emissions
+    - Lagging_Current_Reactive.Power_kVarh   # Reactive power (lagging)
+    - Leading_Current_Reactive_Power_kVarh   # Reactive power (leading)
+    - Lagging_Current_Power_Factor           # Power factor (lagging)
+    - Leading_Current_Power_Factor           # Power factor (leading)
+  
+  # Future covariates (optional, only for inference)
+  # Must be subset of past_covariates for Chronos-2
+  future_covariates: null       # Not used during training
+  
+  # Evaluation during training
+  eval_steps: 100               # Evaluate every N steps
+  save_steps: 500               # Save checkpoint every N steps
+  logging_steps: 10             # Log every N steps
+
+# Performance thresholds
+thresholds:
+  rmse: 42.0   # kWh (with covariates should be best)
+  r2: -0.3     # Better than without covariates
+  mae: 26.0    # kWh
+
+# MLflow configuration
+mlflow:
+  experiment_name: steel_energy_chronos2_covariates
+  tracking_uri: http://localhost:5000
+  tags:
+    model_type: chronos2_covariates
+    model_variant: amazon/chronos-t5-small
+    parameters: 120M
+    pipeline_version: v1.0
+    approach: fine_tuned
+    covariates: 9_past_covariates
+    covariate_names: WeekStatus,Load_Type,NSM,CO2,Power_Reactive,Power_Factor
+
+# DVC configuration
+dvc:
+  remote: gcs_remote
+  auto_push: true
+  skip_push: false
+
+# Notification configuration
+notifications:
+  channels:
+    - console
+    - file
+  slack:
+    enabled: false
+    webhook_url: null
+  email:
+    enabled: false
+    recipients: []
+
+# Compute configuration
+compute:
+  device: auto  # auto = GPU if available, else CPU
+  dtype: bfloat16  # For GPU efficiency
+  mixed_precision: true  # Enable mixed precision training
+
+# Model save configuration
+save:
+  model_dir: models/foundation
+  save_final_model: true
+  save_checkpoints: false  # Save only final model to save space
+  
+# Notes:
+# 1. This config uses 9 past covariates for richer context
+# 2. During training, future_covariates are NOT used (no future data available)
+# 3. During inference, future_covariates can be added if known (e.g., planned load)
+# 4. All covariates are from preprocessed data (US-012)

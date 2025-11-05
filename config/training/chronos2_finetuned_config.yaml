@@ -1,0 +1,89 @@
+# Chronos-2 Fine-Tuned Configuration (Without Covariates)
+# Model: amazon/chronos-t5-small (120M parameters)
+# Approach: Fine-tuning on steel energy data (univariate)
+
+model:
+  type: chronos2_finetuned
+  version: v1.0
+  variant: amazon/chronos-t5-small  # 120M parameters
+  base_model: amazon/chronos-t5-small
+
+# Data paths (preprocessed from US-012)
+data:
+  train: data/processed/steel_preprocessed_train.parquet
+  val: data/processed/steel_preprocessed_val.parquet
+  test: data/processed/steel_preprocessed_test.parquet
+  target_col: Usage_kWh
+
+# Chronos-2 fine-tuning parameters (WITHOUT covariates)
+chronos:
+  # Inference parameters
+  context_length: 512           # Historical window size
+  prediction_length: 1          # Predict 1 step ahead (15 min)
+  num_samples: 20               # Probabilistic scenarios
+  temperature: 1.0              # Sampling temperature
+  
+  # Fine-tuning parameters
+  num_steps: 1000               # Training steps (10 for quick test, 1000+ for production)
+  learning_rate: 0.00001        # 1e-5
+  batch_size: 8                 # Batch size (limited by GPU memory)
+  gradient_accumulation_steps: 4  # Effective batch size = 8 * 4 = 32
+  warmup_steps: 50              # LR warmup
+  max_grad_norm: 1.0            # Gradient clipping
+  
+  # Covariates configuration
+  past_covariates: null         # No covariates for this baseline
+  future_covariates: null       # No covariates for this baseline
+  
+  # Evaluation during training
+  eval_steps: 100               # Evaluate every N steps
+  save_steps: 500               # Save checkpoint every N steps
+  logging_steps: 10             # Log every N steps
+
+# Performance thresholds
+thresholds:
+  rmse: 45.0   # kWh (fine-tuned should be better than zero-shot)
+  r2: -0.5     # Better than zero-shot
+  mae: 30.0    # kWh
+
+# MLflow configuration
+mlflow:
+  experiment_name: steel_energy_chronos2_finetuned
+  tracking_uri: http://localhost:5000
+  tags:
+    model_type: chronos2_finetuned
+    model_variant: amazon/chronos-t5-small
+    parameters: 120M
+    pipeline_version: v1.0
+    approach: fine_tuned
+    covariates: none
+
+# DVC configuration
+dvc:
+  remote: gcs_remote
+  auto_push: true
+  skip_push: false
+
+# Notification configuration
+notifications:
+  channels:
+    - console
+    - file
+  slack:
+    enabled: false
+    webhook_url: null
+  email:
+    enabled: false
+    recipients: []
+
+# Compute configuration
+compute:
+  device: auto  # auto = GPU if available, else CPU
+  dtype: bfloat16  # For GPU efficiency
+  mixed_precision: true  # Enable mixed precision training
+
+# Model save configuration
+save:
+  model_dir: models/foundation
+  save_final_model: true
+  save_checkpoints: false  # Save only final model to save space

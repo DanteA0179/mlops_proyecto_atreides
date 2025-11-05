@@ -319,8 +319,7 @@ desktop.ini
 .dvc/config.local
 
 # Service account credentials (for CI/CD)
-config/
-!config/.gitkeep
+
 
 config/gcs-service-account.json
 
@@ -331,4 +330,4 @@ docs/tareas_segunda_entrega/
 
 #specs
 specs/
-
+docs/areas_mejora/
