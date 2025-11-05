@@ -2,6 +2,36 @@
 
 ## 📋 Índice de Documentos
 
+### 🚀 US-019: Dagster Pipeline + Multi-Modelo (Noviembre 2025)
+
+| Documento | Descripción | Audiencia | Tiempo de Lectura |
+|-----------|-------------|-----------|-------------------|
+| [**us-resolved/us-019.md**](us-resolved/us-019.md) | ⭐ **Documento consolidado completo** - INICIO AQUÍ | Todos | 20 min |
+| [**CHRONOS-QUICKSTART.md**](CHRONOS-QUICKSTART.md) | Guía rápida para entrenar las 3 variantes de Chronos-2 | ML Engineers | 10 min |
+| [**guides/DAGSTER_WORKFLOW.md**](guides/DAGSTER_WORKFLOW.md) | 📖 **Guía completa de workflows de Dagster** - Arquitectura, jobs, multi-modelo, GPU | MLOps Engineers, Developers | 25 min |
+
+**Qué se implementó en US-019:**
+- ✅ Migración exitosa de Prefect a Dagster
+- ✅ UI funcional en http://localhost:3000 (sin workers)
+- ✅ Soporte para 8 modelos: XGBoost, LightGBM, CatBoost, 2 Ensembles, 3 Chronos-2
+- ✅ Detección automática de tipo de modelo desde YAML
+- ✅ GPU fallback automático en todos los modelos
+- ✅ Integración completa con MLflow
+- ✅ 3 configuraciones para Chronos-2 (zero-shot, fine-tuned, covariates)
+- ✅ Scripts de inicio: `start-dagster.ps1` y `start-dagster.sh`
+- ✅ Pipeline de Chronos-2 con 7 ops dedicadas
+
+**Comando rápido para iniciar Dagster:**
+```powershell
+# PowerShell
+.\scripts\start-dagster.ps1
+
+# Bash
+./scripts/start-dagster.sh
+```
+
+---
+
 ### 🎯 US-005: Análisis de Calidad de Datos
 
 | Documento | Descripción | Audiencia | Tiempo de Lectura |

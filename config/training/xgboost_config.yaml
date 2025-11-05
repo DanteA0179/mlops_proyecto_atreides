@@ -1,0 +1,67 @@
+# XGBoost Training Configuration
+model:
+  type: xgboost
+  version: v1.0
+
+# Data paths (preprocessed from US-012)
+data:
+  train: data/processed/steel_preprocessed_train.parquet
+  val: data/processed/steel_preprocessed_val.parquet
+  test: data/processed/steel_preprocessed_test.parquet
+  target_col: Usage_kWh
+
+# Hyperparameters (from US-013 best trial)
+hyperparameters:
+  max_depth: 8
+  min_child_weight: 2
+  gamma: 1.945
+  learning_rate: 0.0395
+  n_estimators: 151
+  subsample: 0.940
+  colsample_bytree: 0.782
+  colsample_bylevel: 0.940
+  reg_alpha: 5.106
+  reg_lambda: 8.280
+  tree_method: hist      # Use 'hist' for both CPU and GPU (XGBoost 3.x)
+  device: cuda:0         # GPU device (auto-fallback to cpu if no GPU)
+  random_state: 42
+
+# Performance thresholds
+thresholds:
+  rmse: 15.0   # kWh
+  r2: 0.80     # 80% variance explained
+  mae: 4.0     # kWh
+
+# MLflow configuration
+mlflow:
+  experiment_name: steel_energy_training_pipeline
+  tracking_uri: http://localhost:5000
+  tags:
+    model_type: xgboost
+    pipeline_version: v1.0
+    optimization: optuna_100_trials
+
+# DVC configuration
+dvc:
+  remote: gcs_remote
+  auto_push: true
+  skip_push: false  # Set to true for testing
+
+# Prefect configuration
+prefect:
+  flow_name: training-pipeline-xgboost
+  retries: 3
+  timeout_seconds: 1800  # 30 minutes
+
+# Notification configuration
+notifications:
+  channels:
+    - console
+    - file
+  # Future: slack, email
+  slack:
+    enabled: false
+    webhook_url: null
+  email:
+    enabled: false
+    recipients: []

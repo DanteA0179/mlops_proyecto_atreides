@@ -210,7 +210,33 @@ df = query_to_dataframe(conn, """
 print(df)
 ```
 
-### 7. Ejecutar la API Localmente (Desarrollo)
+### 7. Ejecutar Pipelines de ML con Dagster
+
+```powershell
+# PowerShell (Windows)
+.\scripts\start-dagster.ps1
+
+# Bash (Linux/macOS)
+./scripts/start-dagster.sh
+```
+
+**Abrir UI**: http://127.0.0.1:3000
+
+**Jobs disponibles**:
+- `complete_training_job` - XGBoost, LightGBM, CatBoost, Ensembles
+- `chronos_zeroshot_job` - Chronos-2 zero-shot inference
+- `chronos_finetuned_job` - Chronos-2 fine-tuning
+- `chronos_covariates_job` - Chronos-2 con 9 covariables
+
+**Características**:
+- ✅ **Configuración prellenada** - Ya viene lista en el Launchpad
+- ✅ **Multi-modelo** - Cambiar de modelo solo editando el YAML
+- ✅ **GPU automático** - Detección y fallback a CPU
+- ✅ **8 modelos soportados** - 5 tradicionales + 3 Chronos-2
+
+📖 **Ver guía completa**: [docs/guides/DAGSTER_GUIDE.md](docs/guides/DAGSTER_GUIDE.md)
+
+### 8. Ejecutar la API Localmente (Desarrollo)
 
 ```bash
 # Opción 1: Uvicorn con hot reload
@@ -223,7 +249,7 @@ poetry run python src/api/main.py
 # http://localhost:8000/docs
 ```
 
-### 8. Verificar Instalación
+### 9. Verificar Instalación
 
 ```bash
 # Ejecutar script de verificación US-003
@@ -689,6 +715,10 @@ gcloud run deploy energy-opt-api \
 ### Guías de Configuración
 - **[Configuración de DVC con GCS](docs/DVC_SETUP.md)** - Setup rápido de DVC para el equipo
 - **[Google Secret Manager Setup](docs/SECRET_MANAGER_SETUP.md)** - Gestión segura de credenciales
+- **[Guía Completa de Dagster](docs/guides/DAGSTER_GUIDE.md)** - Workflows, multi-modelo, configuración y troubleshooting
+
+### Guías de Modelos
+- **[Chronos-2 Quickstart](docs/CHRONOS-QUICKSTART.md)** - Guía rápida para entrenar modelos Chronos-2
 
 ### Documentación del Proyecto
 - [Plan de Proyecto](context/PlaneacionProyecto.md)

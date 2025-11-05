@@ -1,0 +1,35 @@
+# Dagster instance configuration
+
+# Storage for run history, event logs, and schedule/sensor state
+# Using SQLite for development (simpler, no Docker needed)
+storage:
+  sqlite:
+    base_dir: dagster_home/storage
+
+# Run launcher - how to execute runs
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+# Run coordinator - manages run queue
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: DefaultRunCoordinator
+
+# Compute logs
+compute_logs:
+  module: dagster.core.storage.local_compute_log_manager
+  class: LocalComputeLogManager
+  config:
+    base_dir: dagster_home/storage/compute_logs
+
+# Local artifact storage
+local_artifact_storage:
+  module: dagster.core.storage.root
+  class: LocalArtifactStorage
+  config:
+    base_dir: dagster_home/storage
+
+# Telemetry (disable for privacy)
+telemetry:
+  enabled: false
