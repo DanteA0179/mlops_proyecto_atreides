@@ -17,7 +17,7 @@ base_models:
       max_depth: 8
       learning_rate: 0.0395
       n_estimators: 151
-      tree_method: gpu_hist
+      tree_method: hist
       device: cuda
       random_state: 42
   - type: lightgbm
