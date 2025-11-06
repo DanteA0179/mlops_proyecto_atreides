@@ -70,12 +70,11 @@ def check_gpu_availability() -> tuple[bool, str]:
 # Check GPU availability at module load
 GPU_AVAILABLE, DEVICE_INFO = check_gpu_availability()
 
-# Default XGBoost parameters (GPU-aware)
 DEFAULT_PARAMS = {
     "objective": "reg:squarederror",
     "eval_metric": "rmse",
-    "tree_method": "gpu_hist" if GPU_AVAILABLE else "hist",
-    "device": "cuda" if GPU_AVAILABLE else "cpu",
+    "tree_method": "hist",  # Use 'hist' for both CPU and GPU
+    "device": "cuda" if GPU_AVAILABLE else "cpu",  # Device parameter controls CPU/GPU
     "random_state": 42,
     "n_jobs": 1 if GPU_AVAILABLE else -1,
     "verbosity": 0,
@@ -135,8 +134,8 @@ def create_xgboost_pipeline(
             params.update(model_params)
 
         # Ensure GPU settings are preserved if not explicitly overridden
-        if "tree_method" not in model_params and GPU_AVAILABLE:
-            params["tree_method"] = "gpu_hist"
+        if "device" not in model_params and GPU_AVAILABLE:
+            params["tree_method"] = "hist"
             params["device"] = "cuda"
             params["n_jobs"] = 1
 
