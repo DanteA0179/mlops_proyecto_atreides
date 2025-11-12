@@ -399,3 +399,4 @@ class TestPlotSeasonalPattern:
 
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
+
