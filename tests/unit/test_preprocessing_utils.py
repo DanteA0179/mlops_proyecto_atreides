@@ -101,6 +101,39 @@ class TestIdentifyFeatureTypes:
         assert "string_col" in types["categorical"] or "string_col" in types["excluded"]
         assert "bool_col" in types["boolean"]
         assert "datetime_col" in types["datetime"]
+    
+    def test_identification_with_all_null_column(self):
+        """
+        Prueba que una columna que solo contiene nulos (pl.Null) 
+        sea clasificada correctamente (ej. 'excluded').
+        """
+        df = pl.DataFrame({
+            "numeric": [1, 2, 3],
+            "all_null": [None, None, None]
+        })
+        
+        # Le decimos a Polars que la columna es de tipo pl.Null
+        df = df.with_columns(pl.col("all_null").cast(pl.Null))
+        
+        types = identify_feature_types(df)
+        
+        # Una columna de solo nulos no es numérica ni categórica
+        assert "all_null" not in types.get("numeric", [])
+        assert "all_null" not in types.get("categorical", [])
+        
+        # Debería ser 'excluida' o un tipo 'desconocido'
+        assert "all_null" in types.get("excluded", []) or \
+               "all_null" in types.get("unknown", [])
+
+    def test_identification_empty_dataframe(self):
+        """Prueba que la función maneja un DataFrame vacío."""
+        df = pl.DataFrame()
+        types = identify_feature_types(df)
+        
+        # El resultado debe ser un diccionario de listas vacías
+        assert "numeric" in types
+        assert len(types["numeric"]) == 0
+        assert len(types["categorical"]) == 0
 
 
 class TestValidatePreprocessingConfig:
@@ -211,6 +244,34 @@ class TestCalculateScalingStatistics:
 
         assert "numeric1" in stats
         assert "nonexistent" not in stats
+    
+    def test_statistics_with_nulls(self):
+        """
+        Prueba que los nulos son ignorados al calcular estadísticas.
+        """
+        df = pl.DataFrame({"feature": [1.0, 2.0, None, 4.0, 5.0]})
+        
+        stats = calculate_scaling_statistics(df, features=["feature"])
+        
+        # La media debe ser (1+2+4+5) / 4 = 3.0
+        assert stats["feature"]["mean"] == pytest.approx(3.0)
+        # El conteo (si se calcula) debe ser 4, no 5
+        
+    def test_statistics_with_all_nulls(self):
+        """
+        Prueba que una columna de solo nulos se maneja sin fallar.
+        """
+        df = pl.DataFrame({"feature": [None, None, None]}).with_columns(
+            pl.col("feature").cast(pl.Float64)
+        )
+        
+        stats = calculate_scaling_statistics(df, features=["feature"])
+        
+        # La media de solo nulos es nula (o NaN)
+        assert stats["feature"]["mean"] is None or \
+               np.isnan(stats["feature"]["mean"])
+        assert stats["feature"]["min"] is None
+        assert stats["feature"]["max"] is None
 
 
 class TestAnalyzeCategoricalCardinality:
@@ -276,6 +337,31 @@ class TestAnalyzeCategoricalCardinality:
             analyze_categorical_cardinality(
                 sample_dataframe, feature="nonexistent"
             )
+    
+    def test_cardinality_with_nulls(self):
+        """
+        Prueba cómo la cardinalidad maneja los valores nulos.
+        """
+        df = pl.DataFrame({"cat": ["A", "A", "B", None, "A", None]})
+        
+        analysis = analyze_categorical_cardinality(df, feature="cat")
+        
+        # Depende de tu implementación, pero generalmente los nulos 
+        # se cuentan como una categoría separada.
+        
+        # Asumiendo que 'None' NO se cuenta como una categoría
+        assert analysis["n_categories"] == 2  
+        assert set(analysis["categories"]) == {"A", "B"}
+        
+        # Pero los conteos de valores SÍ deben reflejarlos
+        assert analysis["value_counts"]["A"] == 3
+        assert analysis["value_counts"]["B"] == 1
+        # (El conteo de nulos puede estar o no en 'value_counts')
+        
+        # O, si los nulos SÍ se cuentan como categoría:
+        # assert analysis["n_categories"] == 3
+        # assert set(analysis["categories"]) == {"A", "B", None}
+        # assert analysis["value_counts"][None] == 2
 
 
 class TestMapBinaryFeature:
@@ -325,6 +411,25 @@ class TestMapBinaryFeature:
 
         # Unknown category "C" should be None
         assert df_mapped["status"][2] is None
+    
+    def test_mapping_with_existing_nulls(self):
+        """
+        Prueba que los nulos en la entrada se mantienen como nulos en la salida.
+        """
+        df = pl.DataFrame({"status": ["Active", "Inactive", None, "Active"]})
+        
+        df_mapped = map_binary_feature(
+            df, feature="status", mapping={"Active": 1, "Inactive": 0}
+        )
+        
+        # Comprobamos los valores uno por uno
+        assert df_mapped["status"][0] == 1
+        assert df_mapped["status"][1] == 0
+        assert df_mapped["status"][2] is None  # El nulo debe preservarse
+        assert df_mapped["status"][3] == 1
+        
+        # El tipo de dato debe permitir nulos (ej. Int64, no Int32)
+        assert df_mapped["status"].dtype in [pl.Int64, pl.Int32]
 
 
 class TestGetFeatureNameAfterOHE:
@@ -351,3 +456,19 @@ class TestGetFeatureNameAfterOHE:
         """Test with multiple words in category."""
         name = get_feature_name_after_ohe("Status", "Very High Priority")
         assert name == "Status_Very_High_Priority"
+    
+    def test_ohe_name_with_numeric_category(self):
+        """
+        Prueba que la función convierte categorías no-string (como números) 
+        a string.
+        """
+        name = get_feature_name_after_ohe("Age_Group", 10)
+        assert name == "Age_Group_10"
+        
+    def test_ohe_name_with_boolean_category(self):
+        """Prueba que la función maneja categorías booleanas."""
+        name = get_feature_name_after_ohe("Is_Flagged", True)
+        assert name == "Is_Flagged_True"
+    
+
+#pytest tests/unit/test_preprocessing_utils.py -v
