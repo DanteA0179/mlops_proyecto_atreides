@@ -1,0 +1,5 @@
+outs:
+- md5: e9c65cda2156c050cdd777a4d1a94b3d
+  size: 6364022
+  hash: md5
+  path: ensemble_lightgbm_v1.pkl

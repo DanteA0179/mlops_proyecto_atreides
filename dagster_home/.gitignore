@@ -1,0 +1,15 @@
+# Dagster storage
+storage/
+history/
+schedules/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/

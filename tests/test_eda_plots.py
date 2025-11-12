@@ -60,6 +60,35 @@ class TestPlotDistribution:
         fig = plot_distribution(sample_df, 'feature1', nbins=20)
 
         assert isinstance(fig, go.Figure)
+    
+    def test_plot_distribution_missing_column(self, sample_df):
+        """Prueba que la función falla si la columna no existe."""
+        with pytest.raises(pl.ColumnNotFoundError):
+            plot_distribution(sample_df, 'columna_fantasma')
+    
+    def test_plot_distribution_empty_df(self):
+        """Prueba que la función maneja un DataFrame vacío sin fallar."""
+        empty_df = pl.DataFrame({'feature1': []})
+        fig = plot_distribution(empty_df, 'feature1')
+        
+        assert isinstance(fig, go.Figure)
+        # Los datos del gráfico estarán vacíos
+        assert len(fig.data[0].x) == 0
+    
+    def test_plot_distribution_categorical_column(self, sample_df):
+        """
+        Prueba cómo la función maneja una columna categórica.
+        (Idealmente, debería crear un histograma de conteo de categorías)
+        """
+        fig = plot_distribution(sample_df, 'category')
+        
+        assert isinstance(fig, go.Figure)
+        assert len(fig.data) > 0
+        # Verifica que el eje x tenga las categorías A y B
+        assert 'A' in fig.data[0].x
+        assert 'B' in fig.data[0].x
+     
+
 
 
 class TestPlotCorrelationHeatmap:
@@ -84,6 +113,27 @@ class TestPlotCorrelationHeatmap:
         fig = plot_correlation_heatmap(sample_df, colorscale='Viridis')
 
         assert isinstance(fig, go.Figure)
+    
+    def test_plot_heatmap_empty_df(self):
+        """Prueba que el heatmap maneja un DataFrame vacío."""
+        empty_df = pl.DataFrame({'feature1': [], 'feature2': []})
+        fig = plot_correlation_heatmap(empty_df)
+        
+        assert isinstance(fig, go.Figure)
+    
+    def test_plot_heatmap_all_categorical(self, sample_df):
+        """
+        Prueba que el heatmap solo usa columnas numéricas 
+        (ignorando 'category').
+        """
+        # Creamos un DF que solo tiene 'category' y 'feature1'
+        subset_df = sample_df.select(['category', 'feature1'])
+        fig = plot_correlation_heatmap(subset_df)
+        
+        assert isinstance(fig, go.Figure)
+        # El heatmap resultante solo debe tener 'feature1'
+        assert fig.data[0].x == ['feature1']
+        assert fig.data[0].y == ['feature1']
 
 
 class TestPlotTimeSeries:
@@ -130,6 +180,14 @@ class TestPlotBoxByCategory:
         )
 
         assert isinstance(fig, go.Figure)
+    
+        # Puedes añadir esto a TestPlotBoxByCategory
+    def test_plot_box_axis_labels(self, sample_df):
+        """Prueba que los títulos de los ejes X e Y son correctos."""
+        fig = plot_box_by_category(sample_df, 'category', 'target')
+        
+        assert fig.layout.xaxis.title.text == 'category'
+        assert fig.layout.yaxis.title.text == 'target'
 
 
 class TestPlotScatter:
@@ -155,6 +213,18 @@ class TestPlotScatter:
         assert isinstance(fig, go.Figure)
         # Trendline adds an extra trace
         assert len(fig.data) >= 1
+    
+    def test_plot_scatter_missing_column(self, sample_df):
+        """Prueba que la función falla si una columna no existe."""
+        with pytest.raises(pl.ColumnNotFoundError):
+            plot_scatter(sample_df, 'feature1', 'columna_fantasma')
+    
+    def test_plot_scatter_axis_labels(self, sample_df):
+        """Prueba que los títulos de los ejes X e Y son correctos."""
+        fig = plot_scatter(sample_df, 'feature1', 'target')
+        
+        assert fig.layout.xaxis.title.text == 'feature1'
+        assert fig.layout.yaxis.title.text == 'target'
 
 
 class TestPlotScatterMatrix:
@@ -209,3 +279,23 @@ class TestGetTopCorrelatedFeatures:
         # Verify feature3 is not in results
         feature_names = [feat[0] for feat in top_features]
         assert 'feature3' not in feature_names
+    
+    def test_correlation_exact_values(self, sample_df):
+        """Prueba que los valores de correlación calculados son correctos."""
+        # Obtenemos las 2 mejores correlaciones con 'target'
+        top_features = get_top_correlated_features(sample_df, 'target', n=2)
+        
+        # Sabemos que 'feature1' y 'feature2' están perfectamente correlacionados
+        # con 'target' en los datos de muestra.
+        
+        # Convertimos la lista de tuplas a un diccionario para facilitar la comprobación
+        top_dict = dict(top_features)
+        
+        # Comprobamos los valores exactos
+        assert 'feature1' in top_dict
+        assert top_dict['feature1'] == 1.0
+        
+        assert 'feature2' in top_dict
+        assert top_dict['feature2'] == 1.0
+
+# Run tests with: pytest tests/test_eda_plots.py -v

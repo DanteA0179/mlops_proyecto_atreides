@@ -1,0 +1,61 @@
+# CatBoost Training Configuration
+model:
+  type: catboost
+  version: v1.0
+
+# Data paths (preprocessed from US-012)
+data:
+  train: data/processed/steel_preprocessed_train.parquet
+  val: data/processed/steel_preprocessed_val.parquet
+  test: data/processed/steel_preprocessed_test.parquet
+  target_col: Usage_kWh
+
+# Hyperparameters (baseline config)
+hyperparameters:
+  depth: 8
+  learning_rate: 0.05
+  iterations: 150
+  l2_leaf_reg: 8.0
+  border_count: 128
+  task_type: GPU  # Auto-fallback to CPU if no GPU
+  random_seed: 42
+  verbose: False
+
+# Performance thresholds
+thresholds:
+  rmse: 15.0   # kWh
+  r2: 0.80     # 80% variance explained
+  mae: 4.0     # kWh
+
+# MLflow configuration
+mlflow:
+  experiment_name: steel_energy_training_pipeline
+  tracking_uri: http://localhost:5000
+  tags:
+    model_type: catboost
+    pipeline_version: v1.0
+    optimization: baseline
+
+# DVC configuration
+dvc:
+  remote: gcs_remote
+  auto_push: true
+  skip_push: false
+
+# Prefect configuration
+prefect:
+  flow_name: training-pipeline-catboost
+  retries: 3
+  timeout_seconds: 1800  # 30 minutes
+
+# Notification configuration
+notifications:
+  channels:
+    - console
+    - file
+  slack:
+    enabled: false
+    webhook_url: null
+  email:
+    enabled: false
+    recipients: []

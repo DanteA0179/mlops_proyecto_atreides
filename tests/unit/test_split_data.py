@@ -157,6 +157,72 @@ class TestStratifiedTrainValTestSplit:
         assert set(df_val.columns) == original_cols
         assert set(df_test.columns) == original_cols
 
+    def test_stratification_on_categorical_column(self, sample_dataframe):
+        """
+        Prueba que la estratificación mantiene las proporciones de una columna
+        categórica.
+        """
+        # Usamos 'category' como nuestra columna de estratificación
+        df_train, df_val, df_test = stratified_train_val_test_split(
+            df=sample_dataframe,
+            target_col="category",  # ¡Cambiamos a la columna categórica!
+            train_size=0.7,
+            val_size=0.15,
+            test_size=0.15,
+            random_state=42
+        )
+        
+        # Calculamos la proporción de 'A' en el total
+        total_a_ratio = (
+            sample_dataframe.filter(pl.col("category") == "A").height 
+            / len(sample_dataframe)
+        )
+        
+        # Comprobamos la proporción de 'A' en cada división
+        train_a_ratio = (
+            df_train.filter(pl.col("category") == "A").height / len(df_train)
+        )
+        val_a_ratio = (
+            df_val.filter(pl.col("category") == "A").height / len(df_val)
+        )
+        test_a_ratio = (
+            df_test.filter(pl.col("category") == "A").height / len(df_test)
+        )
+
+        # Las proporciones deben ser muy similares (con una pequeña tolerancia)
+        assert abs(total_a_ratio - train_a_ratio) < 0.05
+        assert abs(total_a_ratio - val_a_ratio) < 0.05
+        assert abs(total_a_ratio - test_a_ratio) < 0.05
+
+    def test_stratified_missing_target_col(self, sample_dataframe):
+        """Prueba que falla si la columna 'target_col' no existe."""
+        with pytest.raises((pl.ColumnNotFoundError, KeyError)):
+            stratified_train_val_test_split(
+                df=sample_dataframe, target_col="columna_fantasma"
+            )
+
+    def test_stratified_with_nulls_in_target(self, sample_dataframe):
+        """
+        Prueba cómo se manejan los nulos en la columna de estratificación.
+        (Idealmente, deberían ser eliminados o puestos en su propio estrato).
+        """
+        # Insertamos algunos nulos en 'category'
+        df_with_nulls = sample_dataframe.with_columns(
+            pl.when(pl.col("id") < 10)
+              .then(None)
+              .otherwise(pl.col("category"))
+              .alias("category")
+        )
+        
+        try:
+            df_train, df_val, df_test = stratified_train_val_test_split(
+                df=df_with_nulls, target_col="category"
+            )
+            # La prueba tiene éxito si la función no se rompe
+            assert len(df_train) > 0
+        except Exception as e:
+            pytest.fail(f"La división con nulos falló: {e}")   
+
 
 class TestTemporalTrainValTestSplit:
     """Tests for temporal_train_val_test_split function."""
@@ -233,6 +299,28 @@ class TestTemporalTrainValTestSplit:
         assert len(train_ids.intersection(val_ids)) == 0
         assert len(train_ids.intersection(test_ids)) == 0
         assert len(val_ids.intersection(test_ids)) == 0
+    
+    def test_temporal_split_with_unsorted_data(self, sample_dataframe):
+        """
+        Prueba que la división es temporalmente correcta INCLUSO SI
+        el DataFrame de entrada no está ordenado.
+        """
+        # Barajamos el DataFrame
+        df_shuffled = sample_dataframe.sample(fraction=1.0, shuffle=True)
+        
+        # La función debería re-ordenar los datos internamente
+        df_train, df_val, df_test = temporal_train_val_test_split(
+            df=df_shuffled, date_col="date"
+        )
+
+        # Las mismas comprobaciones de orden deben seguir funcionando
+        train_max_date = df_train["date"].max()
+        val_min_date = df_val["date"].min()
+        val_max_date = df_val["date"].max()
+        test_min_date = df_test["date"].min()
+
+        assert train_max_date <= val_min_date
+        assert val_max_date <= test_min_date
 
 
 class TestValidateSplits:
@@ -289,6 +377,46 @@ class TestValidateSplits:
         assert "sizes" in result["statistics"]
         # Check that target statistics are present (key name may vary)
         assert len(result["statistics"]) >= 2  # At least sizes and target stats
+    
+    def test_validate_detects_data_leakage(self, sample_dataframe):
+        """Prueba que la validación detecta explícitamente la fuga de datos (solapamiento)."""
+        # Creamos divisiones con solapamiento
+        df_train = sample_dataframe.head(500)
+        df_val = sample_dataframe.slice(450, 200)  # Solapamiento de 50 filas
+        df_test = sample_dataframe.tail(300)
+
+        result = validate_splits(
+            df_train=df_train,
+            df_val=df_val,
+            df_test=df_test,
+            target_col="target",
+            id_col="id"  # Asumiendo que la función puede usar un id_col
+        )
+        
+        assert result["valid"] is False
+        assert any("leakage" in issue.lower() or 
+                   "overlap" in issue.lower() for issue in result["issues"])
+
+    def test_validate_detects_temporal_leakage(self, sample_dataframe):
+        """Prueba que la validación detecta la fuga temporal."""
+        df_sorted = sample_dataframe.sort("date")
+        
+        # Creamos divisiones con fuga temporal (el train es posterior al val)
+        df_train = df_sorted.tail(700)
+        df_val = df_sorted.head(150)
+        df_test = df_sorted.slice(100, 150) # Datos aleatorios
+
+        result = validate_splits(
+            df_train=df_train,
+            df_val=df_val,
+            df_test=df_test,
+            target_col="target",
+            #date_col="date"  # La validación necesita saber la columna de fecha
+        )
+        
+        assert result["valid"] is False
+        assert any("temporal" in issue.lower() or 
+                   "order" in issue.lower() for issue in result["issues"])
 
 
 class TestGetSplitStatistics:
@@ -359,3 +487,5 @@ class TestGetSplitStatistics:
         # Allow 20% difference due to randomness
         assert abs(train_mean - val_mean) / train_mean < 0.20
         assert abs(train_mean - test_mean) / train_mean < 0.20
+
+#pytest tests/unit/test_split_data.py -v

@@ -18,10 +18,10 @@ from pathlib import Path
 # Disable MLflow emoji output on Windows to avoid encoding issues
 os.environ["MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR"] = "false"
 
-import mlflow
 import numpy as np
 import polars as pl
 
+import mlflow
 from src.models.xgboost_trainer import (
     evaluate_model,
     get_feature_names_from_pipeline,
@@ -130,7 +130,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         logger.info("Starting XGBoost Baseline Model Training - US-013")
 
         # Import GPU info from trainer module
-        from src.models.xgboost_trainer import GPU_AVAILABLE, DEVICE_INFO
+        from src.models.xgboost_trainer import DEVICE_INFO, GPU_AVAILABLE
 
         logger.info(f"Compute device: {DEVICE_INFO}")
         if GPU_AVAILABLE:
@@ -143,7 +143,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             model_version = f"v_{timestamp}"
-        
+
         logger.info(f"Model version: {model_version}")
 
         # Setup directories and MLflow

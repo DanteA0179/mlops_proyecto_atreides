@@ -1,5 +1,6 @@
 # Optimized Dockerfile for API + MLOps (MLflow, Prefect)
 # Excludes heavy foundation models (PyTorch, Transformers)
+# Updated: 2025-11-06 - Added psutil, catboost, updated xgboost to 3.1.1
 
 FROM python:3.11-slim
 
@@ -15,10 +16,11 @@ RUN useradd -m -u 1000 -s /bin/bash appuser
 
 WORKDIR /app
 
-# Copy requirements
+# Copy requirements (includes psutil, catboost, xgboost 3.1.1, lightgbm, scikit-learn)
 COPY requirements-api.txt ./
 
 # Install dependencies with timeout handling
+# Note: This includes all ML libraries needed for stacking ensemble models
 RUN pip install --no-cache-dir --timeout=300 -r requirements-api.txt
 
 # Copy application code
@@ -37,7 +39,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run with uvicorn
+# Note: Using single worker to avoid model loading issues with multiprocessing
+# For production, consider using gunicorn with preload and single worker per core
 CMD ["uvicorn", "src.api.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--workers", "4"]
+     "--workers", "1"]

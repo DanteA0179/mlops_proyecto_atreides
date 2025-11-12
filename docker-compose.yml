@@ -66,29 +66,31 @@ services:
       - energy-net
 
   # ============================================================================
-  # Prefect Server - Workflow Orchestration
+  # Dagster PostgreSQL - Metadata Storage (Optional)
   # ============================================================================
-  prefect:
-    image: prefecthq/prefect:3-python3.11
-    container_name: prefect-server
-    ports:
-      - "4200:4200"
-    environment:
-      - PREFECT_API_URL=http://prefect:4200/api
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_UI_API_URL=http://localhost:4200/api
-    volumes:
-      - prefect-data:/root/.prefect
-    command: prefect server start --host 0.0.0.0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    networks:
-      - energy-net
+  # Note: Dagster can run with SQLite (default) or PostgreSQL
+  # For development, we'll use SQLite (no Docker needed)
+  # For production, uncomment this service
+  #
+  # dagster-postgres:
+  #   image: postgres:15-alpine
+  #   container_name: dagster-postgres
+  #   environment:
+  #     POSTGRES_USER: dagster
+  #     POSTGRES_PASSWORD: dagster
+  #     POSTGRES_DB: dagster
+  #   volumes:
+  #     - dagster-postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5433:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U dagster"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+  #   networks:
+  #     - energy-net
 
   # ============================================================================
   # DuckDB Web Interface (Optional) - Data Exploration
@@ -122,5 +124,5 @@ networks:
 volumes:
   mlflow-data:
     name: mlflow-data
-  prefect-data:
-    name: prefect-data
+  dagster-postgres-data:
+    name: dagster-postgres-data

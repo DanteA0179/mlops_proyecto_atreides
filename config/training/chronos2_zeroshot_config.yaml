@@ -1,0 +1,66 @@
+# Chronos-2 Zero-Shot Evaluation Configuration
+# Model: amazon/chronos-t5-small (120M parameters)
+# Approach: Zero-shot inference (no fine-tuning)
+
+model:
+  type: chronos2_zeroshot
+  version: v1.0
+  variant: amazon/chronos-t5-small  # 120M parameters, fastest inference
+
+# Data paths (preprocessed from US-012)
+data:
+  train: data/processed/steel_preprocessed_train.parquet
+  val: data/processed/steel_preprocessed_val.parquet
+  test: data/processed/steel_preprocessed_test.parquet
+  target_col: Usage_kWh
+
+# Chronos-2 zero-shot parameters
+chronos:
+  context_length: 512           # Historical window size
+  prediction_length: 1          # Predict 1 step ahead (15 min)
+  batch_size: 512               # Batch size for GPU efficiency
+  max_predictions: null         # null = all predictions, int = limit for testing
+  num_samples: 20               # Number of probabilistic scenarios
+  temperature: 1.0              # Sampling temperature
+  top_k: 50                     # Top-k sampling
+  top_p: 1.0                    # Nucleus sampling
+
+# Performance thresholds
+thresholds:
+  rmse: 55.0   # kWh (zero-shot is less accurate than fine-tuned)
+  r2: -2.0     # Negative R² expected for zero-shot
+  mae: 40.0    # kWh
+
+# MLflow configuration
+mlflow:
+  experiment_name: steel_energy_chronos2_zeroshot
+  tracking_uri: http://localhost:5000
+  tags:
+    model_type: chronos2_zeroshot
+    model_variant: amazon/chronos-t5-small
+    parameters: 120M
+    pipeline_version: v1.0
+    approach: zero_shot
+
+# DVC configuration
+dvc:
+  remote: gcs_remote
+  auto_push: false   # Zero-shot doesn't save custom models
+  skip_push: true
+
+# Notification configuration
+notifications:
+  channels:
+    - console
+    - file
+  slack:
+    enabled: false
+    webhook_url: null
+  email:
+    enabled: false
+    recipients: []
+
+# Compute configuration
+compute:
+  device: auto  # auto = GPU if available, else CPU
+  dtype: bfloat16  # For GPU efficiency
