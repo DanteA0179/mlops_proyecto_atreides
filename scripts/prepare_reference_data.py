@@ -52,6 +52,11 @@ def prepare_reference_data() -> None:
 
     logger.info(f"Sampled {sample_size} rows for reference data")
 
+    # Remove target column (we only monitor features, not targets)
+    if "Usage_kWh" in df_ref.columns:
+        df_ref = df_ref.drop("Usage_kWh", axis=1)
+        logger.info("Removed target column 'Usage_kWh' (monitoring features only)")
+
     # Create output directory
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

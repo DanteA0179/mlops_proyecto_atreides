@@ -18,8 +18,10 @@ services:
       - ./src:/app/src
       # Mount models directory
       - ./models:/app/models
-      # Mount data directory (read-only for API)
-      - ./data:/app/data:ro
+      # Mount data directory (writable for monitoring logs)
+      - ./data:/app/data
+      # Mount reports directory (for drift reports)
+      - ./reports:/app/reports
     command: >
       uvicorn src.api.main:app
       --host 0.0.0.0
