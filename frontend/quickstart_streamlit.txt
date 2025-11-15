@@ -1,0 +1,299 @@
+# ⚡ Quick Start - Streamlit UI
+
+Guía rápida para levantar la UI de Streamlit en **menos de 5 minutos**.
+
+## 🎯 Opción 1: Desarrollo Local (Más Rápido)
+
+### Paso 1: Instalar Dependencias
+
+```bash
+# Con pip
+pip install streamlit plotly requests pandas
+
+# O instalar todas las dependencias del proyecto
+pip install -r requirements.txt
+```
+
+### Paso 2: Configurar Secrets
+
+Crear archivo `.streamlit/secrets.toml`:
+
+```bash
+# Crear directorio
+mkdir -p .streamlit
+
+# Crear archivo de secrets
+cat > .streamlit/secrets.toml << EOF
+API_URL = "http://localhost:8000"
+OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_MODEL = "llama3.2:3b"
+EOF
+```
+
+### Paso 3: Ejecutar App
+
+```bash
+streamlit run streamlit_app.py
+```
+
+✅ Abre tu navegador en: http://localhost:8501
+
+---
+
+## 🐳 Opción 2: Docker (Todo-en-Uno)
+
+### Prerequisito: Docker instalado
+
+```bash
+# Verificar Docker
+docker --version
+```
+
+### Ejecutar con Docker Compose
+
+```bash
+# Iniciar todos los servicios (UI + API + Ollama + MLflow)
+docker-compose -f docker-compose.streamlit.yml up -d
+
+# Ver logs
+docker-compose -f docker-compose.streamlit.yml logs -f
+
+# Acceder a:
+# - Streamlit UI: http://localhost:8501
+# - API: http://localhost:8000
+# - MLflow: http://localhost:5000
+```
+
+### Detener servicios
+
+```bash
+docker-compose -f docker-compose.streamlit.yml down
+```
+
+---
+
+## ☁️ Opción 3: Streamlit Cloud (Gratis)
+
+### Paso 1: Push a GitHub
+
+```bash
+git add .
+git commit -m "feat: add streamlit ui"
+git push origin main
+```
+
+### Paso 2: Deployar
+
+1. Ir a [share.streamlit.io](https://share.streamlit.io/)
+2. Conectar con GitHub
+3. Seleccionar repo: `DanteA0179/mlops_proyecto_atreides`
+4. Main file: `streamlit_app.py`
+5. Click **Deploy**
+
+### Paso 3: Configurar Secrets
+
+En Streamlit Cloud → Settings → Secrets:
+
+```toml
+API_URL = "https://your-api-url.run.app"
+OLLAMA_HOST = "http://localhost:11434"
+```
+
+✅ Tu app estará en: `https://[usuario]-mlops-energy.streamlit.app`
+
+---
+
+## 🧪 Verificar Instalación
+
+### Test 1: Verificar Streamlit
+
+```bash
+streamlit --version
+# Debe mostrar: Streamlit, version 1.29.0 o superior
+```
+
+### Test 2: Verificar Página Principal
+
+```bash
+# Ejecutar app
+streamlit run streamlit_app.py
+
+# Abrir en navegador: http://localhost:8501
+# Debe mostrar página de bienvenida
+```
+
+### Test 3: Verificar API (Opcional)
+
+```bash
+# Verificar que la API esté corriendo
+curl http://localhost:8000/health
+
+# Respuesta esperada: {"status": "healthy"}
+```
+
+### Test 4: Verificar Ollama (Opcional)
+
+```bash
+# Verificar Ollama
+curl http://localhost:11434/api/tags
+
+# Si no está instalado:
+# 1. Instalar: curl -fsSL https://ollama.com/install.sh | sh
+# 2. Iniciar: ollama serve
+# 3. Descargar modelo: ollama pull llama3.2:3b
+```
+
+---
+
+## 🎮 Primeros Pasos
+
+### 1. Explorar la UI
+
+- **🏠 Home**: Información del proyecto
+- **🔮 Predicción**: Hacer predicciones de consumo
+- **💬 Copiloto IA**: Chatear con el asistente
+
+### 2. Hacer tu Primera Predicción
+
+1. Ir a **"🔮 Predicción"**
+2. Ingresar valores:
+   - Potencia Reactiva: 10.0 kVarh
+   - CO2: 0.5 tCO2
+   - Factor de Potencia: 0.85
+3. Seleccionar hora y día
+4. Click en **"🚀 Realizar Predicción"**
+5. Ver resultados y visualizaciones
+
+### 3. Usar el Copiloto IA
+
+1. Ir a **"💬 Copiloto IA"**
+2. Hacer una pregunta o usar preguntas sugeridas:
+   - "¿Cómo puedo reducir mi consumo energético?"
+   - "¿Qué significa el factor de potencia?"
+3. Ver respuesta del asistente
+
+---
+
+## 📝 Archivos Necesarios
+
+Estructura mínima para que la app funcione:
+
+```
+mlops_proyecto_atreides/
+├── streamlit_app.py              ✅ App principal
+├── pages/
+│   ├── 1_🔮_Predicción.py       ✅ Página de predicción
+│   └── 2_💬_Copiloto_IA.py      ✅ Copiloto IA
+├── .streamlit/
+│   ├── config.toml               ⚙️ Configuración
+│   └── secrets.toml              🔐 Secretos (crear)
+└── requirements.txt              📦 Dependencias
+```
+
+---
+
+## ⚙️ Configuración Mínima
+
+### requirements.txt
+
+```txt
+streamlit>=1.29.0
+plotly>=5.18.0
+pandas>=2.0.0
+requests>=2.31.0
+```
+
+### .streamlit/config.toml
+
+```toml
+[server]
+port = 8501
+address = "0.0.0.0"
+
+[theme]
+primaryColor = "#667eea"
+```
+
+### .streamlit/secrets.toml
+
+```toml
+API_URL = "http://localhost:8000"
+OLLAMA_HOST = "http://localhost:11434"
+```
+
+---
+
+## 🔧 Troubleshooting Rápido
+
+### Error: "ModuleNotFoundError: No module named 'streamlit'"
+
+```bash
+pip install streamlit plotly requests pandas
+```
+
+### Error: "Port 8501 is already in use"
+
+```bash
+# Usar puerto diferente
+streamlit run streamlit_app.py --server.port 8502
+```
+
+### Error: "API not available"
+
+La app funcionará en **modo simulado** si la API no está disponible.  
+Las predicciones se harán con heurísticas simples.
+
+### Error: "Ollama not connected"
+
+El copiloto funcionará en **modo simulado** con respuestas predefinidas.  
+Para usar Ollama real:
+
+```bash
+# Instalar Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Iniciar servicio
+ollama serve
+
+# Descargar modelo
+ollama pull llama3.2:3b
+```
+
+---
+
+## 🎓 Próximos Pasos
+
+1. **Personalizar la UI**: Editar colores, agregar secciones
+2. **Conectar con tu API**: Actualizar `API_URL` en secrets
+3. **Deployar a producción**: Seguir [STREAMLIT_DEPLOYMENT.md](docs/STREAMLIT_DEPLOYMENT.md)
+4. **Optimizar performance**: Usar caché de Streamlit
+5. **Agregar features**: Nuevas visualizaciones, análisis
+
+---
+
+## 📚 Documentación Completa
+
+- 📖 [UI_README.md](docs/UI_README.md) - Documentación detallada
+- 🚀 [STREAMLIT_DEPLOYMENT.md](docs/STREAMLIT_DEPLOYMENT.md) - Guía de deployment
+- 🏠 [README.md](README.md) - Documentación del proyecto
+
+---
+
+## 💡 Tips
+
+✅ **Para desarrollo**: Usa modo local con hot reload  
+✅ **Para demos**: Deploya en Streamlit Cloud (gratis)  
+✅ **Para producción**: Usa Google Cloud Run  
+
+---
+
+## ❓ ¿Necesitas Ayuda?
+
+- 📘 [Documentación de Streamlit](https://docs.streamlit.io/)
+- 🐛 [Abrir Issue en GitHub](https://github.com/DanteA0179/mlops_proyecto_atreides/issues)
+- 💬 Contactar al equipo Atreides
+
+---
+
+**Tiempo total de setup**: ⏱️ < 5 minutos  
+**Última actualización**: Noviembre 2025
