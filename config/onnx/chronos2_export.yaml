@@ -1,0 +1,151 @@
+# ONNX Export Configuration for Chronos-2 Foundation Models
+# Energy Optimization Copilot - MLOps Project
+
+chronos2_zeroshot:
+  model:
+    type: chronos2_zeroshot
+    source_path: "amazon/chronos-t5-small"
+    output_path: models/onnx/chronos2_zeroshot.onnx
+    description: "Chronos-2 T5-small zero-shot foundation model for time series forecasting"
+  
+  export:
+    opset_version: 17
+    dynamic_axes:
+      context:
+        0: batch_size
+        1: sequence_length
+      predictions:
+        0: batch_size
+        1: num_samples
+        2: prediction_length
+    
+    optimization:
+      enabled: true
+      level: 1  # Basic optimization for stability (foundation models are complex)
+      quantize: false
+    
+    model_params:
+      context_length: 512
+      prediction_length: 64
+      num_samples: 20
+    
+    device: "cuda"  # Use GPU if available
+    dtype: "float32"
+  
+  validation:
+    tolerance: 1.0e-4  # Slightly higher tolerance for foundation models
+    num_samples: 50    # Fewer samples due to model size
+    enable_gpu: true
+  
+  performance:
+    benchmark_runs: 100  # Fewer runs due to model size
+    warmup_runs: 5
+    batch_sizes: [1, 5, 10]
+  
+  metadata:
+    author: "MLOps Team - Proyecto Atreides"
+    version: "1.0.0"
+    created_date: "2025-11-06"
+    rmse_test: 53.1069  # Zero-shot RMSE on test set
+    model_size_mb: 455
+
+chronos2_finetuned:
+  model:
+    type: chronos2_finetuned
+    source_path: models/foundation/chronos2_finetuned_20251029_144949
+    output_path: models/onnx/chronos2_finetuned.onnx
+    description: "Chronos-2 fine-tuned on steel energy dataset"
+  
+  export:
+    opset_version: 17
+    dynamic_axes:
+      context:
+        0: batch_size
+        1: sequence_length
+      predictions:
+        0: batch_size
+        1: num_samples
+        2: prediction_length
+    
+    optimization:
+      enabled: true
+      level: 1  # Basic optimization for stability
+      quantize: false
+    
+    model_params:
+      context_length: 512
+      prediction_length: 64
+      num_samples: 20
+    
+    device: "cuda"  # Use GPU if available
+    dtype: "float32"
+  
+  validation:
+    tolerance: 1.0e-4  # Slightly higher tolerance for foundation models
+    num_samples: 50    # Fewer samples due to model size
+    enable_gpu: true
+  
+  performance:
+    benchmark_runs: 100
+    warmup_runs: 5
+    batch_sizes: [1, 5, 10]
+  
+  metadata:
+    author: "MLOps Team - Proyecto Atreides"
+    version: "1.0.0"
+    created_date: "2025-11-06"
+    rmse_test: 40.5071  # Fine-tuned RMSE on test set
+    model_size_mb: 455
+
+chronos2_covariates:
+  model:
+    type: chronos2_covariates
+    source_path: models/foundation/chronos2_finetuned_20251029_144949
+    output_path: models/onnx/chronos2_covariates.onnx
+    description: "Chronos-2 fine-tuned with 9 covariates"
+  
+  export:
+    opset_version: 17
+    dynamic_axes:
+      context:
+        0: batch_size
+        1: sequence_length
+      covariates:
+        0: batch_size
+        1: sequence_length
+        2: num_covariates
+      predictions:
+        0: batch_size
+        1: num_samples
+        2: prediction_length
+    
+    optimization:
+      enabled: true
+      level: 1  # Basic optimization for stability
+      quantize: false
+    
+    model_params:
+      context_length: 512
+      prediction_length: 64
+      num_samples: 20
+      num_covariates: 9
+    
+    device: "cuda"  # Use GPU if available
+    dtype: "float32"
+  
+  validation:
+    tolerance: 1.0e-4  # Slightly higher tolerance for foundation models
+    num_samples: 50    # Fewer samples due to model size
+    enable_gpu: true
+  
+  performance:
+    benchmark_runs: 100
+    warmup_runs: 5
+    batch_sizes: [1, 5, 10]
+  
+  metadata:
+    author: "MLOps Team - Proyecto Atreides"
+    version: "1.0.0"
+    created_date: "2025-11-06"
+    rmse_test: 41.5789  # Covariates RMSE on test set
+    model_size_mb: 455

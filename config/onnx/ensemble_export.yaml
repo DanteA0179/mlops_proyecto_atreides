@@ -1,0 +1,86 @@
+# ONNX Export Configuration for Stacking Ensemble Models
+# Energy Optimization Copilot - MLOps Project
+
+ridge_ensemble:
+  model:
+    type: ridge_ensemble
+    source_path: models/ensembles/ensemble_ridge_v2.pkl
+    output_path: models/onnx/ridge_ensemble/
+    description: "Ridge stacking ensemble with XGBoost, LightGBM, CatBoost base models"
+  
+  export:
+    base_models:
+      - name: xgboost
+        type: FloatTensorType
+        shape: [null, 18]
+      - name: lightgbm
+        type: FloatTensorType
+        shape: [null, 18]
+      - name: catboost
+        type: FloatTensorType
+        shape: [null, 18]
+    
+    meta_model:
+      name: ridge
+      type: FloatTensorType
+      shape: [null, 3]  # 3 base model predictions
+    
+    optimization:
+      enabled: true
+      level: 2
+      quantize: false
+    
+    opset_version: 17
+  
+  validation:
+    tolerance: 1.0e-5
+    num_samples: 100
+    enable_gpu: true
+  
+  metadata:
+    author: "MLOps Team - Proyecto Atreides"
+    version: "1.0.0"
+    created_date: "2025-11-06"
+    rmse_test: 12.8151  # Best ensemble RMSE on test set
+
+lightgbm_ensemble:
+  model:
+    type: lightgbm_ensemble
+    source_path: models/ensembles/ensemble_lightgbm_v1.pkl
+    output_path: models/onnx/lightgbm_ensemble/
+    description: "LightGBM stacking ensemble with XGBoost, LightGBM, CatBoost base models"
+  
+  export:
+    base_models:
+      - name: xgboost
+        type: FloatTensorType
+        shape: [null, 18]
+      - name: lightgbm
+        type: FloatTensorType
+        shape: [null, 18]
+      - name: catboost
+        type: FloatTensorType
+        shape: [null, 18]
+    
+    meta_model:
+      name: lightgbm
+      type: FloatTensorType
+      shape: [null, 3]  # 3 base model predictions
+    
+    optimization:
+      enabled: true
+      level: 2
+      quantize: false
+    
+    opset_version: 17
+  
+  validation:
+    tolerance: 1.0e-5
+    num_samples: 100
+    enable_gpu: true
+  
+  metadata:
+    author: "MLOps Team - Proyecto Atreides"
+    version: "1.0.0"
+    created_date: "2025-11-06"
+    rmse_test: 12.7982  # Best model overall RMSE on test set
