@@ -1,0 +1,398 @@
+# ✅ Checklist de Aceptación - US-032 y US-033
+
+Sistema de Optimización Energética - Atreides
+
+---
+
+## 📋 US-032: Streamlit UI - Página de Predicción
+
+**Como**: Usuario final  
+**Quiero**: Una interfaz web intuitiva  
+**Para**: Usar el sistema sin conocimientos técnicos
+
+### Criterios de Aceptación
+
+#### ✅ 1. App Streamlit con 3 Páginas
+
+- [ ] **Página 1: Home/Introducción**
+  - [ ] Título del proyecto visible
+  - [ ] Descripción del objetivo
+  - [ ] Información del dataset (35,040 registros)
+  - [ ] Stack tecnológico listado
+  - [ ] Información del equipo Atreides
+  - [ ] Métricas del modelo (RMSE, MAE, CV)
+  - [ ] Enlaces a recursos (GitHub, MLflow, Dagster, API)
+
+- [ ] **Página 2: Predicción Simple**
+  - [ ] Formulario de entrada con todos los campos requeridos:
+    - [ ] Lagging Current Reactive Power (kVarh)
+    - [ ] Leading Current Reactive Power (kVarh)
+    - [ ] CO2 (tCO2)
+    - [ ] Lagging Current Power Factor (slider 0-1)
+    - [ ] Leading Current Power Factor (slider 0-1)
+    - [ ] NSM (calculado desde fecha/hora)
+    - [ ] Día de la semana (auto-detectado)
+    - [ ] Tipo de carga (selector)
+    - [ ] Week Status (radio buttons)
+  - [ ] Botón "Realizar Predicción" visible y funcional
+  - [ ] Área de resultados de predicción
+
+- [ ] **Página 3: Copiloto Conversacional**
+  - [ ] Interfaz de chat implementada
+  - [ ] Campo de entrada de texto (st.chat_input)
+  - [ ] Área de mensajes de conversación
+  - [ ] Preguntas sugeridas visibles
+  - [ ] Integración con Ollama/LLM
+  - [ ] Historial de conversaciones
+  - [ ] Botones de control (limpiar, guardar)
+
+#### ✅ 2. Formulario de Entrada con Validación
+
+- [ ] **Validaciones Implementadas**:
+  - [ ] Potencia reactiva no puede ser negativa
+  - [ ] CO2 debe estar entre 0 y 100 tCO2
+  - [ ] Factores de potencia entre 0 y 1
+  - [ ] NSM entre 0 y 86400 segundos
+  - [ ] Mensajes de error claros y específicos
+  - [ ] Validación antes de enviar predicción
+
+- [ ] **UX del Formulario**:
+  - [ ] Labels descriptivos en cada campo
+  - [ ] Tooltips con información adicional (help parameter)
+  - [ ] Valores por defecto razonables
+  - [ ] Campos organizados en secciones lógicas
+  - [ ] Responsive en diferentes tamaños de pantalla
+
+#### ✅ 3. Visualización de Resultados
+
+- [ ] **Gauges (Indicadores Circulares)**:
+  - [ ] Gauge de consumo energético (kWh)
+  - [ ] Gauge de eficiencia (%)
+  - [ ] Gauge de emisiones CO2 (tCO2)
+  - [ ] Colores indicativos (verde/amarillo/rojo)
+  - [ ] Valores numéricos visibles
+
+- [ ] **Gráficos Adicionales**:
+  - [ ] Gráfico de barras comparativo de parámetros
+  - [ ] Gráfico de tendencia (si hay múltiples predicciones)
+  - [ ] Interactividad (hover, zoom)
+  - [ ] Títulos y ejes etiquetados correctamente
+
+- [ ] **Tarjeta de Predicción Principal**:
+  - [ ] Consumo predicho destacado (grande y visible)
+  - [ ] Timestamp de la predicción
+  - [ ] Diseño atractivo (gradientes, sombras)
+
+- [ ] **Historial de Predicciones**:
+  - [ ] Tabla con predicciones anteriores
+  - [ ] Últimas 10 predicciones visibles
+  - [ ] Columnas: Timestamp, Consumo, Tipo de Carga, CO2
+  - [ ] Botón para limpiar historial
+
+#### ✅ 4. Responsive Design
+
+- [ ] **Adaptabilidad**:
+  - [ ] Funciona en desktop (1920x1080)
+  - [ ] Funciona en tablet (768x1024)
+  - [ ] Funciona en móvil (375x667)
+  - [ ] Layout se ajusta con st.columns()
+  - [ ] Sidebar colapsable en móviles
+
+- [ ] **Performance**:
+  - [ ] Carga inicial < 3 segundos
+  - [ ] Predicción < 2 segundos
+  - [ ] Sin lag en interacciones
+  - [ ] Uso de caché donde sea apropiado
+
+#### ✅ 5. Elementos Adicionales
+
+- [ ] **Sidebar Informativo**:
+  - [ ] Logo/icono del proyecto
+  - [ ] Información del equipo
+  - [ ] Métricas destacadas
+  - [ ] Enlaces útiles
+
+- [ ] **Estilos y Tema**:
+  - [ ] CSS personalizado aplicado
+  - [ ] Colores consistentes (primaryColor: #667eea)
+  - [ ] Tipografía legible
+  - [ ] Espaciado adecuado
+
+- [ ] **Experiencia de Usuario**:
+  - [ ] Mensajes de loading durante predicción
+  - [ ] Feedback visual claro (success/error/warning)
+  - [ ] Navegación intuitiva entre páginas
+  - [ ] Sin errores en consola del navegador
+
+---
+
+## 🚀 US-033: Deployment de Streamlit
+
+**Como**: Usuario  
+**Quiero**: Acceder a la app desde cualquier lugar  
+**Para**: No depender de entorno local
+
+### Criterios de Aceptación
+
+#### ✅ 1. Dockerizar App Streamlit
+
+- [ ] **Dockerfile.streamlit Creado**:
+  - [ ] FROM Python 3.11-slim
+  - [ ] WORKDIR configurado
+  - [ ] Dependencias instaladas (Poetry o pip)
+  - [ ] Archivos de app copiados
+  - [ ] EXPOSE 8501
+  - [ ] CMD con streamlit run
+  - [ ] Healthcheck configurado
+
+- [ ] **Build Exitoso**:
+  - [ ] `docker build -f Dockerfile.streamlit -t energy-optimizer-ui .` funciona
+  - [ ] Imagen creada sin errores
+  - [ ] Tamaño de imagen razonable (< 1GB)
+
+- [ ] **Run Local Exitoso**:
+  - [ ] `docker run -p 8501:8501 energy-optimizer-ui` funciona
+  - [ ] App accesible en http://localhost:8501
+  - [ ] Todas las funcionalidades operan correctamente
+  - [ ] Variables de entorno se pasan correctamente
+
+- [ ] **Docker Compose**:
+  - [ ] `docker-compose.streamlit.yml` creado
+  - [ ] Servicio streamlit configurado
+  - [ ] Servicios complementarios (API, Ollama, MLflow) opcionales
+  - [ ] Networks configurados
+  - [ ] Volumes para persistencia (si aplica)
+  - [ ] `docker-compose up -d` funciona sin errores
+
+#### ✅ 2. Deployar en Cloud Run
+
+- [ ] **Scripts de Deployment**:
+  - [ ] `deploy_streamlit_cloudrun.sh` (Linux/macOS) creado
+  - [ ] `deploy_streamlit_cloudrun.ps1` (Windows) creado
+  - [ ] Scripts con permisos de ejecución
+  - [ ] Scripts verifican dependencias (gcloud, docker)
+  - [ ] Scripts manejan errores apropiadamente
+  - [ ] Output informativo y coloreado
+
+- [ ] **Configuración de GCP**:
+  - [ ] Proyecto GCP configurado
+  - [ ] APIs habilitadas (Cloud Build, Cloud Run, Container Registry)
+  - [ ] Autenticación configurada
+  - [ ] Service account con permisos adecuados
+
+- [ ] **Build y Push a GCR**:
+  - [ ] Imagen se sube exitosamente a gcr.io
+  - [ ] Tag con timestamp creado
+  - [ ] Tag latest actualizado
+
+- [ ] **Deployment a Cloud Run**:
+  - [ ] Servicio se despliega sin errores
+  - [ ] Puerto 8501 configurado
+  - [ ] Recursos asignados (2Gi RAM, 2 CPU)
+  - [ ] Min instances = 0 (ahorro de costos)
+  - [ ] Max instances = 5 (escalabilidad)
+  - [ ] Allow unauthenticated (acceso público)
+  - [ ] Variables de entorno configuradas
+  - [ ] Timeout adecuado (300s)
+
+- [ ] **Verificación Post-Deployment**:
+  - [ ] URL pública generada
+  - [ ] App accesible desde internet
+  - [ ] HTTPS funcionando (SSL automático)
+  - [ ] Health check respondiendo
+  - [ ] Logs disponibles en Cloud Console
+
+#### ✅ 3. Deployar en Streamlit Cloud (Alternativa Gratuita)
+
+- [ ] **Preparación del Repositorio**:
+  - [ ] Código en GitHub (público o privado con acceso)
+  - [ ] `requirements.txt` en raíz del proyecto
+  - [ ] `streamlit_app.py` en raíz
+  - [ ] `.streamlit/config.toml` configurado
+  - [ ] Archivos innecesarios en `.gitignore`
+
+- [ ] **Configuración en Streamlit Cloud**:
+  - [ ] Cuenta creada en share.streamlit.io
+  - [ ] Repositorio conectado
+  - [ ] App deployada
+  - [ ] Secrets configurados en dashboard
+  - [ ] Auto-deploy desde GitHub habilitado
+
+- [ ] **Verificación**:
+  - [ ] URL pública generada (*.streamlit.app)
+  - [ ] App accesible públicamente
+  - [ ] Certificado SSL activo
+  - [ ] Reinicio automático en push a GitHub
+
+#### ✅ 4. URL Pública Accesible
+
+- [ ] **Accesibilidad**:
+  - [ ] URL funciona desde cualquier navegador
+  - [ ] Funciona desde diferentes redes (WiFi, móvil)
+  - [ ] No requiere VPN o configuración especial
+  - [ ] Tiempo de carga aceptable (< 5 segundos inicial)
+
+- [ ] **Monitoreo**:
+  - [ ] Health checks funcionando
+  - [ ] Logs accesibles
+  - [ ] Métricas disponibles (Cloud Run o Streamlit Cloud)
+  - [ ] Alertas configuradas (opcional)
+
+#### ✅ 5. Documentación de Deployment
+
+- [ ] **STREAMLIT_DEPLOYMENT.md Completo**:
+  - [ ] Instrucciones de deployment local
+  - [ ] Instrucciones para Streamlit Cloud
+  - [ ] Instrucciones para Google Cloud Run
+  - [ ] Troubleshooting común
+  - [ ] Comparación de opciones
+  - [ ] Ejemplos de comandos
+
+- [ ] **QUICKSTART.md Creado**:
+  - [ ] Guía de inicio rápido (< 5 minutos)
+  - [ ] Opciones claramente explicadas
+  - [ ] Comandos copy-paste listos
+  - [ ] Verificación de instalación
+
+- [ ] **UI_README.md Completo**:
+  - [ ] Descripción de características
+  - [ ] Arquitectura de la UI
+  - [ ] Guía de uso
+  - [ ] Personalización
+  - [ ] Referencias
+
+---
+
+## 🧪 Testing y Validación
+
+### Tests Manuales
+
+- [ ] **Flujo Completo de Predicción**:
+  1. [ ] Abrir app
+  2. [ ] Navegar a Predicción
+  3. [ ] Ingresar valores válidos
+  4. [ ] Hacer predicción
+  5. [ ] Verificar resultado
+  6. [ ] Verificar visualizaciones
+
+- [ ] **Flujo Completo de Chat**:
+  1. [ ] Abrir app
+  2. [ ] Navegar a Copiloto IA
+  3. [ ] Hacer pregunta
+  4. [ ] Verificar respuesta
+  5. [ ] Usar pregunta sugerida
+  6. [ ] Guardar conversación
+
+- [ ] **Validaciones**:
+  1. [ ] Ingresar valor negativo → ver error
+  2. [ ] Ingresar valor fuera de rango → ver error
+  3. [ ] Dejar campo vacío → ver comportamiento
+  4. [ ] Corregir error → verificar que desaparezca
+
+### Tests de Deployment
+
+- [ ] **Docker Local**:
+  - [ ] Build exitoso
+  - [ ] Run exitoso
+  - [ ] App funcional en container
+  - [ ] Logs accesibles
+
+- [ ] **Cloud Run** (si aplica):
+  - [ ] Deploy exitoso
+  - [ ] URL pública accesible
+  - [ ] App funcional en cloud
+  - [ ] Escalado automático funciona
+
+- [ ] **Streamlit Cloud** (si aplica):
+  - [ ] Deploy exitoso
+  - [ ] URL pública accesible
+  - [ ] Auto-deploy funciona
+  - [ ] Secrets cargados correctamente
+
+---
+
+## 📊 Criterios de Calidad
+
+### Performance
+
+- [ ] Carga inicial < 3 segundos
+- [ ] Predicción < 2 segundos
+- [ ] Respuesta chat < 5 segundos
+- [ ] Sin lag en interacciones
+
+### UX/UI
+
+- [ ] Diseño atractivo y moderno
+- [ ] Navegación intuitiva
+- [ ] Mensajes de error claros
+- [ ] Feedback visual apropiado
+- [ ] Responsive en todos los dispositivos
+
+### Código
+
+- [ ] Código bien organizado
+- [ ] Comentarios donde necesario
+- [ ] Sin errores en consola
+- [ ] Sin warnings de deprecación
+- [ ] Buenas prácticas seguidas
+
+### Documentación
+
+- [ ] README claro y completo
+- [ ] Deployment docs detalladas
+- [ ] Quickstart fácil de seguir
+- [ ] Ejemplos funcionales
+- [ ] Troubleshooting útil
+
+---
+
+## ✅ Firma de Aceptación
+
+**User Stories Completadas**: [ ] US-032 [ ] US-033
+
+**Verificado por**:
+- [ ] Product Owner: _________________
+- [ ] Scrum Master (Dante): _________________
+- [ ] QA/Testing: _________________
+
+**Fecha de Completación**: _______________
+
+**Notas Adicionales**:
+```
+[Agregar notas, observaciones o issues pendientes]
+```
+
+---
+
+## 🔄 Proceso de Verificación
+
+### Ejecución del Script de Verificación
+
+```bash
+# Dar permisos
+chmod +x scripts/verify_us032_us033.py
+
+# Ejecutar verificación
+python scripts/verify_us032_us033.py
+```
+
+**Resultado Esperado**: ✅ Todos los checks pasados (100%)
+
+### Checklist de Revisión Manual
+
+1. [ ] Ejecutar `streamlit run streamlit_app.py`
+2. [ ] Navegar por las 3 páginas
+3. [ ] Realizar al menos 3 predicciones
+4. [ ] Chatear con el copiloto IA
+5. [ ] Verificar responsive design
+6. [ ] Probar validaciones de errores
+7. [ ] Verificar visualizaciones
+8. [ ] Build de Docker exitoso
+9. [ ] Deployment a Cloud/Streamlit Cloud
+10. [ ] URL pública accesible
+
+---
+
+**Última actualización**: Noviembre 2025  
+**Versión**: 1.0  
+**Proyecto**: MLOps - Sistema de Optimización Energética Atreides
