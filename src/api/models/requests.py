@@ -144,16 +144,78 @@ class PredictionRequest(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "example": {
-                "lagging_reactive_power": 23.45,
-                "leading_reactive_power": 12.30,
-                "co2": 0.05,
-                "lagging_power_factor": 0.85,
-                "leading_power_factor": 0.92,
-                "nsm": 36000,
-                "day_of_week": 1,
-                "load_type": "Medium",
-            }
+            "examples": [
+                {
+                    "summary": "Carga Light - Turno Nocturno",
+                    "description": "Predicción para carga ligera durante la madrugada (2:00 AM)",
+                    "value": {
+                        "lagging_reactive_power": 15.20,
+                        "leading_reactive_power": 8.50,
+                        "co2": 0.03,
+                        "lagging_power_factor": 0.88,
+                        "leading_power_factor": 0.95,
+                        "nsm": 7200,
+                        "day_of_week": 1,
+                        "load_type": "Light",
+                    }
+                },
+                {
+                    "summary": "Carga Medium - Turno Diurno",
+                    "description": "Predicción para carga media durante el turno matutino (10:00 AM)",
+                    "value": {
+                        "lagging_reactive_power": 23.45,
+                        "leading_reactive_power": 12.30,
+                        "co2": 0.05,
+                        "lagging_power_factor": 0.85,
+                        "leading_power_factor": 0.92,
+                        "nsm": 36000,
+                        "day_of_week": 1,
+                        "load_type": "Medium",
+                    }
+                },
+                {
+                    "summary": "Carga Maximum - Pico de Producción",
+                    "description": "Predicción para carga máxima durante el turno vespertino (2:00 PM)",
+                    "value": {
+                        "lagging_reactive_power": 45.80,
+                        "leading_reactive_power": 25.60,
+                        "co2": 0.12,
+                        "lagging_power_factor": 0.75,
+                        "leading_power_factor": 0.85,
+                        "nsm": 50400,
+                        "day_of_week": 3,
+                        "load_type": "Maximum",
+                    }
+                },
+                {
+                    "summary": "Carga Medium - Fin de Semana",
+                    "description": "Predicción para operación reducida en fin de semana (12:00 PM)",
+                    "value": {
+                        "lagging_reactive_power": 19.30,
+                        "leading_reactive_power": 10.20,
+                        "co2": 0.04,
+                        "lagging_power_factor": 0.82,
+                        "leading_power_factor": 0.90,
+                        "nsm": 43200,
+                        "day_of_week": 5,
+                        "load_type": "Medium",
+                    }
+                },
+                {
+                    "summary": "Carga Maximum - Turno Tarde Completo",
+                    "description": "Predicción para máxima producción en turno de tarde (4:00 PM)",
+                    "value": {
+                        "lagging_reactive_power": 52.10,
+                        "leading_reactive_power": 29.80,
+                        "co2": 0.15,
+                        "lagging_power_factor": 0.72,
+                        "leading_power_factor": 0.82,
+                        "nsm": 57600,
+                        "day_of_week": 2,
+                        "load_type": "Maximum",
+                    }
+                }
+            ]
         }
     }
 
@@ -183,20 +245,6 @@ class BatchPredictionRequest(BaseModel):
         ...,
         max_length=1000,
         description="List of prediction requests (max 1000)",
-        examples=[
-            [
-                {
-                    "lagging_reactive_power": 23.45,
-                    "leading_reactive_power": 12.30,
-                    "co2": 0.05,
-                    "lagging_power_factor": 0.85,
-                    "leading_power_factor": 0.92,
-                    "nsm": 36000,
-                    "day_of_week": 1,
-                    "load_type": "Medium",
-                }
-            ]
-        ],
     )
 
     @field_validator("predictions")
@@ -225,3 +273,76 @@ class BatchPredictionRequest(BaseModel):
         if len(v) > 1000:
             raise ValueError("Batch cannot exceed 1000 predictions")
         return v
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "summary": "Batch Pequeño - 2 Predicciones",
+                    "description": "Lote pequeño con 2 predicciones (Light y Medium)",
+                    "value": {
+                        "predictions": [
+                            {
+                                "lagging_reactive_power": 15.20,
+                                "leading_reactive_power": 8.50,
+                                "co2": 0.03,
+                                "lagging_power_factor": 0.88,
+                                "leading_power_factor": 0.95,
+                                "nsm": 7200,
+                                "day_of_week": 1,
+                                "load_type": "Light",
+                            },
+                            {
+                                "lagging_reactive_power": 23.45,
+                                "leading_reactive_power": 12.30,
+                                "co2": 0.05,
+                                "lagging_power_factor": 0.85,
+                                "leading_power_factor": 0.92,
+                                "nsm": 36000,
+                                "day_of_week": 1,
+                                "load_type": "Medium",
+                            }
+                        ]
+                    }
+                },
+                {
+                    "summary": "Batch Turno Completo - 3 Predicciones",
+                    "description": "Predicciones para un turno completo (mañana, tarde, noche)",
+                    "value": {
+                        "predictions": [
+                            {
+                                "lagging_reactive_power": 23.45,
+                                "leading_reactive_power": 12.30,
+                                "co2": 0.05,
+                                "lagging_power_factor": 0.85,
+                                "leading_power_factor": 0.92,
+                                "nsm": 28800,
+                                "day_of_week": 1,
+                                "load_type": "Medium",
+                            },
+                            {
+                                "lagging_reactive_power": 45.80,
+                                "leading_reactive_power": 25.60,
+                                "co2": 0.12,
+                                "lagging_power_factor": 0.75,
+                                "leading_power_factor": 0.85,
+                                "nsm": 50400,
+                                "day_of_week": 1,
+                                "load_type": "Maximum",
+                            },
+                            {
+                                "lagging_reactive_power": 15.20,
+                                "leading_reactive_power": 8.50,
+                                "co2": 0.03,
+                                "lagging_power_factor": 0.88,
+                                "leading_power_factor": 0.95,
+                                "nsm": 72000,
+                                "day_of_week": 1,
+                                "load_type": "Light",
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }

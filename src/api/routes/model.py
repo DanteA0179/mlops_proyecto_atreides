@@ -59,11 +59,86 @@ def set_services(model_svc, feature_svc):
     response_model=ModelInfoResponse,
     status_code=status.HTTP_200_OK,
     summary="Model Information",
-    description="Returns detailed information about the loaded model",
+    description="""
+    Retorna información detallada del modelo de ML cargado.
+    
+    Incluye metadata del modelo, arquitectura del ensemble, features utilizadas,
+    métricas de entrenamiento y referencias a MLflow para trazabilidad.
+    """,
+    response_description="Información completa del modelo",
+    responses={
+        200: {
+            "description": "Información del modelo obtenida exitosamente",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "model_type": "stacking_ensemble",
+                        "model_version": "stacking_ensemble_v1",
+                        "model_name": "Stacking Ensemble",
+                        "trained_on": "2025-11-16T10:30:00Z",
+                        "training_dataset": {
+                            "name": "steel_featured.parquet",
+                            "samples": 27928,
+                            "features": 18
+                        },
+                        "base_models": [
+                            {"name": "XGBoost", "contribution_pct": 19.3},
+                            {"name": "LightGBM", "contribution_pct": 40.5},
+                            {"name": "CatBoost", "contribution_pct": 40.2}
+                        ],
+                        "training_metrics": {
+                            "rmse": 12.7982,
+                            "r2": 0.8702,
+                            "mae": 3.4731
+                        }
+                    }
+                }
+            }
+        },
+        503: {
+            "description": "Modelo no cargado",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Model not loaded"}
+                }
+            }
+        }
+    }
 )
 async def get_model_info() -> ModelInfoResponse:
     """
     Get detailed model information.
+    
+    ## Descripción
+    Proporciona información completa sobre el modelo actualmente cargado:
+    - **Arquitectura**: Tipo de modelo (ensemble, single)
+    - **Versión**: Identificador único del modelo
+    - **Features**: Lista de características utilizadas
+    - **Métricas**: Performance en conjunto de entrenamiento
+    - **Trazabilidad**: Referencias a MLflow y artifacts
+    
+    ## Casos de Uso
+    - Auditoría de modelos en producción
+    - Documentación automática de sistemas
+    - Debugging y troubleshooting
+    - Compliance y governance
+    
+    ## Ejemplo curl
+    ```bash
+    curl http://localhost:8000/model/info
+    ```
+    
+    ## Ejemplo Python
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8000/model/info")
+    info = response.json()
+    
+    print(f"Modelo: {info['model_name']}")
+    print(f"RMSE: {info['training_metrics']['rmse']}")
+    print(f"Features: {len(info['features'])}")
+    ```
 
     Returns model metadata, features, training metrics, and MLflow info.
 
@@ -148,11 +223,90 @@ async def get_model_info() -> ModelInfoResponse:
     response_model=ModelMetricsResponse,
     status_code=status.HTTP_200_OK,
     summary="Model Metrics",
-    description="Returns current performance metrics and statistics",
+    description="""
+    Retorna métricas actuales de performance y estadísticas de producción.
+    
+    Combina métricas de entrenamiento con métricas de producción en tiempo real,
+    incluyendo latencias, throughput, distribución de predicciones y salud del sistema.
+    """,
+    response_description="Métricas del modelo y del sistema",
+    responses={
+        200: {
+            "description": "Métricas obtenidas exitosamente",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "model_version": "stacking_ensemble_v1",
+                        "timestamp": "2025-11-16T10:30:00Z",
+                        "training_metrics": {
+                            "rmse": 12.7982,
+                            "r2": 0.8702,
+                            "mae": 3.4731
+                        },
+                        "production_metrics": {
+                            "total_predictions": 15234,
+                            "predictions_last_24h": 1523,
+                            "avg_prediction_time_ms": 45.32,
+                            "p95_prediction_time_ms": 78.10,
+                            "error_rate_percent": 0.02
+                        },
+                        "load_type_distribution": {
+                            "Light": 4523,
+                            "Medium": 7234,
+                            "Maximum": 3477
+                        }
+                    }
+                }
+            }
+        },
+        503: {
+            "description": "Métricas no disponibles"
+        }
+    }
 )
 async def get_model_metrics() -> ModelMetricsResponse:
     """
     Get current model metrics.
+    
+    ## Descripción
+    Endpoint de monitoreo que proporciona:
+    - **Métricas de Entrenamiento**: RMSE, MAE, R² del test set
+    - **Métricas de Producción**: Total de predicciones, latencias, error rate
+    - **Distribución de Cargas**: Conteo por tipo (Light, Medium, Maximum)
+    - **Salud del Sistema**: CPU, memoria, uptime
+    
+    ## Uso en Dashboards
+    Este endpoint es ideal para integración con dashboards de monitoreo:
+    - Grafana
+    - Datadog
+    - New Relic
+    - Prometheus
+    
+    ## Alertas Sugeridas
+    - `p95_prediction_time_ms > 200`: Latencia alta
+    - `error_rate_percent > 1.0`: Tasa de error elevada
+    - `memory_usage_mb > 1000`: Uso de memoria alto
+    
+    ## Ejemplo curl
+    ```bash
+    curl http://localhost:8000/model/metrics
+    ```
+    
+    ## Ejemplo Python - Monitoreo
+    ```python
+    import requests
+    import time
+    
+    while True:
+        response = requests.get("http://localhost:8000/model/metrics")
+        metrics = response.json()
+        
+        p95 = metrics['production_metrics']['p95_prediction_time_ms']
+        if p95 > 200:
+            print(f"⚠️ ALERTA: Latencia P95 = {p95}ms")
+        
+        time.sleep(60)  # Check cada minuto
+    ```
 
     Returns training metrics, production metrics, and system health.
 
