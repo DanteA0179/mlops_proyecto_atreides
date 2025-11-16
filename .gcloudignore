@@ -1,0 +1,75 @@
+# This file specifies files that are *not* uploaded to Google Cloud when
+# deploying a service. It works similarly to a .gitignore file.
+
+# Python and environment files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+env/
+*.egg-info/
+.poetry/
+
+# IDE and editor configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git and DVC
+.git/
+.gitignore
+.dvc/
+.dvcignore
+
+# Local data and models (should be handled by DVC/GCS)
+data/raw/
+data/processed/
+models/trained/
+models/foundation/
+# Keep models needed for API deployment
+# models/baselines/
+# models/ensembles/
+# models/gradient_boosting/
+# models/preprocessing/
+
+# Notebooks and reports
+notebooks/
+reports/
+htmlcov/
+.pytest_cache/
+mlruns/
+mlflow/
+
+# Build and distribution artifacts
+dist/
+build/
+*.spec
+
+# Documentation and miscellaneous
+docs/
+CONTRIBUTING.md
+AGENTS.md
+LICENSE
+README.md
+poetry.lock
+# Keep pyproject.toml as it's needed for dependency installation
+# pyproject.toml
+
+# Scripts not needed in the cloud environment
+scripts/
+test_dagster_load.py
+
+# Other
+.ruff_cache/
+dagster_home/
+planeacion/
+context/
+specs/
+frontend/
+logs/
+*.log
+*.dvc
