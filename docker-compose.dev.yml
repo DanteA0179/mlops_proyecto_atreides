@@ -1,0 +1,56 @@
+# Docker Compose for DEVELOPMENT
+# Hot reload enabled, volumes mounted
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: energy-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=debug
+      - MODEL_TYPE=stacking_ensemble
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      # Mount models directory
+      - ./models:/app/models
+      # Mount data directory
+      - ./data:/app/data
+      # Mount reports directory
+      - ./reports:/app/reports
+    command: >
+      uvicorn src.api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level debug
+    networks:
+      - energy-net
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - ./mlflow:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    networks:
+      - energy-net
+
+networks:
+  energy-net:
+    driver: bridge
+    name: energy-optimization-network
