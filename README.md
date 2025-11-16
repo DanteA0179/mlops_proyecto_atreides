@@ -788,6 +788,8 @@ curl -X POST "http://localhost:8000/predict" \
 ### Documentación del Proyecto
 - [Plan de Proyecto](context/PlaneacionProyecto.md)
 - [ML Canvas](docs/ml_canvas.md) (pendiente)
+- [API Documentation](http://localhost:8000/docs) (Swagger UI)
+- [Sistema de Monitoreo](src/monitoring/README.md) - Guía de monitoreo y drift detection con Evidently
 - [Architecture Decision Records](docs/adr/) (pendiente)
 
 ## 🤝 Contribución
