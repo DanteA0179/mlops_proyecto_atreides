@@ -1,0 +1,5 @@
+outs:
+- md5: 925c8d4cbed4e72829fede10204902ce
+  size: 17164936
+  hash: md5
+  path: lightgbm_base_catboost.onnx

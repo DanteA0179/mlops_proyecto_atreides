@@ -1,0 +1,493 @@
+# 🛠️ Instrucciones de Setup - Streamlit UI
+
+Guía paso a paso para configurar el entorno de desarrollo de la UI de Streamlit.
+
+---
+
+## 📦 Instalación de Dependencias
+
+### Opción 1: Con Poetry (Recomendado)
+
+El proyecto ya usa Poetry, así que las dependencias de Streamlit ya deberían estar incluidas.
+
+```bash
+# Verificar que Poetry esté instalado
+poetry --version
+
+# Instalar/actualizar dependencias
+poetry install
+
+# Activar entorno virtual
+poetry shell
+
+# Verificar instalación de Streamlit
+streamlit --version
+```
+
+### Opción 2: Con pip
+
+Si prefieres usar pip directamente:
+
+```bash
+# Crear entorno virtual
+python -m venv venv
+
+# Activar entorno virtual
+# Windows:
+.\venv\Scripts\activate
+# Linux/macOS:
+source venv/bin/activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Verificar instalación
+streamlit --version
+```
+
+### Dependencias Principales
+
+```txt
+streamlit>=1.29.0      # Framework de UI
+plotly>=5.18.0         # Visualizaciones interactivas
+pandas>=2.0.0          # Manejo de datos
+requests>=2.31.0       # HTTP requests para API
+```
+
+---
+
+## ⚙️ Configuración de Streamlit
+
+### 1. Crear Directorio de Configuración
+
+```bash
+mkdir -p .streamlit
+```
+
+### 2. Crear config.toml
+
+Crea el archivo `.streamlit/config.toml`:
+
+```bash
+cat > .streamlit/config.toml << 'EOF'
+[server]
+port = 8501
+address = "0.0.0.0"
+enableCORS = false
+enableXsrfProtection = false
+maxUploadSize = 200
+headless = true
+
+[browser]
+serverAddress = "0.0.0.0"
+gatherUsageStats = false
+serverPort = 8501
+
+[theme]
+primaryColor = "#667eea"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+font = "sans serif"
+
+[runner]
+magicEnabled = true
+fastReruns = true
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"
+
+[logger]
+level = "info"
+EOF
+```
+
+### 3. Crear secrets.toml (Development)
+
+Crea el archivo `.streamlit/secrets.toml`:
+
+```bash
+cat > .streamlit/secrets.toml << 'EOF'
+# Development secrets (NO COMMITEAR!)
+
+# API Configuration
+API_URL = "http://localhost:8000"
+
+# Ollama Configuration
+OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_MODEL = "llama3.2:3b"
+
+# MLflow Configuration (opcional)
+MLFLOW_TRACKING_URI = "http://localhost:5000"
+
+# GCP Configuration (para deployment)
+# GCP_PROJECT_ID = "mlops-atreides-2025"
+# GCS_BUCKET_NAME = "energy-optimizer-data"
+EOF
+```
+
+### 4. Agregar al .gitignore
+
+Asegúrate de que `.streamlit/secrets.toml` esté en `.gitignore`:
+
+```bash
+echo ".streamlit/secrets.toml" >> .gitignore
+```
+
+---
+
+## 🔧 Configuración de Servicios Externos
+
+### API Backend (FastAPI)
+
+La UI necesita comunicarse con tu API de predicción.
+
+#### Verificar que la API esté corriendo:
+
+```bash
+# Opción 1: Verificar con curl
+curl http://localhost:8000/health
+
+# Opción 2: Con Python
+python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
+```
+
+#### Si la API no está corriendo:
+
+```bash
+# Con Poetry
+poetry run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Con docker-compose
+docker-compose up -d api
+```
+
+### Ollama (Copiloto IA)
+
+Ollama es necesario para el copiloto conversacional.
+
+#### 1. Instalar Ollama
+
+**Linux/macOS:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**Windows:**
+- Descargar desde: https://ollama.com/download
+- Ejecutar instalador
+
+#### 2. Iniciar Servicio
+
+```bash
+# Iniciar Ollama en background
+ollama serve
+```
+
+#### 3. Descargar Modelo
+
+```bash
+# Descargar Llama 3.2 (3B parámetros)
+ollama pull llama3.2:3b
+
+# Verificar que se descargó
+ollama list
+```
+
+#### 4. Probar Ollama
+
+```bash
+# Test simple
+ollama run llama3.2:3b "¿Qué es la optimización energética?"
+
+# Test via API
+curl http://localhost:11434/api/tags
+```
+
+### MLflow (Opcional)
+
+Para tracking de experimentos.
+
+```bash
+# Iniciar MLflow UI
+poetry run mlflow ui --port 5000
+
+# O con docker-compose
+docker-compose up -d mlflow
+```
+
+---
+
+## 🐳 Setup con Docker
+
+### Opción 1: Solo Streamlit
+
+```bash
+# Build
+docker build -f Dockerfile.streamlit -t energy-optimizer-ui:latest .
+
+# Run
+docker run -d \
+  --name energy-optimizer-ui \
+  -p 8501:8501 \
+  -e API_URL=http://host.docker.internal:8000 \
+  -e OLLAMA_HOST=http://host.docker.internal:11434 \
+  energy-optimizer-ui:latest
+
+# Ver logs
+docker logs -f energy-optimizer-ui
+
+# Detener
+docker stop energy-optimizer-ui
+docker rm energy-optimizer-ui
+```
+
+### Opción 2: Stack Completo (docker-compose)
+
+```bash
+# Iniciar todos los servicios
+docker-compose -f docker-compose.streamlit.yml up -d
+
+# Ver logs de todos los servicios
+docker-compose -f docker-compose.streamlit.yml logs -f
+
+# Ver logs de Streamlit solamente
+docker-compose -f docker-compose.streamlit.yml logs -f streamlit
+
+# Verificar estado
+docker-compose -f docker-compose.streamlit.yml ps
+
+# Detener todo
+docker-compose -f docker-compose.streamlit.yml down
+
+# Detener y remover volumes
+docker-compose -f docker-compose.streamlit.yml down -v
+```
+
+---
+
+## 🧪 Verificación de Setup
+
+### 1. Verificar Instalación de Python y Dependencias
+
+```bash
+# Python version
+python --version  # Debe ser 3.11+
+
+# Streamlit
+streamlit --version
+
+# Plotly
+python -c "import plotly; print(f'Plotly: {plotly.__version__}')"
+
+# Pandas
+python -c "import pandas; print(f'Pandas: {pandas.__version__}')"
+
+# Requests
+python -c "import requests; print(f'Requests: {requests.__version__}')"
+```
+
+### 2. Verificar Archivos de Configuración
+
+```bash
+# Verificar que existan
+ls -la .streamlit/config.toml
+ls -la .streamlit/secrets.toml
+
+# Verificar contenido de config
+cat .streamlit/config.toml
+
+# NO mostrar secrets en terminal (contiene información sensible)
+```
+
+### 3. Verificar Estructura de Archivos
+
+```bash
+# Verificar archivos principales
+ls -la streamlit_app.py
+ls -la pages/1_🔮_Predicción.py
+ls -la pages/2_💬_Copiloto_IA.py
+
+# Verificar Dockerfiles
+ls -la Dockerfile.streamlit
+ls -la docker-compose.streamlit.yml
+```
+
+### 4. Probar App Localmente
+
+```bash
+# Iniciar Streamlit
+streamlit run streamlit_app.py
+
+# Debería abrir en http://localhost:8501
+# Si no abre automáticamente, abrir manualmente en el navegador
+```
+
+### 5. Ejecutar Script de Verificación
+
+```bash
+# Dar permisos de ejecución
+chmod +x scripts/verify_us032_us033.py
+
+# Ejecutar
+python scripts/verify_us032_us033.py
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Error: "streamlit: command not found"
+
+```bash
+# Opción 1: Reinstalar
+pip install --upgrade streamlit
+
+# Opción 2: Verificar PATH
+which streamlit
+echo $PATH
+
+# Opción 3: Ejecutar con Python
+python -m streamlit run streamlit_app.py
+```
+
+### Error: "ModuleNotFoundError: No module named 'plotly'"
+
+```bash
+# Instalar dependencias faltantes
+pip install plotly pandas requests
+
+# O reinstalar todas
+pip install -r requirements.txt
+```
+
+### Error: "Address already in use"
+
+```bash
+# Puerto 8501 ya está en uso
+# Opción 1: Usar otro puerto
+streamlit run streamlit_app.py --server.port 8502
+
+# Opción 2: Matar proceso en ese puerto
+# Linux/macOS:
+lsof -ti:8501 | xargs kill -9
+
+# Windows:
+netstat -ano | findstr :8501
+taskkill /PID <PID> /F
+```
+
+### Error: "API connection refused"
+
+```bash
+# Verificar que la API esté corriendo
+curl http://localhost:8000/health
+
+# Si no está corriendo, iniciarla:
+poetry run uvicorn src.api.main:app --reload
+
+# Verificar URL en secrets.toml
+cat .streamlit/secrets.toml | grep API_URL
+```
+
+### Error: "Ollama connection failed"
+
+```bash
+# Verificar que Ollama esté corriendo
+curl http://localhost:11434/api/tags
+
+# Si no está corriendo:
+ollama serve
+
+# Verificar que el modelo esté descargado
+ollama list
+
+# Si no está, descargarlo:
+ollama pull llama3.2:3b
+```
+
+### Error: Docker build falla
+
+```bash
+# Limpiar caché de Docker
+docker builder prune -a
+
+# Build sin caché
+docker build --no-cache -f Dockerfile.streamlit -t energy-optimizer-ui .
+
+# Verificar logs detallados
+docker build -f Dockerfile.streamlit -t energy-optimizer-ui . --progress=plain
+```
+
+### Error: "Permission denied" en scripts
+
+```bash
+# Dar permisos de ejecución
+chmod +x scripts/*.sh
+chmod +x scripts/*.py
+
+# Ejecutar con bash explícitamente
+bash scripts/deploy_streamlit_cloudrun.sh
+```
+
+---
+
+## 🎯 Checklist de Setup Completo
+
+Use este checklist para verificar que todo esté configurado:
+
+- [ ] Python 3.11+ instalado
+- [ ] Poetry o pip configurado
+- [ ] Dependencias instaladas (`pip install -r requirements.txt`)
+- [ ] Directorio `.streamlit/` creado
+- [ ] Archivo `.streamlit/config.toml` configurado
+- [ ] Archivo `.streamlit/secrets.toml` configurado
+- [ ] `.streamlit/secrets.toml` en `.gitignore`
+- [ ] API backend corriendo (opcional para desarrollo)
+- [ ] Ollama instalado y corriendo (opcional para copiloto IA)
+- [ ] Modelo Llama 3.2 descargado (opcional)
+- [ ] `streamlit run streamlit_app.py` funciona sin errores
+- [ ] App accesible en http://localhost:8501
+- [ ] Navegación entre páginas funciona
+- [ ] Docker instalado (opcional)
+- [ ] Docker build exitoso (opcional)
+- [ ] docker-compose up funciona (opcional)
+
+---
+
+## 🚀 Próximos Pasos
+
+Una vez que hayas completado el setup:
+
+1. **Explorar la App**: Navega por las 3 páginas
+2. **Hacer Predicción**: Prueba el formulario de predicción
+3. **Usar Copiloto**: Chatea con el asistente IA
+4. **Personalizar**: Modifica colores, textos, etc.
+5. **Deployar**: Sigue [STREAMLIT_DEPLOYMENT.md](docs/STREAMLIT_DEPLOYMENT.md)
+
+---
+
+## 📚 Referencias
+
+- [Streamlit Documentation](https://docs.streamlit.io/)
+- [Plotly Python](https://plotly.com/python/)
+- [Ollama Documentation](https://github.com/ollama/ollama)
+- [Docker Documentation](https://docs.docker.com/)
+- [Poetry Documentation](https://python-poetry.org/docs/)
+
+---
+
+## 🤝 Soporte
+
+¿Problemas con el setup?
+
+1. Revisa la sección de Troubleshooting
+2. Ejecuta `python scripts/verify_us032_us033.py`
+3. Consulta [QUICKSTART.md](QUICKSTART.md)
+4. Abre un issue en GitHub
+
+---
+
+**Última actualización**: Noviembre 2025  
+**Mantenido por**: Equipo Atreides

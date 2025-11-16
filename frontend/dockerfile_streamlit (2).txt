@@ -1,0 +1,65 @@
+# Dockerfile para Streamlit App
+# Sistema de Optimización Energética - Atreides
+
+FROM python:3.11-slim
+
+# Metadata
+LABEL maintainer="Equipo Atreides"
+LABEL description="Streamlit UI para Sistema de Optimización Energética"
+LABEL version="1.0"
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar archivos de dependencias
+COPY pyproject.toml poetry.lock* ./
+
+# Instalar Poetry
+RUN pip install poetry==1.8.0
+
+# Configurar Poetry para no crear virtualenv
+RUN poetry config virtualenvs.create false
+
+# Instalar dependencias (sin dev)
+RUN poetry install --no-interaction --no-ansi --no-root --only main
+
+# Instalar dependencias adicionales para Streamlit
+RUN pip install streamlit plotly requests pandas
+
+# Copiar código de la aplicación
+COPY streamlit_app.py ./
+COPY pages/ ./pages/
+
+# Copiar archivos de configuración (si existen)
+COPY .streamlit/ ./.streamlit/ 2>/dev/null || :
+
+# Crear directorio para datos temporales
+RUN mkdir -p /app/data /app/models
+
+# Exponer puerto de Streamlit
+EXPOSE 8501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+# Comando para ejecutar la app
+CMD ["streamlit", "run", "streamlit_app.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.enableCORS=false", \
+     "--server.enableXsrfProtection=false", \
+     "--browser.serverAddress=0.0.0.0"]

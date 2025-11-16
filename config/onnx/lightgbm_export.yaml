@@ -1,0 +1,40 @@
+# ONNX Export Configuration for LightGBM Model
+# Energy Optimization Copilot - MLOps Project
+
+model:
+  type: lightgbm
+  source_path: models/baselines/lightgbm_test_-gbm_v1.pkl
+  output_path: models/onnx/lightgbm.onnx
+  description: "LightGBM gradient boosting model for energy consumption prediction"
+
+export:
+  initial_types:
+    - name: input
+      type: FloatTensorType
+      shape: [null, 18]  # batch_size, features
+      description: "18 input features for energy prediction"
+  
+  optimization:
+    enabled: true
+    level: 2  # 0=none, 1=basic, 2=extended, 3=all
+    quantize: false
+    description: "Level 2 optimization for operator fusion"
+  
+  opset_version: 17
+  verbose: false
+
+validation:
+  tolerance: 1.0e-5  # Numerical tolerance for validation
+  num_samples: 100   # Number of test samples for validation
+  enable_gpu: true
+  
+performance:
+  benchmark_runs: 1000
+  warmup_runs: 10
+  batch_sizes: [1, 10, 50, 100, 500]
+  
+metadata:
+  author: "MLOps Team - Proyecto Atreides"
+  version: "1.0.0"
+  created_date: "2025-11-06"
+  rmse_test: 12.9521  # Original model RMSE on test set
