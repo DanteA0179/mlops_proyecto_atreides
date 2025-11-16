@@ -1,0 +1,5 @@
+outs:
+- md5: 0dc9b2e7124de3a71c8e57d1522c2b6a
+  size: 48301
+  hash: md5
+  path: lightgbm_meta.onnx
