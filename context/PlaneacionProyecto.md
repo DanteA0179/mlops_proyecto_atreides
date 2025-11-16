@@ -1907,7 +1907,7 @@ onnx.save_model(model_onnx, "models/production/model.onnx")
 
 #### **Epic 9: Testing (Todos - 2 hrs c/u)**
 
-**US-022: Tests unitarios**
+**US-023: Tests unitarios**
 - **Como** developer
 - **Quiero** tests comprehensivos
 - **Para que** prevenga regresiones
@@ -2042,7 +2042,7 @@ addopts = [
 
 ---
 
-**US-022b: Tests de integración end-to-end**
+**US-023b: Tests de integración end-to-end**
 - Criterios adicionales:
   - [x] Test completo: data → preprocessing → model → API → response
   - [x] Test de pipeline Prefect (mock)
