@@ -1,0 +1,72 @@
+steps:
+  # 1. Build the Docker image (using Dockerfile.api from US-022)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Docker Image'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_SERVICE_NAME}:${_TAG}'
+      - '-f'
+      - 'Dockerfile.api'
+      - '.'
+    timeout: '1200s' # 20 minutes
+
+  # 2. Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push to Artifact Registry'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_SERVICE_NAME}:${_TAG}'
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_SERVICE_NAME}:${_TAG}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--min-instances'
+      - '${_MIN_INSTANCES}'
+      - '--max-instances'
+      - '${_MAX_INSTANCES}'
+      - '--concurrency'
+      - '${_CONCURRENCY}'
+      - '--cpu'
+      - '${_CPU}'
+      - '--memory'
+      - '${_MEMORY}'
+      - '--timeout'
+      - '${_TIMEOUT}'
+      - '--set-env-vars'
+      - 'MODEL_PATH=${_MODEL_PATH},MODEL_TYPE=${_MODEL_TYPE}'
+      - '--project'
+      - '${PROJECT_ID}'
+
+# Define the images to be pushed to Artifact Registry
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_SERVICE_NAME}:${_TAG}'
+
+# Default substitutions
+substitutions:
+  _REGION: 'us-central1'
+  _REPOSITORY: 'energy-api-repo'
+  _SERVICE_NAME: 'energy-optimization-api'
+  _TAG: 'latest'
+  _MIN_INSTANCES: '0'
+  _MAX_INSTANCES: '2'
+  _CONCURRENCY: '80'
+  _CPU: '1'
+  _MEMORY: '2Gi'
+  _TIMEOUT: '300'
+  _MODEL_PATH: '/app/models/ensembles/ensemble_lightgbm_v1.pkl'
+  _MODEL_TYPE: 'stacking_ensemble'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
