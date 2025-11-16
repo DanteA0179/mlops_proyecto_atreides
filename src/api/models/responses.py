@@ -74,16 +74,50 @@ class PredictionResponse(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "example": {
-                "predicted_usage_kwh": 45.67,
-                "confidence_interval_lower": 42.10,
-                "confidence_interval_upper": 49.24,
-                "model_version": "lightgbm_ensemble_v1",
-                "model_type": "stacking_ensemble",
-                "prediction_timestamp": "2025-11-05T10:30:00Z",
-                "features_used": 18,
-                "prediction_id": "pred_8f3a9b2c",
-            }
+            "examples": [
+                {
+                    "summary": "Predicción Carga Light",
+                    "description": "Resultado para carga ligera en turno nocturno",
+                    "value": {
+                        "predicted_usage_kwh": 28.34,
+                        "confidence_interval_lower": 25.10,
+                        "confidence_interval_upper": 31.58,
+                        "model_version": "stacking_ensemble_v1",
+                        "model_type": "stacking_ensemble",
+                        "prediction_timestamp": "2025-11-16T02:15:00Z",
+                        "features_used": 18,
+                        "prediction_id": "pred_abc123",
+                    }
+                },
+                {
+                    "summary": "Predicción Carga Medium",
+                    "description": "Resultado para carga media en turno diurno",
+                    "value": {
+                        "predicted_usage_kwh": 45.67,
+                        "confidence_interval_lower": 42.10,
+                        "confidence_interval_upper": 49.24,
+                        "model_version": "stacking_ensemble_v1",
+                        "model_type": "stacking_ensemble",
+                        "prediction_timestamp": "2025-11-16T10:30:00Z",
+                        "features_used": 18,
+                        "prediction_id": "pred_8f3a9b2c",
+                    }
+                },
+                {
+                    "summary": "Predicción Carga Maximum",
+                    "description": "Resultado para carga máxima en pico de producción",
+                    "value": {
+                        "predicted_usage_kwh": 78.92,
+                        "confidence_interval_lower": 73.45,
+                        "confidence_interval_upper": 84.39,
+                        "model_version": "stacking_ensemble_v1",
+                        "model_type": "stacking_ensemble",
+                        "prediction_timestamp": "2025-11-16T14:00:00Z",
+                        "features_used": 18,
+                        "prediction_id": "pred_def456",
+                    }
+                }
+            ]
         }
     }
 

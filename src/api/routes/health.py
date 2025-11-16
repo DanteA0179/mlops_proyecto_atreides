@@ -39,13 +39,84 @@ def set_services(model_svc):
     response_model=HealthResponse,
     status_code=status.HTTP_200_OK,
     summary="Health Check",
-    description="Returns the health status of the API service with system metrics",
+    description="""
+    Retorna el estado de salud del servicio con métricas del sistema.
+    
+    Este endpoint es utilizado por load balancers, sistemas de orquestación 
+    (Kubernetes, Cloud Run) y herramientas de monitoreo para verificar 
+    la disponibilidad y estado del servicio.
+    """,
+    response_description="Estado de salud del servicio",
+    responses={
+        200: {
+            "description": "Servicio saludable",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "service": "energy-optimization-api",
+                        "version": "1.0.0",
+                        "timestamp": "2025-11-16T10:30:00Z",
+                        "model_loaded": True,
+                        "model_version": "stacking_ensemble_v1",
+                        "uptime_seconds": 3600.50,
+                        "memory_usage_mb": 512.34,
+                        "cpu_usage_percent": 15.20
+                    }
+                }
+            }
+        }
+    }
 )
 async def health_check() -> HealthResponse:
     """
     Health check endpoint.
-
-    Returns service status, model status, and system metrics.
+    
+    ## Descripción
+    Proporciona información sobre el estado del servicio, incluyendo:
+    - **Estado general**: healthy, degraded, unhealthy
+    - **Modelo cargado**: Si el modelo de ML está disponible
+    - **Métricas del sistema**: Uso de CPU, memoria y uptime
+    
+    ## Estados Posibles
+    - **healthy**: Servicio operativo, modelo cargado, recursos normales
+    - **degraded**: Servicio operativo pero con recursos limitados (CPU>80% o Memoria>1GB)
+    - **unhealthy**: Modelo no cargado o servicio con errores críticos
+    
+    ## Uso en Load Balancers
+    Configure health checks en su balanceador:
+    ```yaml
+    health_check:
+      path: /health
+      interval: 30s
+      timeout: 5s
+      healthy_threshold: 2
+      unhealthy_threshold: 3
+    ```
+    
+    ## Ejemplo curl
+    ```bash
+    curl http://localhost:8000/health
+    ```
+    
+    ## Ejemplo Python
+    ```python
+    import requests
+    
+    response = requests.get("http://localhost:8000/health")
+    health = response.json()
+    
+    if health["status"] == "healthy":
+        print("✅ Servicio operativo")
+    else:
+        print(f"⚠️ Estado: {health['status']}")
+    ```
+    
+    ## Monitoreo Continuo
+    ```bash
+    # Check cada 10 segundos
+    watch -n 10 curl -s http://localhost:8000/health | jq
+    ```
 
     Returns
     -------

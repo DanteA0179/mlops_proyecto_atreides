@@ -50,11 +50,107 @@ def set_services(model_svc, feature_svc):
     response_model=PredictionResponse,
     status_code=status.HTTP_200_OK,
     summary="Predict Energy Consumption",
-    description="Predicts energy consumption for a single observation based on provided features",
+    description="""
+    Predice el consumo energético para una observación individual.
+    
+    Este endpoint utiliza un modelo ensemble de ML para predecir el consumo 
+    de energía basado en características operacionales de la planta siderúrgica.
+    Incluye intervalos de confianza al 95% para cuantificar la incertidumbre.
+    """,
+    response_description="Predicción exitosa con intervalos de confianza",
+    responses={
+        200: {
+            "description": "Predicción exitosa",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "predicted_usage_kwh": 45.67,
+                        "confidence_interval_lower": 42.10,
+                        "confidence_interval_upper": 49.24,
+                        "model_version": "stacking_ensemble_v1",
+                        "model_type": "stacking_ensemble",
+                        "prediction_timestamp": "2025-11-16T10:30:00Z",
+                        "features_used": 18,
+                        "prediction_id": "pred_8f3a9b2c"
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Error de validación",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "load_type"],
+                                "msg": "load_type must be one of ['Light', 'Medium', 'Maximum']",
+                                "type": "value_error"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Error interno del servidor"
+        }
+    }
 )
 async def predict_single(request: PredictionRequest) -> PredictionResponse:
     """
     Predict energy consumption for single observation.
+    
+    ## Descripción
+    Este endpoint recibe las características de operación de la planta siderúrgica
+    y retorna una predicción del consumo energético junto con intervalos de confianza.
+    
+    ## Características de Entrada
+    - **lagging_reactive_power**: Potencia reactiva en atraso (kVarh)
+    - **leading_reactive_power**: Potencia reactiva en adelanto (kVarh)
+    - **co2**: Emisiones de CO2 (tCO2)
+    - **lagging_power_factor**: Factor de potencia en atraso (0-1)
+    - **leading_power_factor**: Factor de potencia en adelanto (0-1)
+    - **nsm**: Segundos desde medianoche (0-86400)
+    - **day_of_week**: Día de la semana (0=Lunes, 6=Domingo)
+    - **load_type**: Tipo de carga (Light, Medium, Maximum)
+    
+    ## Ejemplo curl
+    ```bash
+    curl -X POST "http://localhost:8000/predict" \\
+      -H "Content-Type: application/json" \\
+      -d '{
+        "lagging_reactive_power": 23.45,
+        "leading_reactive_power": 12.30,
+        "co2": 0.05,
+        "lagging_power_factor": 0.85,
+        "leading_power_factor": 0.92,
+        "nsm": 36000,
+        "day_of_week": 1,
+        "load_type": "Medium"
+      }'
+    ```
+    
+    ## Ejemplo Python
+    ```python
+    import requests
+    
+    response = requests.post(
+        "http://localhost:8000/predict",
+        json={
+            "lagging_reactive_power": 23.45,
+            "leading_reactive_power": 12.30,
+            "co2": 0.05,
+            "lagging_power_factor": 0.85,
+            "leading_power_factor": 0.92,
+            "nsm": 36000,
+            "day_of_week": 1,
+            "load_type": "Medium"
+        }
+    )
+    prediction = response.json()
+    print(f"Consumo predicho: {prediction['predicted_usage_kwh']} kWh")
+    ```
 
     Parameters
     ----------
@@ -129,11 +225,129 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
     response_model=BatchPredictionResponse,
     status_code=status.HTTP_200_OK,
     summary="Batch Predict Energy Consumption",
-    description="Predicts energy consumption for multiple observations in a single request",
+    description="""
+    Predice el consumo energético para múltiples observaciones en una sola petición.
+    
+    Este endpoint permite procesar hasta 1000 predicciones simultáneamente,
+    optimizando el throughput para escenarios de planificación o análisis masivo.
+    Incluye estadísticas agregadas del lote procesado.
+    """,
+    response_description="Predicciones batch exitosas con resumen estadístico",
+    responses={
+        200: {
+            "description": "Batch procesado exitosamente",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "predictions": [
+                            {"predicted_usage_kwh": 28.34, "prediction_id": "pred_abc123"},
+                            {"predicted_usage_kwh": 45.67, "prediction_id": "pred_def456"}
+                        ],
+                        "summary": {
+                            "total_predictions": 2,
+                            "avg_predicted_usage": 37.00,
+                            "min_predicted_usage": 28.34,
+                            "max_predicted_usage": 45.67,
+                            "processing_time_ms": 45.32
+                        },
+                        "model_version": "stacking_ensemble_v1",
+                        "batch_timestamp": "2025-11-16T10:30:00Z"
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Error de validación del batch",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Batch cannot exceed 1000 predictions"
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Error de validación en items del batch"
+        },
+        500: {
+            "description": "Error interno del servidor"
+        }
+    }
 )
 async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
     """
     Predict energy consumption for batch of observations.
+    
+    ## Descripción
+    Procesa múltiples predicciones en una sola petición HTTP, ideal para:
+    - Planificación de turnos completos (24 horas)
+    - Análisis what-if de múltiples escenarios
+    - Optimización de horarios de producción
+    - Generación de reportes masivos
+    
+    ## Límites
+    - **Mínimo**: 1 predicción
+    - **Máximo**: 1000 predicciones por request
+    - **Timeout**: 30 segundos
+    
+    ## Ejemplo curl
+    ```bash
+    curl -X POST "http://localhost:8000/predict/batch" \\
+      -H "Content-Type: application/json" \\
+      -d '{
+        "predictions": [
+          {
+            "lagging_reactive_power": 15.20,
+            "leading_reactive_power": 8.50,
+            "co2": 0.03,
+            "lagging_power_factor": 0.88,
+            "leading_power_factor": 0.95,
+            "nsm": 7200,
+            "day_of_week": 1,
+            "load_type": "Light"
+          },
+          {
+            "lagging_reactive_power": 23.45,
+            "leading_reactive_power": 12.30,
+            "co2": 0.05,
+            "lagging_power_factor": 0.85,
+            "leading_power_factor": 0.92,
+            "nsm": 36000,
+            "day_of_week": 1,
+            "load_type": "Medium"
+          }
+        ]
+      }'
+    ```
+    
+    ## Ejemplo Python
+    ```python
+    import requests
+    
+    batch_data = {
+        "predictions": [
+            {
+                "lagging_reactive_power": 15.20,
+                "leading_reactive_power": 8.50,
+                "co2": 0.03,
+                "lagging_power_factor": 0.88,
+                "leading_power_factor": 0.95,
+                "nsm": 7200,
+                "day_of_week": 1,
+                "load_type": "Light"
+            },
+            # ... más predicciones
+        ]
+    }
+    
+    response = requests.post(
+        "http://localhost:8000/predict/batch",
+        json=batch_data
+    )
+    result = response.json()
+    print(f"Total predicciones: {result['summary']['total_predictions']}")
+    print(f"Promedio: {result['summary']['avg_predicted_usage']} kWh")
+    ```
 
     Parameters
     ----------

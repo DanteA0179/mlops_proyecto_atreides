@@ -98,14 +98,25 @@ async def lifespan(app: FastAPI):
     logger.info("Shutdown complete")
 
 
+# Import OpenAPI configuration
+from src.api.utils.openapi_config import (
+    API_CONTACT,
+    API_DESCRIPTION,
+    API_LICENSE,
+    API_TERMS_OF_SERVICE,
+    OPENAPI_TAGS,
+    get_custom_openapi_schema,
+)
+
 # Create FastAPI app instance
 app = FastAPI(
     title=config.APP_NAME,
-    description=(
-        "AI-powered energy consumption prediction and optimization for steel industry. "
-        "Provides single and batch predictions using state-of-the-art ML models."
-    ),
+    description=API_DESCRIPTION,
     version=config.APP_VERSION,
+    contact=API_CONTACT,
+    license_info=API_LICENSE,
+    terms_of_service=API_TERMS_OF_SERVICE,
+    openapi_tags=OPENAPI_TAGS,
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -131,6 +142,9 @@ app.add_exception_handler(Exception, general_exception_handler)
 app.include_router(predict.router)
 app.include_router(health.router)
 app.include_router(model.router)
+
+# Override default OpenAPI schema with custom one
+app.openapi = lambda: get_custom_openapi_schema(app)
 
 
 @app.get(
