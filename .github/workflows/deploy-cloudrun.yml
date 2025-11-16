@@ -1,0 +1,89 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: energy-api
+  REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push to GCR
+        run: |
+          gcloud builds submit \
+            --tag gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+            --tag gcr.io/$PROJECT_ID/$SERVICE_NAME:latest \
+            --timeout=10m
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+            --platform managed \
+            --region $REGION \
+            --allow-unauthenticated \
+            --memory 2Gi \
+            --cpu 2 \
+            --timeout 300 \
+            --max-instances 10 \
+            --min-instances 0 \
+            --concurrency 80 \
+            --set-env-vars MODEL_TYPE=lightgbm_ensemble,LOG_LEVEL=info
+
+      - name: Test deployment
+        run: |
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION \
+            --format='value(status.url)')
+          
+          echo "Service URL: $SERVICE_URL"
+          
+          # Test health endpoint
+          curl -f $SERVICE_URL/health || exit 1
+          
+          # Test prediction endpoint
+          curl -X POST $SERVICE_URL/predict \
+            -H "Content-Type: application/json" \
+            -d '{
+              "lagging_reactive_power": 23.45,
+              "leading_reactive_power": 12.30,
+              "co2": 0.05,
+              "lagging_power_factor": 0.85,
+              "leading_power_factor": 0.92,
+              "nsm": 36000,
+              "day_of_week": 1,
+              "load_type": "Medium"
+            }' || exit 1
+          
+          echo "Deployment successful!"
+
+      - name: Notify deployment
+        if: success()
+        run: |
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION \
+            --format='value(status.url)')
+          echo "::notice::Deployment successful! Service URL: $SERVICE_URL"

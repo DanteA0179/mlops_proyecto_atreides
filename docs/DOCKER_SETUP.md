@@ -1,6 +1,6 @@
 # Docker Setup - Energy Optimization API
 
-Guía completa para Docker, FastAPI, MLflow y Prefect (US-003 & US-004).
+Guía completa para Docker, FastAPI, MLflow y Prefect (US-003, US-004 & US-022).
 
 ## 🚀 Quick Start
 
@@ -29,18 +29,20 @@ docker run -p 8000:8000 energy-optimization-api:latest
 
 ## 📦 Dockerfiles Disponibles
 
-### `Dockerfile.api` - API + MLOps (Recomendado)
-- ✅ **Rápido**: Build en 3-5 minutos
-- ✅ **Balanceado**: ~800MB
-- ✅ **Incluye**: FastAPI, MLflow, Prefect, scikit-learn, XGBoost, LightGBM
-- ❌ **Excluye**: PyTorch, Transformers (foundation models pesados)
+### `Dockerfile.api` - API Production-Ready (Recomendado)
+- ✅ **Build**: 3-5 minutos
+- ✅ **Tamaño**: ~2.97GB
+- ✅ **Incluye**: FastAPI, scikit-learn, XGBoost, LightGBM, CatBoost
+- ✅ **Modelos**: Pickle models (stacking_ensemble)
+- ❌ **Excluye**: PyTorch, Transformers, ONNX Runtime
 
 **Usar para:**
 - US-003: Docker + FastAPI
-- US-004: MLflow + Prefect
+- US-020: API con modelos pickle
+- US-022: Dockerización optimizada
 - Desarrollo local
 - CI/CD
-- Deployment de producción (API + MLOps)
+- Deployment de producción
 
 ### `Dockerfile` - Completo (Para foundation models)
 - ⚠️ **Lento**: Build en 15-20 minutos
@@ -312,3 +314,153 @@ poetry run python src/flows/example_flow.py
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [MLflow Documentation](https://mlflow.org/docs/latest/index.html)
 - [Prefect Documentation](https://docs.prefect.io/)
+
+
+---
+
+## 🐳 US-022: Dockerización Production-Ready
+
+### Multi-stage Dockerfile
+
+El `Dockerfile.api` usa un build multi-stage para optimizar el build:
+
+**Stage 1 (Builder)**:
+- Instala build dependencies
+- Crea virtual environment
+- Instala requirements-api-minimal.txt
+
+**Stage 2 (Runtime)**:
+- Imagen de producción
+- Copia solo el venv
+- Non-root user (appuser)
+- Modelos pickle embebidos
+
+**Resultado**: ~2.97GB (incluye XGBoost, LightGBM, CatBoost completos)
+
+### Estrategia de Modelos
+
+**Modelos Pickle (Solución Final)**:
+- Modelos en `/app/models/ensembles`, `/app/models/gradient_boosting`, `/app/models/baselines`
+- Compatible con NumPy 2.x
+- Configuración probada en US-020
+- Modelo por defecto: `stacking_ensemble`
+
+**¿Por qué NO ONNX?**:
+- ONNX Runtime 1.18.0 incompatible con NumPy 2.x
+- Preferimos NumPy actualizado sobre ONNX
+- Modelos pickle funcionan perfectamente
+
+### Scripts de Validación
+
+```bash
+# Validar setup completo
+.\scripts\validate_docker_setup.ps1
+
+# Build con validación automática
+.\scripts\docker_build.ps1  # Windows
+bash scripts/docker_build.sh  # Linux/Mac
+```
+
+### Métricas Alcanzadas
+
+| Métrica | Resultado | Estado |
+|---------|-----------|--------|
+| Tamaño de imagen | 2.97GB | ✅ |
+| Build time | ~3 min | ✅ |
+| Startup time | ~15 seg | ✅ |
+| Health check | healthy | ✅ |
+| Predicción | Funciona | ✅ |
+
+### CI/CD con GitHub Actions
+
+**Workflows disponibles**:
+- `.github/workflows/docker-build.yml` - Build automático y tests
+- `.github/workflows/deploy-cloudrun.yml` - Deployment a GCP Cloud Run
+
+**Features**:
+- Build automático en push/PR
+- Tests de health y prediction
+- Validación de tamaño de imagen
+- Cache de layers con GitHub Actions
+- Deployment automático a Cloud Run
+
+### Deployment Multi-Cloud
+
+**GCP Cloud Run**:
+```bash
+gcloud builds submit --tag gcr.io/PROJECT_ID/energy-api
+gcloud run deploy energy-api --image gcr.io/PROJECT_ID/energy-api
+```
+
+**AWS ECS**: Ver task definition en `docs/us-resolved/us-022.md`
+
+**Azure Container Apps**:
+```bash
+az acr build --registry myregistry --image energy-api:latest .
+az containerapp create --name energy-api --image myregistry.azurecr.io/energy-api:latest
+```
+
+### Comandos Útiles
+
+```bash
+# Build
+docker build -f Dockerfile.api -t energy-api:latest .
+
+# Run con variables de entorno
+docker run -p 8000:8000 \
+  -e MODEL_TYPE=xgboost \
+  -e LOG_LEVEL=debug \
+  energy-api:latest
+
+# Ver logs
+docker logs -f CONTAINER_ID
+
+# Stats (CPU, memoria)
+docker stats CONTAINER_ID
+
+# Inspeccionar imagen
+docker history energy-api:latest
+```
+
+### Troubleshooting US-022
+
+**Problema: Imagen > 1.5GB**
+```bash
+# Verificar .dockerignore
+cat .dockerignore
+
+# Ver history de layers
+docker history energy-api:latest
+```
+
+**Problema: Modelos no cargan**
+```bash
+# Verificar modelos en imagen
+docker run -it energy-api:latest ls -la /app/models/onnx
+
+# Ver logs de carga
+docker logs CONTAINER_ID | grep "model"
+```
+
+**Problema: Health check falla**
+```bash
+# Verificar healthcheck
+docker inspect --format='{{json .State.Health}}' CONTAINER_ID
+
+# Test manual
+docker exec CONTAINER_ID curl -f http://localhost:8000/health
+```
+
+---
+
+## 📚 Documentación Adicional
+
+- **US-022 Completa**: `docs/us-resolved/us-022.md`
+- **Planeación US-022**: `docs/us-planning/us-022.md`
+- **Scripts**: `scripts/docker_build.ps1`, `scripts/validate_docker_setup.ps1`
+- **CI/CD**: `.github/workflows/docker-build.yml`
+
+---
+
+**Última actualización**: 15 de Noviembre, 2025  
+**Versión**: 2.0 (incluye US-022)

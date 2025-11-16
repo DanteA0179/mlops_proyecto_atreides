@@ -1,77 +1,82 @@
-# Git
-.git
-.gitignore
-.gitattributes
+# ============================================================================
+# CRITICAL: Exclude large files and unnecessary data
+# ============================================================================
 
-# Python
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info
-dist
-build
-*.egg
-
-# Virtual environments
-.venv
-venv
-env
-ENV
-
-# IDEs
-.vscode
-.idea
-*.swp
-*.swo
-*~
-
-# Testing
-.pytest_cache
-.coverage
-htmlcov
-.tox
-.nox
-
-# Documentation
-docs/
-*.md
-!README.md
-
-# Data files (use DVC instead)
+# Data files (use DVC, not Docker)
 data/
 *.csv
 *.parquet
 *.duckdb
 *.duckdb.wal
 
-# Models (use DVC instead)
-models/
-*.pkl
-*.joblib
+# Large models (exclude only foundation and trained)
+models/foundation/
+models/trained/
+models/onnx/
 *.h5
-*.hdf5
-*.pb
 *.pt
 *.pth
-*.onnx
 
-# MLflow
-mlruns/
-mlartifacts/
+# INCLUDE: Pickle models from US-020
+!models/ensembles/
+!models/gradient_boosting/
+!models/baselines/
+!models/preprocessing/
 
-# DVC
+# Exclude pyproject.toml and poetry files
+pyproject.toml
+poetry.lock
+poetry.toml
+
+# Development files
+notebooks/
+tests/
+docs/
+scripts/
+*.ipynb
+.ipynb_checkpoints
+
+# Git and DVC
+.git/
 .dvc/
 *.dvc
+.gitignore
+.dvcignore
 
-# Jupyter
-.ipynb_checkpoints
-*.ipynb
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
 
-# Logs
-*.log
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+.kiro/
+*.swp
+*.swo
+
+# MLflow and logs
+mlruns/
+mlflow/
 logs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
 
 # Environment
 .env
@@ -88,21 +93,19 @@ docker-compose*.yml
 .github/
 .gitlab-ci.yml
 
+# Reports and planning
+reports/
+planeacion/
+context/
+specs/
+
 # Misc
 *.tmp
 *.temp
 .DS_Store
 Thumbs.db
-
-# Config
-config/
-*.json
-!pyproject.toml
-!package.json
-
-# Scripts (not needed in container)
-scripts/
-notebooks/
-
-# Tests (not needed in production)
-tests/
+README.md
+LICENSE
+CONTRIBUTING.md
+AGENTS.md
+STRUCTURE.md

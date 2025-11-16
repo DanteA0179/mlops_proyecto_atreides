@@ -1,14 +1,35 @@
-# Optimized Dockerfile for API + MLOps (MLflow, Prefect)
-# Excludes heavy foundation models (PyTorch, Transformers)
-# Updated: 2025-11-06 - Added psutil, catboost, updated xgboost to 3.1.1
+# ============================================================================
+# Stage 1: Builder - Install dependencies
+# ============================================================================
+FROM python:3.11-slim AS builder
 
-FROM python:3.11-slim
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install system dependencies
+WORKDIR /app
+
+# Copy only requirements first (cache optimization)
+COPY requirements-api-minimal.txt .
+
+# Install dependencies to /opt/venv
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-api-minimal.txt
+
+# ============================================================================
+# Stage 2: Runtime - Minimal production image
+# ============================================================================
+FROM python:3.11-slim AS runtime
+
+# Install only runtime dependencies
 RUN apt-get update && apt-get install -y \
     libgomp1 \
     curl \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -16,18 +37,20 @@ RUN useradd -m -u 1000 -s /bin/bash appuser
 
 WORKDIR /app
 
-# Copy requirements (includes psutil, catboost, xgboost 3.1.1, lightgbm, scikit-learn)
-COPY requirements-api.txt ./
-
-# Install dependencies with timeout handling
-# Note: This includes all ML libraries needed for stacking ensemble models
-RUN pip install --no-cache-dir --timeout=300 -r requirements-api.txt
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy application code
 COPY --chown=appuser:appuser ./src ./src
-COPY --chown=appuser:appuser ./pyproject.toml ./
+
+# Copy models (pickle models from US-020)
+COPY --chown=appuser:appuser ./models/ensembles ./models/ensembles
+COPY --chown=appuser:appuser ./models/gradient_boosting ./models/gradient_boosting
+COPY --chown=appuser:appuser ./models/baselines ./models/baselines
+COPY --chown=appuser:appuser ./models/preprocessing ./models/preprocessing
 
 # Set environment variables
+ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 ENV PYTHONUNBUFFERED=1
 
@@ -35,13 +58,15 @@ USER appuser
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Healthcheck with model validation
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run with uvicorn
-# Note: Using single worker to avoid model loading issues with multiprocessing
-# For production, consider using gunicorn with preload and single worker per core
-CMD ["uvicorn", "src.api.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "1"]
+# Production command with gunicorn
+CMD ["gunicorn", "src.api.main:app", \
+     "--workers", "2", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8000", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]
