@@ -19,6 +19,7 @@ from src.api.models.responses import (
     BatchPredictionSummary,
     PredictionResponse,
 )
+from src.monitoring.log_prediction import log_prediction
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/predict", tags=["Predictions"])
@@ -82,6 +83,14 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
         # Make prediction
         prediction = model_service.predict(features)
         logger.info(f"Prediction result: {prediction[0]}")
+
+        # Log prediction for monitoring
+        try:
+            feature_names = feature_service.get_feature_names()
+            features_dict = dict(zip(feature_names, features[0].tolist()))
+            log_prediction(features_dict, float(prediction[0]))
+        except Exception as e:
+            logger.warning(f"Failed to log prediction for monitoring: {e}")
 
         # Calculate confidence intervals (if model supports it)
         ci_lower, ci_upper = model_service.predict_interval(features, alpha=0.05)
