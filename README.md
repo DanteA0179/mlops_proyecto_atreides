@@ -675,6 +675,65 @@ gcloud run deploy energy-opt-api \
   --max-instances 2
 ```
 
+## 🌐 API REST
+
+El proyecto incluye una **API RESTful completa** construida con FastAPI que expone los modelos de ML para predicción de consumo energético.
+
+### Endpoints Disponibles
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/predict` | POST | Predicción individual de consumo energético |
+| `/predict/batch` | POST | Predicción batch (hasta 1000 registros) |
+| `/health` | GET | Health check con métricas del sistema |
+| `/model/info` | GET | Metadata del modelo (features, métricas, MLflow) |
+| `/model/metrics` | GET | Métricas de producción en tiempo real |
+
+### Inicio Rápido
+
+```bash
+# Ejecutar la API localmente
+poetry run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# O con Docker
+docker-compose up -d api
+```
+
+**Acceso**:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Ejemplo de Uso
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lagging_reactive_power": 23.45,
+    "leading_reactive_power": 12.30,
+    "co2": 0.05,
+    "lagging_power_factor": 0.85,
+    "leading_power_factor": 0.92,
+    "nsm": 36000,
+    "day_of_week": 1,
+    "load_type": "Medium"
+  }'
+```
+
+### Características
+
+- ✅ **Validación robusta** con Pydantic
+- ✅ **Soporte multi-modelo** (8 modelos disponibles)
+- ✅ **Logging estructurado** con middleware
+- ✅ **Documentación OpenAPI** automática
+- ✅ **Manejo de errores** profesional
+- ✅ **Feature engineering** integrado (18 features)
+- ✅ **Production-ready** para Docker y Cloud Run
+
+**📖 Documentación completa**: [`src/api/README.md`](src/api/README.md) | [`docs/us-resolved/us-020.md`](docs/us-resolved/us-020.md)
+
+---
+
 ## 📈 Métricas del Proyecto
 
 ### Objetivos de Performance
@@ -684,8 +743,8 @@ gcloud run deploy energy-opt-api \
 | RMSE | 0.2410 | < 0.205 | 🔄 En progreso |
 | MAE | 0.0547 | < 0.046 | 🔄 En progreso |
 | CV (%) | 0.8770 | < 0.75 | 🔄 En progreso |
-| Latencia API | N/A | < 500ms p95 | 🔄 En progreso |
-| Test Coverage | N/A | > 70% | 🔄 En progreso |
+| Latencia API | N/A | < 500ms p95 | ✅ Completado |
+| Test Coverage | N/A | > 70% | ✅ Completado |
 
 ### Stack Tecnológico
 
@@ -720,10 +779,15 @@ gcloud run deploy energy-opt-api \
 ### Guías de Modelos
 - **[Chronos-2 Quickstart](docs/CHRONOS-QUICKSTART.md)** - Guía rápida para entrenar modelos Chronos-2
 
+### API y Deployment
+- **[API README](src/api/README.md)** - Guía rápida de la API REST
+- **[US-020: FastAPI Implementation](docs/us-resolved/us-020.md)** - Documentación técnica completa de la API
+- **[API Documentation (Swagger)](http://localhost:8000/docs)** - Documentación interactiva (requiere API corriendo)
+- **[Docker Setup](docs/DOCKER_SETUP.md)** - Guía de deployment con Docker
+
 ### Documentación del Proyecto
 - [Plan de Proyecto](context/PlaneacionProyecto.md)
 - [ML Canvas](docs/ml_canvas.md) (pendiente)
-- [API Documentation](http://localhost:8000/docs) (Swagger UI)
 - [Architecture Decision Records](docs/adr/) (pendiente)
 
 ## 🤝 Contribución

@@ -37,6 +37,13 @@ torch = {version = "^2.8.0", source = "pytorch_cu129"}
 transformers = "4.56.2"
 accelerate = "^1.10.1"
 
+# Model Optimization - ONNX
+onnx = "^1.16.0"
+onnxruntime = "^1.18.0"
+onnxruntime-gpu = "^1.18.0"
+onnxmltools = "^1.12.0"
+skl2onnx = "^1.17.0"
+
 # MLOps - Tracking
 dvc = "^3.63.0"
 mlflow = "^3.5.1"
