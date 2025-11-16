@@ -1,31 +1,27 @@
 services:
   # ============================================================================
-  # API Service - FastAPI Application
+  # API Service - Production-like setup
   # ============================================================================
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
-    container_name: energy-optimization-api
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: energy-optimization-api:latest
+    container_name: energy-api
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=info
-      - WORKERS=4
-    volumes:
-      # Mount source code for development (hot reload)
-      - ./src:/app/src
-      # Mount models directory
-      - ./models:/app/models
-      # Mount data directory (read-only for API)
-      - ./data:/app/data:ro
-    command: >
-      uvicorn src.api.main:app
-      --host 0.0.0.0
-      --port 8000
-      --reload
-      --log-level info
+      - MODEL_TYPE=stacking_ensemble
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    # volumes:
+      # Optional: Mount external models for updates without rebuild
+      # - ./models/onnx:/app/models/external:ro
+      # Development only: hot reload (comment out for production testing)
+      # - ./src:/app/src
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -35,6 +31,14 @@ services:
     restart: unless-stopped
     networks:
       - energy-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
 
   # ============================================================================
   # MLflow Service - Experiment Tracking

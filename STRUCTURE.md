@@ -341,21 +341,43 @@ CLOUD_RUN_MIN_INSTANCES=1
 
 ## 🚀 Deployment Artifacts
 
-### Docker Image
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY pyproject.toml poetry.lock ./
-RUN pip install poetry && poetry install --no-dev
-COPY src/ ./src/
-CMD ["poetry", "run", "uvicorn", "src.api.main:app", "--host", "0.0.0.0"]
-```
+### Docker
+
+#### Archivos de Docker
+- `Dockerfile.api` - Multi-stage Dockerfile optimizado para producción
+- `docker-compose.yml` - Orquestación local (API + MLflow + DuckDB)
+- `.dockerignore` - Exclusiones de build (data/, notebooks/, tests/)
+- `docker/README.md` - Guía completa de Docker
+
+#### Características de la Imagen
+- **Base**: `python:3.11-slim`
+- **Tamaño**: ~800MB-1GB (< 1.5GB target)
+- **Build time**: < 5 min completo, < 30 seg rebuild
+- **Arquitectura**: Multi-stage (builder + runtime)
+- **Seguridad**: Non-root user (appuser)
+- **Producción**: Gunicorn + Uvicorn workers
+- **Modelos**: ONNX embebidos (~2-3MB)
+
+#### Scripts de Build
+- `scripts/docker_build.sh` - Build y validación (Linux/Mac)
+- `scripts/docker_build.ps1` - Build y validación (Windows)
+
+#### Estrategia de Modelos
+1. **Embebidos** (default): Modelos ONNX en `/app/models/onnx`
+2. **Externos** (opcional): Volúmenes en `/app/models/external`
+3. **Fallback**: Env var `MODEL_PATH` configurable
 
 ### Cloud Run
-- Artifact: `gcr.io/PROJECT_ID/energy-opt-api:latest`
-- Config: `cloud-run-config.yaml`
+- Artifact: `gcr.io/PROJECT_ID/energy-api:latest`
+- Memory: 2Gi, CPU: 2, Timeout: 300s
+- Auto-scaling: 0-10 instancias
+- Deployment: GitHub Actions workflow
+
+### Documentación de Deployment
+- `docs/deployment/docker-deployment.md` - Guía técnica completa
+- `docker/README.md` - Inicio rápido y troubleshooting
 
 ---
 
-**Última actualización:** Octubre 2025
+**Última actualización:** Noviembre 2025
 **Mantenedor:** Equipo MLOps - Proyecto Atreides

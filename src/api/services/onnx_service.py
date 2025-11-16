@@ -6,6 +6,7 @@ multiple model types and optimized performance.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -69,13 +70,55 @@ class ONNXModelService:
             )
 
         self.model_type = model_type
-        self.model_path = self.AVAILABLE_MODELS[model_type]
+        self.base_model_path = self.AVAILABLE_MODELS[model_type]
+        self.model_path = self._resolve_model_path()
         self.use_gpu = use_gpu
         self.session = None
         self.is_ensemble = "ensemble" in model_type
         self.sessions = {}
 
         logger.info(f"ONNXModelService initialized with model_type={model_type}, use_gpu={use_gpu}")
+        logger.info(f"Using models from: {self.model_path}")
+
+    def _resolve_model_path(self) -> Path:
+        """
+        Resolve model path with fallback strategy.
+
+        Priority:
+        1. External volume: /app/models/external
+        2. Environment variable: MODEL_PATH
+        3. Embedded models: models/onnx (default)
+
+        Returns
+        -------
+        Path
+            Resolved model path
+
+        Notes
+        -----
+        This allows updating models without rebuilding the Docker image
+        by mounting a volume at /app/models/external.
+        """
+        # Check external volume first (for updates without rebuild)
+        external_path = Path("/app/models/external")
+        if external_path.exists():
+            model_file = external_path / Path(self.base_model_path).name
+            if model_file.exists() or (external_path / Path(self.base_model_path).name).is_dir():
+                logger.info(f"Using external models from volume: {external_path}")
+                return external_path / Path(self.base_model_path).name
+
+        # Check environment variable
+        env_path = os.getenv("MODEL_PATH")
+        if env_path:
+            path = Path(env_path) / Path(self.base_model_path).name
+            if path.exists():
+                logger.info(f"Using models from MODEL_PATH env var: {path}")
+                return path
+
+        # Fallback to embedded models
+        embedded_path = Path(self.base_model_path)
+        logger.info(f"Using embedded models: {embedded_path}")
+        return embedded_path
 
     def load_model(self) -> None:
         """
