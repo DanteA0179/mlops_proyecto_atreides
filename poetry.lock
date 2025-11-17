@@ -10970,4 +10970,4 @@ dask = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "5c4861347634ce612ad285686d36f9e8800f05f2fbb61fa06cac2c3bf054c407"
+content-hash = "b952b5f985928c785230b339c0733050d559dbcaa7f9289948aeb392ea3f0415"
