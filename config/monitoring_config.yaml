@@ -1,0 +1,57 @@
+# Monitoring Configuration for Evidently AI Drift Detection
+# Project: Energy Optimization Copilot
+# Component: Data Drift & Model Monitoring
+
+monitoring:
+  reference_data:
+    path: "reports/monitoring/reference_data/train_data_sample.parquet"
+    size: 10000
+    stratify_column: "Load_Type"
+
+  production_data:
+    source: "file"  # Options: file, api_logs, database
+    timeframe_days: 7
+    min_samples: 1000
+
+  drift_detection:
+    thresholds:
+      drift_score: 0.7              # Alert if > 0.7
+      share_of_drifted_features: 0.5  # Alert if > 50% features drifted
+      feature_drift_score: 0.5      # Alert if individual feature > 0.5
+      target_drift_score: 0.6
+      prediction_drift_score: 0.6
+
+    statistical_tests:
+      psi_threshold: 0.2            # PSI > 0.2 indicates drift
+      ks_pvalue_threshold: 0.05     # p-value < 0.05 indicates drift
+      wasserstein_threshold: 0.1
+
+  performance:
+    thresholds:
+      rmse_degradation: 0.15        # Alert if RMSE increases > 15%
+      mae_degradation: 0.15
+      r2_degradation: 0.10
+
+  reporting:
+    output_dir: "reports/monitoring"
+    retention_days: 90
+    compress_old_reports: true
+    save_json_metrics: true
+    save_csv_history: true
+
+  alerts:
+    enabled: false  # Disabled for testing
+    channels:
+      - email
+
+    email:
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      use_tls: true
+      sender: "${SMTP_SENDER_EMAIL}"
+      password: "${SMTP_SENDER_PASSWORD}"
+      recipients:
+        - "arthur@team37.com"
+        - "mlops-team@team37.com"
+      subject_template: "[ALERT] Data Drift Detected - {date}"
+      html_template: true

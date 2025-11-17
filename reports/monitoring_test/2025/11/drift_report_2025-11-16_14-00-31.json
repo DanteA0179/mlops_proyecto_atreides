@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-11-16T14:00:31.019389",
+  "number_of_drifted_features": 2.0,
+  "share_of_drifted_features": 0.18181818181818182,
+  "drift_score": 0.18181818181818182,
+  "dataset_drift": false,
+  "mape": 22.372195708318063,
+  "mae": 21.02254479527236,
+  "drifted_features": {},
+  "report_path": "reports\\monitoring_test\\2025\\11\\drift_report_2025-11-16_14-00-31.html"
+}
