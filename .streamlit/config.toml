@@ -1,0 +1,204 @@
+# ============================================================================
+# Streamlit Configuration File
+# Energy Optimization AI - Steel Industry
+# ============================================================================
+# 
+# Este archivo configura la apariencia y comportamiento de la aplicación
+# Streamlit para el proyecto de Optimización Energética con IA.
+#
+# Documentación: https://docs.streamlit.io/library/advanced-features/configuration
+#
+# Autor: Equipo Atreides
+# Fecha: 2025
+# User Story: US-033 - Deployment de Streamlit
+# ============================================================================
+
+
+# ============================================================================
+# [theme] - Configuración del tema visual
+# ============================================================================
+[theme]
+# Color primario (usado en botones, enlaces, sliders)
+# Azul corporativo de la aplicación
+primaryColor = "#1f77b4"
+
+# Color de fondo principal
+backgroundColor = "#ffffff"
+
+# Color de fondo secundario (sidebars, tarjetas)
+secondaryBackgroundColor = "#f0f2f6"
+
+# Color del texto principal
+textColor = "#262730"
+
+# Familia de fuentes
+# Opciones: "sans serif", "serif", "monospace"
+font = "sans serif"
+
+
+# ============================================================================
+# [server] - Configuración del servidor
+# ============================================================================
+[server]
+# Puerto en el que correrá la aplicación
+# Default: 8501
+# Para producción, usar 8501 o el puerto especificado por el servicio
+port = 8501
+
+# Dirección IP para escuchar
+# "0.0.0.0" permite conexiones externas (necesario para Docker/Cloud)
+# "localhost" solo permite conexiones locales
+address = "0.0.0.0"
+
+# Habilitar CORS (Cross-Origin Resource Sharing)
+# false: más seguro para producción
+# true: necesario si la app es consumida desde otro dominio
+enableCORS = false
+
+# Habilitar protección XSRF (Cross-Site Request Forgery)
+# Recomendado: true para producción
+enableXsrfProtection = true
+
+# Tamaño máximo de archivo para upload (en MB)
+# Ajustar según necesidades (para CSVs, JSONs, etc.)
+maxUploadSize = 200
+
+# Modo headless (sin abrir browser automáticamente)
+# true: para producción y deployment
+# false: para desarrollo local
+headless = true
+
+# Habilitar websocket compression
+# Mejora el rendimiento en conexiones lentas
+enableWebsocketCompression = true
+
+# Timeout para conexiones inactivas (en segundos)
+# 0 = sin timeout
+maxMessageSize = 200
+
+
+# ============================================================================
+# [browser] - Configuración del navegador
+# ============================================================================
+[browser]
+# Recopilar estadísticas de uso anónimas
+# false: para cumplir con políticas de privacidad
+gatherUsageStats = false
+
+# Dirección del servidor que se muestra en el navegador
+# "localhost" para desarrollo local
+# Cambiar según deployment (dominio o IP pública)
+serverAddress = "localhost"
+
+# Puerto que se muestra en el navegador
+# Útil cuando hay redirección de puertos
+serverPort = 8501
+
+
+# ============================================================================
+# [runner] - Configuración del ejecutor de scripts
+# ============================================================================
+[runner]
+# Habilitar "magic commands"
+# Permite que expresiones Python se muestren automáticamente
+magicEnabled = true
+
+# Habilitar reruns rápidos
+# Mejora la experiencia de desarrollo
+fastReruns = true
+
+# Modo de ejecución de comandos
+# "runOnSave": ejecutar al guardar cambios (desarrollo)
+# "default": ejecución normal
+postProcessing = "default"
+
+# Limitar número de reruns automáticos
+# Previene loops infinitos en desarrollo
+maxReruns = 10
+
+
+# ============================================================================
+# [client] - Configuración del cliente
+# ============================================================================
+[client]
+# Mostrar mensajes de error detallados
+# true: útil para debugging
+# false: para producción (más limpio)
+showErrorDetails = true
+
+# Toolbar en la esquina superior derecha
+# "auto": mostrar según contexto
+# "developer": siempre mostrar (para desarrollo)
+# "viewer": siempre ocultar (para producción)
+toolbarMode = "auto"
+
+
+# ============================================================================
+# [logger] - Configuración de logging
+# ============================================================================
+[logger]
+# Nivel de logging
+# Opciones: "error", "warning", "info", "debug"
+# Producción: "warning" o "error"
+# Desarrollo: "info" o "debug"
+level = "info"
+
+# Formato de mensajes de log
+messageFormat = "%(asctime)s %(levelname)s: %(message)s"
+
+
+# ============================================================================
+# [deprecation] - Configuración de advertencias de deprecación
+# ============================================================================
+[deprecation]
+# Mostrar advertencias sobre funciones deprecadas
+# true: útil en desarrollo para mantener código actualizado
+# false: para producción (evita confundir a usuarios)
+showPyplotGlobalUse = false
+
+
+# ============================================================================
+# [mapbox] - Configuración de Mapbox (si se usan mapas)
+# ============================================================================
+# [mapbox]
+# Token de acceso de Mapbox (si se necesita)
+# token = "your-mapbox-token-here"
+
+
+# ============================================================================
+# [s3] - Configuración de AWS S3 (si se usa para almacenamiento)
+# ============================================================================
+# [s3]
+# accessKeyId = "your-access-key-id"
+# secretAccessKey = "your-secret-access-key"
+# bucket = "your-bucket-name"
+# region = "us-east-1"
+
+
+# ============================================================================
+# NOTAS DE DEPLOYMENT
+# ============================================================================
+#
+# Para desarrollo local:
+# - headless = false
+# - address = "localhost"
+# - showErrorDetails = true
+# - level = "debug"
+#
+# Para producción (Docker/Cloud):
+# - headless = true
+# - address = "0.0.0.0"
+# - showErrorDetails = false
+# - level = "warning"
+# - gatherUsageStats = false
+#
+# Para Cloud Run:
+# - port = $PORT (variable de entorno)
+# - address = "0.0.0.0"
+# - headless = true
+#
+# Para Streamlit Cloud:
+# - La mayoría de configuraciones se manejan automáticamente
+# - Solo personalizar theme y comportamiento específico
+#
+# ============================================================================

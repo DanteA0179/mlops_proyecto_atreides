@@ -1,0 +1,90 @@
+# ============================================================================
+# Docker Compose Configuration for Streamlit + API
+# Energy Optimization AI - Steel Industry
+# ============================================================================
+#
+# Este archivo orquesta los servicios necesarios para ejecutar la aplicación
+# completa: API Backend + Streamlit Frontend
+#
+# Uso:
+#   docker-compose -f docker-compose.streamlit.yml up --build
+#   docker-compose -f docker-compose.streamlit.yml down
+#
+# Autor: Equipo Atreides
+# User Story: US-033 - Deployment de Streamlit
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # API Backend Service
+  # ==========================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: energy-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://localhost:5000}
+      - ENVIRONMENT=production
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Streamlit Frontend Service
+  # ==========================================================================
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: energy-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - energy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  energy-network:
+    driver: bridge
+    name: energy-network
+
+# ============================================================================
+# Volumes (opcional, para persistencia)
+# ============================================================================
+# volumes:
+#   models-data:
+#   app-data:
