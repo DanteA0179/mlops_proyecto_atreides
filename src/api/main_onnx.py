@@ -6,12 +6,10 @@ Simplified version that only uses ONNX models, no pickle models.
 
 import logging
 from datetime import datetime
-from typing import Dict
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from src.api.middleware.error_handler import (
     general_exception_handler,
@@ -59,7 +57,7 @@ app.include_router(predict_onnx.router)
 
 
 @app.get("/health")
-async def health_check() -> Dict:
+async def health_check() -> dict:
     """Health check endpoint."""
     return {
         "status": "healthy",
@@ -76,7 +74,7 @@ async def health_check() -> Dict:
     summary="Root Endpoint",
     description="Welcome message and API information",
 )
-async def root() -> Dict:
+async def root() -> dict:
     """Root endpoint with API information."""
     return {
         "message": "Welcome to Energy Optimization API (ONNX)",

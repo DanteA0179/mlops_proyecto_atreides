@@ -23,10 +23,11 @@ from pathlib import Path
 from typing import Any
 
 import joblib
-import mlflow
 import mlflow.sklearn
 import numpy as np
 import psutil
+
+import mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +35,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_TRACKING_URI = "http://localhost:5000"
 
 
-def setup_mlflow_experiment(
-    experiment_name: str, tracking_uri: str = DEFAULT_TRACKING_URI
-) -> str:
+def setup_mlflow_experiment(experiment_name: str, tracking_uri: str = DEFAULT_TRACKING_URI) -> str:
     """
     Setup MLflow experiment and return experiment_id.
 
@@ -126,7 +125,11 @@ def log_system_metrics() -> dict[str, Any]:
         # GPU information
         try:
             result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"],
+                [
+                    "nvidia-smi",
+                    "--query-gpu=name,memory.total,driver_version",
+                    "--format=csv,noheader",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -143,24 +146,30 @@ def log_system_metrics() -> dict[str, Any]:
             system_info["gpu_available"] = False
 
         # Log to MLflow as params (for filtering) and metrics (for comparison)
-        mlflow.log_params({
-            "system_platform": system_info["platform"],
-            "system_python_version": system_info["python_version"],
-            "system_cpu_count": system_info["cpu_count"],
-            "system_gpu_available": system_info["gpu_available"],
-        })
+        mlflow.log_params(
+            {
+                "system_platform": system_info["platform"],
+                "system_python_version": system_info["python_version"],
+                "system_cpu_count": system_info["cpu_count"],
+                "system_gpu_available": system_info["gpu_available"],
+            }
+        )
 
         if system_info["gpu_available"]:
-            mlflow.log_params({
-                "system_gpu_name": system_info["gpu_name"],
-                "system_gpu_memory": system_info["gpu_memory_mb"],
-            })
+            mlflow.log_params(
+                {
+                    "system_gpu_name": system_info["gpu_name"],
+                    "system_gpu_memory": system_info["gpu_memory_mb"],
+                }
+            )
 
-        mlflow.log_metrics({
-            "system_memory_total_gb": system_info["memory_total_gb"],
-            "system_memory_available_gb": system_info["memory_available_gb"],
-            "system_cpu_percent": system_info["cpu_percent"],
-        })
+        mlflow.log_metrics(
+            {
+                "system_memory_total_gb": system_info["memory_total_gb"],
+                "system_memory_available_gb": system_info["memory_available_gb"],
+                "system_cpu_percent": system_info["cpu_percent"],
+            }
+        )
 
         logger.info("Logged system metrics to MLflow")
         logger.info(f"  CPU: {system_info['cpu_count']} cores")
@@ -231,7 +240,9 @@ def log_model_metrics(metrics: dict[str, float], prefix: str = "") -> None:
         raise
 
 
-def log_cv_results(cv_scores: dict[str, dict[str, float]], fold_scores: list[dict[str, float]]) -> None:
+def log_cv_results(
+    cv_scores: dict[str, dict[str, float]], fold_scores: list[dict[str, float]]
+) -> None:
     """
     Log cross-validation results to MLflow.
 
@@ -312,7 +323,7 @@ def log_feature_importance(
         # Get feature importance
         if hasattr(xgb_model, "feature_importances_"):
             importances = xgb_model.feature_importances_
-            importance_dict = dict(zip(feature_names, importances))
+            importance_dict = dict(zip(feature_names, importances, strict=False))
         elif hasattr(xgb_model, "get_booster"):
             # For XGBoost models with get_booster method
             booster = xgb_model.get_booster()
@@ -320,9 +331,7 @@ def log_feature_importance(
 
             # Map feature indices to names if needed
             if all(isinstance(k, str) and k.startswith("f") for k in importance_dict.keys()):
-                importance_dict = {
-                    feature_names[int(k[1:])]: v for k, v in importance_dict.items()
-                }
+                importance_dict = {feature_names[int(k[1:])]: v for k, v in importance_dict.items()}
         else:
             raise ValueError("Model does not support feature importance extraction")
 
@@ -333,9 +342,7 @@ def log_feature_importance(
         }
 
         # Sort by importance
-        importance_dict = dict(
-            sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)
-        )
+        importance_dict = dict(sorted(importance_dict.items(), key=lambda x: x[1], reverse=True))
 
         # Save as JSON artifact
         temp_path = Path(f"temp_feature_importance_{importance_type}.json")
@@ -346,10 +353,12 @@ def log_feature_importance(
         temp_path.unlink()
 
         # Log top 10 features as metrics
-        for i, (feature, importance) in enumerate(list(importance_dict.items())[:10]):
+        for i, (_feature, importance) in enumerate(list(importance_dict.items())[:10]):
             mlflow.log_metric(f"feature_importance_{importance_type}_rank{i+1}", importance)
 
-        logger.info(f"Logged feature importance ({importance_type}) for {len(importance_dict)} features")
+        logger.info(
+            f"Logged feature importance ({importance_type}) for {len(importance_dict)} features"
+        )
 
         return importance_dict
 

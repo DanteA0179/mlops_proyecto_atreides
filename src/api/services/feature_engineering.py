@@ -7,7 +7,6 @@ integrating temporal features (US-011) and preprocessing pipeline (US-012).
 
 import logging
 from pathlib import Path
-from typing import List
 
 import numpy as np
 import polars as pl
@@ -62,9 +61,7 @@ class FeatureService:
             If preprocessing pipeline not found
         """
         if not preprocessing_pipeline_path:
-            preprocessing_pipeline_path = (
-                "models/preprocessing/preprocessing_pipeline.pkl"
-            )
+            preprocessing_pipeline_path = "models/preprocessing/preprocessing_pipeline.pkl"
 
         pipeline_path = Path(preprocessing_pipeline_path)
         if not pipeline_path.exists():
@@ -145,7 +142,7 @@ class FeatureService:
 
         return features
 
-    def transform_batch(self, requests: List[PredictionRequest]) -> np.ndarray:
+    def transform_batch(self, requests: list[PredictionRequest]) -> np.ndarray:
         """
         Transform batch of API requests to model-ready features.
 
@@ -234,7 +231,7 @@ class FeatureService:
         ]
         return days[day_of_week]
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self) -> list[str]:
         """
         Get names of all 18 features after transformation.
 

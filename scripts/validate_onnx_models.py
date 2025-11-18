@@ -44,7 +44,7 @@ def main():
     failed = sum(1 for r in results if r.get("status") == "FAILED")
     errors = sum(1 for r in results if r.get("status") == "ERROR")
 
-    logger.info(f"\nValidation Summary:")
+    logger.info("\nValidation Summary:")
     logger.info(f"  ✓ Passed: {passed}")
     logger.info(f"  ✗ Failed: {failed}")
     logger.info(f"  ⚠ Errors: {errors}")

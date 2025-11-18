@@ -8,7 +8,6 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -52,8 +51,8 @@ def set_services(model_svc, feature_svc):
     summary="Predict Energy Consumption",
     description="""
     Predice el consumo energético para una observación individual.
-    
-    Este endpoint utiliza un modelo ensemble de ML para predecir el consumo 
+
+    Este endpoint utiliza un modelo ensemble de ML para predecir el consumo
     de energía basado en características operacionales de la planta siderúrgica.
     Incluye intervalos de confianza al 95% para cuantificar la incertidumbre.
     """,
@@ -71,10 +70,10 @@ def set_services(model_svc, feature_svc):
                         "model_type": "stacking_ensemble",
                         "prediction_timestamp": "2025-11-16T10:30:00Z",
                         "features_used": 18,
-                        "prediction_id": "pred_8f3a9b2c"
+                        "prediction_id": "pred_8f3a9b2c",
                     }
                 }
-            }
+            },
         },
         422: {
             "description": "Error de validación",
@@ -85,26 +84,24 @@ def set_services(model_svc, feature_svc):
                             {
                                 "loc": ["body", "load_type"],
                                 "msg": "load_type must be one of ['Light', 'Medium', 'Maximum']",
-                                "type": "value_error"
+                                "type": "value_error",
                             }
                         ]
                     }
                 }
-            }
+            },
         },
-        500: {
-            "description": "Error interno del servidor"
-        }
-    }
+        500: {"description": "Error interno del servidor"},
+    },
 )
 async def predict_single(request: PredictionRequest) -> PredictionResponse:
     """
     Predict energy consumption for single observation.
-    
+
     ## Descripción
     Este endpoint recibe las características de operación de la planta siderúrgica
     y retorna una predicción del consumo energético junto con intervalos de confianza.
-    
+
     ## Características de Entrada
     - **lagging_reactive_power**: Potencia reactiva en atraso (kVarh)
     - **leading_reactive_power**: Potencia reactiva en adelanto (kVarh)
@@ -114,7 +111,7 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
     - **nsm**: Segundos desde medianoche (0-86400)
     - **day_of_week**: Día de la semana (0=Lunes, 6=Domingo)
     - **load_type**: Tipo de carga (Light, Medium, Maximum)
-    
+
     ## Ejemplo curl
     ```bash
     curl -X POST "http://localhost:8000/predict" \\
@@ -130,11 +127,11 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
         "load_type": "Medium"
       }'
     ```
-    
+
     ## Ejemplo Python
     ```python
     import requests
-    
+
     response = requests.post(
         "http://localhost:8000/predict",
         json={
@@ -183,7 +180,7 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
         # Log prediction for monitoring
         try:
             feature_names = feature_service.get_feature_names()
-            features_dict = dict(zip(feature_names, features[0].tolist()))
+            features_dict = dict(zip(feature_names, features[0].tolist(), strict=False))
             log_prediction(features_dict, float(prediction[0]))
         except Exception as e:
             logger.warning(f"Failed to log prediction for monitoring: {e}")
@@ -227,7 +224,7 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
     summary="Batch Predict Energy Consumption",
     description="""
     Predice el consumo energético para múltiples observaciones en una sola petición.
-    
+
     Este endpoint permite procesar hasta 1000 predicciones simultáneamente,
     optimizando el throughput para escenarios de planificación o análisis masivo.
     Incluye estadísticas agregadas del lote procesado.
@@ -241,55 +238,47 @@ async def predict_single(request: PredictionRequest) -> PredictionResponse:
                     "example": {
                         "predictions": [
                             {"predicted_usage_kwh": 28.34, "prediction_id": "pred_abc123"},
-                            {"predicted_usage_kwh": 45.67, "prediction_id": "pred_def456"}
+                            {"predicted_usage_kwh": 45.67, "prediction_id": "pred_def456"},
                         ],
                         "summary": {
                             "total_predictions": 2,
                             "avg_predicted_usage": 37.00,
                             "min_predicted_usage": 28.34,
                             "max_predicted_usage": 45.67,
-                            "processing_time_ms": 45.32
+                            "processing_time_ms": 45.32,
                         },
                         "model_version": "stacking_ensemble_v1",
-                        "batch_timestamp": "2025-11-16T10:30:00Z"
+                        "batch_timestamp": "2025-11-16T10:30:00Z",
                     }
                 }
-            }
+            },
         },
         400: {
             "description": "Error de validación del batch",
             "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Batch cannot exceed 1000 predictions"
-                    }
-                }
-            }
+                "application/json": {"example": {"detail": "Batch cannot exceed 1000 predictions"}}
+            },
         },
-        422: {
-            "description": "Error de validación en items del batch"
-        },
-        500: {
-            "description": "Error interno del servidor"
-        }
-    }
+        422: {"description": "Error de validación en items del batch"},
+        500: {"description": "Error interno del servidor"},
+    },
 )
 async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
     """
     Predict energy consumption for batch of observations.
-    
+
     ## Descripción
     Procesa múltiples predicciones en una sola petición HTTP, ideal para:
     - Planificación de turnos completos (24 horas)
     - Análisis what-if de múltiples escenarios
     - Optimización de horarios de producción
     - Generación de reportes masivos
-    
+
     ## Límites
     - **Mínimo**: 1 predicción
     - **Máximo**: 1000 predicciones por request
     - **Timeout**: 30 segundos
-    
+
     ## Ejemplo curl
     ```bash
     curl -X POST "http://localhost:8000/predict/batch" \\
@@ -319,11 +308,11 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
         ]
       }'
     ```
-    
+
     ## Ejemplo Python
     ```python
     import requests
-    
+
     batch_data = {
         "predictions": [
             {
@@ -339,7 +328,7 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
             # ... más predicciones
         ]
     }
-    
+
     response = requests.post(
         "http://localhost:8000/predict/batch",
         json=batch_data
@@ -382,7 +371,7 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
         logger.info(f"Batch prediction completed: {len(predictions)} predictions")
 
         # Generate prediction items
-        prediction_items: List[BatchPredictionItem] = []
+        prediction_items: list[BatchPredictionItem] = []
         for pred in predictions:
             prediction_items.append(
                 BatchPredictionItem(

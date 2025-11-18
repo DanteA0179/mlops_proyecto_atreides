@@ -18,13 +18,13 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import numpy as np
 import onnx
 import torch
 from onnxmltools.convert import convert_lightgbm, convert_xgboost
 from onnxmltools.convert.common.data_types import FloatTensorType
 from skl2onnx import convert_sklearn, to_onnx
 from skl2onnx.common.data_types import FloatTensorType as SklearnFloatTensorType
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -118,9 +118,9 @@ class ONNXExporter:
 
         model = joblib.load(model_path)
 
-        if hasattr(model, 'named_steps'):
+        if hasattr(model, "named_steps"):
             logger.info("Detected sklearn Pipeline, extracting final estimator")
-            model = model.named_steps['model']
+            model = model.named_steps["model"]
 
         if output_path is None:
             output_path = self.output_dir / "xgboost.onnx"
@@ -182,18 +182,18 @@ class ONNXExporter:
 
         model = joblib.load(model_path)
 
-        if hasattr(model, 'named_steps'):
+        if hasattr(model, "named_steps"):
             logger.info("Detected sklearn Pipeline, extracting final estimator")
-            model = model.named_steps['model']
+            model = model.named_steps["model"]
 
         if output_path is None:
             output_path = self.output_dir / "lightgbm.onnx"
         else:
             output_path = Path(output_path)
 
-        num_features = model.n_features_ if hasattr(model, 'n_features_') else self.NUM_FEATURES
+        num_features = model.n_features_ if hasattr(model, "n_features_") else self.NUM_FEATURES
         logger.info(f"Model expects {num_features} features")
-        
+
         initial_types = [("input", FloatTensorType([None, num_features]))]
         onnx_model = convert_lightgbm(model, initial_types=initial_types)
 
@@ -234,9 +234,9 @@ class ONNXExporter:
 
         model = joblib.load(model_path)
 
-        if hasattr(model, 'named_steps'):
+        if hasattr(model, "named_steps"):
             logger.info("Detected sklearn Pipeline, extracting final estimator")
-            model = model.named_steps['model']
+            model = model.named_steps["model"]
 
         if output_path is None:
             output_path = self.output_dir / "catboost.onnx"
@@ -307,26 +307,29 @@ class ONNXExporter:
             for name, base_model in ensemble.base_models_.items():
                 base_output = output_dir / f"{model_type}_base_{name}.onnx"
 
-                if hasattr(base_model, 'named_steps'):
+                if hasattr(base_model, "named_steps"):
                     logger.info(f"Base model {name} is a Pipeline, extracting estimator")
-                    base_model = base_model.named_steps['model']
+                    base_model = base_model.named_steps["model"]
 
                 if "xgboost" in name.lower() or "xgb" in name.lower():
                     try:
                         import xgboost as xgb
+
                         temp_json = output_dir / f"temp_{name}.json"
                         base_model.save_model(str(temp_json))
-                        
+
                         booster = xgb.Booster()
                         booster.load_model(str(temp_json))
-                        
+
                         initial_types = [("input", FloatTensorType([None, self.NUM_FEATURES]))]
                         onnx_model = convert_xgboost(booster, initial_types=initial_types)
-                        
+
                         temp_json.unlink()
                     except Exception as e:
                         logger.error(f"Failed to export XGBoost base model {name}: {e}")
-                        logger.warning(f"Skipping XGBoost model {name} - will use LightGBM and CatBoost only")
+                        logger.warning(
+                            f"Skipping XGBoost model {name} - will use LightGBM and CatBoost only"
+                        )
                         continue
                 elif "lightgbm" in name.lower() or "lgb" in name.lower():
                     initial_types = [("input", FloatTensorType([None, self.NUM_FEATURES]))]
@@ -334,15 +337,15 @@ class ONNXExporter:
                 elif "catboost" in name.lower() or "cat" in name.lower():
                     try:
                         from catboost.utils import convert_to_onnx_object
-                        
+
                         onnx_model_proto = convert_to_onnx_object(base_model)
-                        
+
                         if isinstance(onnx_model_proto, bytes):
                             with open(base_output, "wb") as f:
                                 f.write(onnx_model_proto)
                         else:
                             onnx.save_model(onnx_model_proto, str(base_output))
-                        
+
                         exported_models[f"base_{name}"] = str(base_output)
                         logger.info(f"Base model {name} exported to {base_output}")
                         continue
@@ -367,9 +370,9 @@ class ONNXExporter:
 
             num_base_models = len([k for k in exported_models.keys() if k.startswith("base_")])
             logger.info(f"Exporting meta-model with {num_base_models} base model inputs")
-            
+
             try:
-                if hasattr(meta_model, '__class__') and 'lightgbm' in str(type(meta_model)).lower():
+                if hasattr(meta_model, "__class__") and "lightgbm" in str(type(meta_model)).lower():
                     logger.info("Meta-model is LightGBM, using convert_lightgbm")
                     initial_types = [("input", FloatTensorType([None, num_base_models]))]
                     onnx_meta = convert_lightgbm(meta_model, initial_types=initial_types)

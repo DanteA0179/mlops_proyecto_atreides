@@ -6,7 +6,6 @@ This module provides /model/info and /model/metrics endpoints.
 
 import logging
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -91,7 +90,7 @@ async def get_model_info() -> ModelInfoResponse:
 
         # Get feature information
         feature_names = feature_service.get_feature_names()
-        features: List[FeatureInfo] = []
+        features: list[FeatureInfo] = []
         for name in feature_names:
             features.append(
                 FeatureInfo(
@@ -111,13 +110,15 @@ async def get_model_info() -> ModelInfoResponse:
             training_dataset=TrainingDatasetInfo(
                 name="steel_featured.parquet", samples=27928, features=18
             ),
-            base_models=[
-                BaseModelInfo(name="XGBoost", contribution_pct=19.3),
-                BaseModelInfo(name="LightGBM", contribution_pct=40.5),
-                BaseModelInfo(name="CatBoost", contribution_pct=40.2),
-            ]
-            if model_service.model_type == "stacking_ensemble"
-            else None,
+            base_models=(
+                [
+                    BaseModelInfo(name="XGBoost", contribution_pct=19.3),
+                    BaseModelInfo(name="LightGBM", contribution_pct=40.5),
+                    BaseModelInfo(name="CatBoost", contribution_pct=40.2),
+                ]
+                if model_service.model_type == "stacking_ensemble"
+                else None
+            ),
             meta_model=None,  # Can be filled with actual meta-model info
             features=features,
             training_metrics={
@@ -177,23 +178,15 @@ async def get_model_metrics() -> ModelMetricsResponse:
 
         # Calculate production metrics
         avg_time = (
-            sum(production_metrics["prediction_times"]) /
-            len(production_metrics["prediction_times"])
+            sum(production_metrics["prediction_times"])
+            / len(production_metrics["prediction_times"])
             if production_metrics["prediction_times"]
             else 0.0
         )
 
         sorted_times = sorted(production_metrics["prediction_times"])
-        p95_time = (
-            sorted_times[int(len(sorted_times) * 0.95)]
-            if sorted_times
-            else 0.0
-        )
-        p99_time = (
-            sorted_times[int(len(sorted_times) * 0.99)]
-            if sorted_times
-            else 0.0
-        )
+        p95_time = sorted_times[int(len(sorted_times) * 0.95)] if sorted_times else 0.0
+        p99_time = sorted_times[int(len(sorted_times) * 0.99)] if sorted_times else 0.0
 
         # Calculate prediction distribution
         values = production_metrics["prediction_values"]

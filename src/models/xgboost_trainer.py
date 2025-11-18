@@ -252,9 +252,15 @@ def train_xgboost_with_cv(
                     fold_scores.append({})
                 fold_scores[i][metric] = float(score)
 
-        logger.info(f"CV Results - RMSE: {cv_scores['rmse']['mean']:.4f} ± {cv_scores['rmse']['std']:.4f}")
-        logger.info(f"CV Results - MAE: {cv_scores['mae']['mean']:.4f} ± {cv_scores['mae']['std']:.4f}")
-        logger.info(f"CV Results - R2: {cv_scores['r2']['mean']:.4f} ± {cv_scores['r2']['std']:.4f}")
+        logger.info(
+            f"CV Results - RMSE: {cv_scores['rmse']['mean']:.4f} ± {cv_scores['rmse']['std']:.4f}"
+        )
+        logger.info(
+            f"CV Results - MAE: {cv_scores['mae']['mean']:.4f} ± {cv_scores['mae']['std']:.4f}"
+        )
+        logger.info(
+            f"CV Results - R2: {cv_scores['r2']['mean']:.4f} ± {cv_scores['r2']['std']:.4f}"
+        )
 
         # Train final model on full training set
         logger.info("Training final model on full training set")

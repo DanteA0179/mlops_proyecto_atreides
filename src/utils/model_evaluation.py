@@ -14,11 +14,9 @@ Functions:
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import polars as pl
 import seaborn as sns
 from matplotlib.figure import Figure
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -32,9 +30,7 @@ plt.rcParams["savefig.dpi"] = 300
 plt.rcParams["font.size"] = 10
 
 
-def calculate_regression_metrics(
-    y_true: np.ndarray, y_pred: np.ndarray
-) -> dict[str, float]:
+def calculate_regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
     """
     Calculate comprehensive regression metrics.
 
@@ -96,7 +92,7 @@ def plot_predictions_vs_actual(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     title: str = "Predictions vs Actual",
-    save_path: Optional[Path] = None,
+    save_path: Path | None = None,
 ) -> Figure:
     """
     Create scatter plot of predictions vs actual values.
@@ -154,7 +150,7 @@ def plot_predictions_vs_actual(
             transform=ax.transAxes,
             fontsize=12,
             verticalalignment="top",
-            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
         )
 
         plt.tight_layout()
@@ -175,7 +171,7 @@ def plot_predictions_vs_actual(
 def plot_residuals(
     y_true: np.ndarray,
     y_pred: np.ndarray,
-    save_path: Optional[Path] = None,
+    save_path: Path | None = None,
 ) -> Figure:
     """
     Create residual plots (histogram + scatter).
@@ -233,7 +229,7 @@ def plot_residuals(
             transform=axes[1].transAxes,
             fontsize=10,
             verticalalignment="top",
-            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
         )
 
         plt.tight_layout()
@@ -255,7 +251,7 @@ def plot_feature_importance(
     importance_dict: dict[str, float],
     top_n: int = 10,
     importance_type: str = "gain",
-    save_path: Optional[Path] = None,
+    save_path: Path | None = None,
 ) -> Figure:
     """
     Create horizontal bar plot of feature importance.
@@ -288,7 +284,7 @@ def plot_feature_importance(
     try:
         # Sort by importance and take top N
         sorted_items = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)[:top_n]
-        features, importances = zip(*sorted_items)
+        features, importances = zip(*sorted_items, strict=False)
 
         # Create horizontal bar plot
         fig, ax = plt.subplots(figsize=(10, max(6, top_n * 0.4)))
@@ -381,7 +377,7 @@ def create_evaluation_report(
         for metric_name, stats in cv_scores.items():
             report += f"| {metric_name.upper()} | {stats['mean']:.4f} | {stats['std']:.4f} |\n"
 
-        report += f"""
+        report += """
 ## Top 10 Most Important Features
 
 | Rank | Feature | Importance |

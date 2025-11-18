@@ -1,64 +1,50 @@
 """
-Model Service for Energy Optimization API.
+Model service orchestrator for Energy Optimization API.
 
-This module provides model loading and prediction functionality,
-supporting multiple model types from Dagster pipeline.
+Coordinates model loading, validation, and prediction using composition.
+Follows Single Responsibility Principle with separate classes for each concern.
 """
 
-import json
 import logging
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any
 
-import joblib
 import numpy as np
 
-try:
-    from mlflow.tracking import MlflowClient
-except ImportError:
-    MlflowClient = None
-
-# Import model classes for pickle deserialization
-try:
-    from src.models.stacking_ensemble import StackingEnsemble
-except ImportError:
-    StackingEnsemble = None
-    logger.warning("StackingEnsemble not available")
+from src.api.services.feature_validator import FeatureValidator
+from src.api.services.model_loader import ModelLoader
+from src.api.services.predictor import Predictor
 
 logger = logging.getLogger(__name__)
 
 
 class ModelService:
     """
-    Model service with support for 8 models from Dagster pipeline.
+    Orchestrate model operations using composition.
+
+    Single Responsibility: Coordinate between loader, validator, and predictor.
+    Delegates specific responsibilities to specialized classes.
 
     Supports:
     - Traditional ML: XGBoost, LightGBM, CatBoost
     - Ensembles: Stacking, Voting
     - Foundation Models: Chronos-2 (3 variants)
 
-    Attributes
+    Parameters
     ----------
-    SUPPORTED_MODELS : Dict[str, str]
-        Mapping of model types to file paths
-    model_type : str
-        Current model type
-    model_path : Path
-        Path to model file
-    model : object
-        Loaded model object
-    scaler : object
-        Loaded scaler (if applicable)
-    metadata : dict
-        Model metadata
-    mlflow_client : mlflow.tracking.MlflowClient
-        MLflow client for tracking
+    model_type : str, default="stacking_ensemble"
+        Type of model to load from supported models
+    mlflow_tracking_uri : str, default="http://localhost:5000"
+        MLflow tracking server URI
+    expected_features : list[str], optional
+        List of expected feature names for validation
 
     Examples
     --------
-    >>> model_service = ModelService(model_type="stacking_ensemble")
-    >>> model_service.load_model()
-    >>> prediction = model_service.predict(features)
+    >>> from src.api.services.model_service import ModelService
+    >>> service = ModelService(model_type="stacking_ensemble")
+    >>> service.load_model()
+    >>> prediction = service.predict(features)
     """
 
     SUPPORTED_MODELS = {
@@ -79,22 +65,9 @@ class ModelService:
         self,
         model_type: str = "stacking_ensemble",
         mlflow_tracking_uri: str = "http://localhost:5000",
+        expected_features: list[str] | None = None,
     ):
-        """
-        Initialize model service.
-
-        Parameters
-        ----------
-        model_type : str, default="stacking_ensemble"
-            Type of model to load
-        mlflow_tracking_uri : str, default="http://localhost:5000"
-            MLflow tracking server URI
-
-        Raises
-        ------
-        ValueError
-            If model_type is not supported
-        """
+        """Initialize model service with dependency injection."""
         if model_type not in self.SUPPORTED_MODELS:
             raise ValueError(
                 f"Unsupported model type: {model_type}. "
@@ -102,27 +75,24 @@ class ModelService:
             )
 
         self.model_type = model_type
-        self.model_path = Path(self.SUPPORTED_MODELS.get(model_type))
-        self.model = None
+        self.model_path = Path(self.SUPPORTED_MODELS[model_type])
+
+        # Composition: delegate responsibilities to specialized classes
+        self.loader = ModelLoader(mlflow_tracking_uri)
+        self.predictor: Predictor | None = None
+        self.validator: FeatureValidator | None = None
         self.scaler = None
         self.metadata = None
 
-        # Initialize MLflow client if available
-        if MlflowClient is not None:
-            try:
-                self.mlflow_client = MlflowClient(mlflow_tracking_uri)
-            except Exception as e:
-                logger.warning(f"Failed to initialize MLflow client: {e}")
-                self.mlflow_client = None
-        else:
-            logger.warning("MLflow not available, client disabled")
-            self.mlflow_client = None
+        # Setup validator if features provided
+        if expected_features:
+            self.validator = FeatureValidator(expected_features)
 
         logger.info(f"ModelService initialized with model_type={model_type}")
 
     def load_model(self) -> None:
         """
-        Load model from pickle with metadata.
+        Load model, metadata, and scaler from disk.
 
         For Chronos-2 models, loads from Dagster pipeline artifacts.
         For traditional models, loads from MLflow/local storage.
@@ -134,34 +104,22 @@ class ModelService:
         RuntimeError
             If model loading fails
         """
-        if not self.model_path.exists():
-            raise FileNotFoundError(
-                f"Model not found: {self.model_path}. "
-                f"Run Dagster pipeline to train model first."
-            )
+        # Delegate loading to ModelLoader
+        model = self.loader.load_from_disk(self.model_path)
 
-        try:
-            # Load main model using joblib (compatible with sklearn pipelines and ensembles)
-            self.model = joblib.load(self.model_path)
-            logger.info(f"Model loaded successfully from {self.model_path}")
+        # Initialize predictor with loaded model
+        self.predictor = Predictor(model)
 
-            # Load metadata (JSON)
-            metadata_path = self.model_path.with_suffix(".json")
-            if metadata_path.exists():
-                with open(metadata_path) as f:
-                    self.metadata = json.load(f)
-                logger.info(f"Model metadata loaded from {metadata_path}")
+        # Load metadata (JSON)
+        metadata_path = self.model_path.with_suffix(".json")
+        self.metadata = self.loader.load_metadata(metadata_path)
 
-            # For traditional models, load scaler
-            if self.model_type in ["xgboost", "lightgbm", "catboost"]:
-                scaler_path = Path("models/preprocessing/scaler.pkl")
-                if scaler_path.exists():
-                    self.scaler = joblib.load(scaler_path)
-                    logger.info(f"Scaler loaded from {scaler_path}")
+        # For traditional models, load scaler
+        if self.model_type in ["xgboost", "lightgbm", "catboost"]:
+            scaler_path = Path("models/preprocessing/scaler.pkl")
+            self.scaler = self.loader.load_scaler(scaler_path)
 
-        except Exception as e:
-            logger.error(f"Failed to load model: {str(e)}", exc_info=True)
-            raise RuntimeError(f"Model loading failed: {str(e)}")
+        logger.info(f"Model loaded successfully from {self.model_path}")
 
     def predict(self, features: np.ndarray) -> np.ndarray:
         """
@@ -182,21 +140,19 @@ class ModelService:
         RuntimeError
             If model not loaded or prediction fails
         """
-        if self.model is None:
+        if self.predictor is None:
             raise RuntimeError("Model not loaded. Call load_model() first.")
 
-        try:
-            predictions = self.model.predict(features)
-            logger.debug(f"Prediction made: shape={predictions.shape}")
-            return predictions
+        # Apply scaler if available
+        if self.scaler is not None:
+            features = self.scaler.transform(features)
 
-        except Exception as e:
-            logger.error(f"Prediction failed: {str(e)}", exc_info=True)
-            raise RuntimeError(f"Prediction failed: {str(e)}")
+        # Delegate prediction to Predictor
+        return self.predictor.predict_batch(features)
 
     def predict_interval(
         self, features: np.ndarray, alpha: float = 0.05
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """
         Calculate confidence intervals for predictions.
 
@@ -209,7 +165,7 @@ class ModelService:
 
         Returns
         -------
-        Tuple[Optional[float], Optional[float]]
+        tuple[float | None, float | None]
             Lower and upper confidence bounds (None if not supported)
 
         Notes
@@ -217,18 +173,24 @@ class ModelService:
         Currently returns None for models without interval support.
         Future implementation can add quantile regression or bootstrapping.
         """
-        # For now, return None (not all models support intervals)
-        # Future: implement quantile regression or bootstrapping
-        logger.debug("Confidence intervals not implemented yet")
-        return None, None
+        if self.predictor is None:
+            raise RuntimeError("Model not loaded. Call load_model() first.")
 
-    def get_mlflow_info(self) -> Optional[Dict]:
+        # Apply scaler if available
+        if self.scaler is not None:
+            features = self.scaler.transform(features)
+
+        # Delegate to predictor
+        _, intervals = self.predictor.predict_with_confidence(features, alpha)
+        return intervals
+
+    def get_mlflow_info(self) -> dict | None:
         """
         Get MLflow experiment info for current model.
 
         Returns
         -------
-        Optional[Dict]
+        dict | None
             MLflow experiment information or None if not found
 
         Examples
@@ -247,18 +209,8 @@ class ModelService:
         }
 
         exp_name = experiments.get(self.model_type)
-        if exp_name and self.mlflow_client is not None:
-            try:
-                experiment = self.mlflow_client.get_experiment_by_name(exp_name)
-                if experiment:
-                    return {
-                        "experiment_id": experiment.experiment_id,
-                        "experiment_name": exp_name,
-                        "artifact_location": experiment.artifact_location,
-                    }
-            except Exception as e:
-                logger.warning(f"Failed to get MLflow info: {str(e)}")
-                return None
+        if exp_name:
+            return self.loader.get_mlflow_experiment_info(exp_name)
         return None
 
     @property
@@ -285,4 +237,24 @@ class ModelService:
         bool
             True if model is loaded, False otherwise
         """
-        return self.model is not None
+        return self.predictor is not None
+
+    def validate_features(self, features: dict[str, Any]) -> tuple[bool, str | None]:
+        """
+        Validate input features against schema.
+
+        Parameters
+        ----------
+        features : dict[str, any]
+            Feature dictionary to validate
+
+        Returns
+        -------
+        tuple[bool, str | None]
+            (is_valid, error_message)
+        """
+        if self.validator is None:
+            logger.debug("No validator configured, skipping validation")
+            return True, None
+
+        return self.validator.validate(features)

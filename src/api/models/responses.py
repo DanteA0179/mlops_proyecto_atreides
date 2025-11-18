@@ -5,7 +5,8 @@ This module contains all response models used by the API endpoints,
 ensuring consistent and validated responses.
 """
 
-from typing import Dict, List, Literal, Optional, Any
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -38,12 +39,12 @@ class PredictionResponse(BaseModel):
     predicted_usage_kwh: float = Field(
         ..., description="Predicted energy consumption in kWh", examples=[45.67]
     )
-    confidence_interval_lower: Optional[float] = Field(
+    confidence_interval_lower: float | None = Field(
         None,
         description="Lower bound of 95% confidence interval (if available)",
         examples=[42.10],
     )
-    confidence_interval_upper: Optional[float] = Field(
+    confidence_interval_upper: float | None = Field(
         None,
         description="Upper bound of 95% confidence interval (if available)",
         examples=[49.24],
@@ -87,7 +88,7 @@ class PredictionResponse(BaseModel):
                         "prediction_timestamp": "2025-11-16T02:15:00Z",
                         "features_used": 18,
                         "prediction_id": "pred_abc123",
-                    }
+                    },
                 },
                 {
                     "summary": "Predicción Carga Medium",
@@ -101,7 +102,7 @@ class PredictionResponse(BaseModel):
                         "prediction_timestamp": "2025-11-16T10:30:00Z",
                         "features_used": 18,
                         "prediction_id": "pred_8f3a9b2c",
-                    }
+                    },
                 },
                 {
                     "summary": "Predicción Carga Maximum",
@@ -115,8 +116,8 @@ class PredictionResponse(BaseModel):
                         "prediction_timestamp": "2025-11-16T14:00:00Z",
                         "features_used": 18,
                         "prediction_id": "pred_def456",
-                    }
-                }
+                    },
+                },
             ]
         }
     }
@@ -179,9 +180,7 @@ class BatchPredictionResponse(BaseModel):
         ISO 8601 timestamp of batch processing
     """
 
-    predictions: List[BatchPredictionItem] = Field(
-        ..., description="List of predictions"
-    )
+    predictions: list[BatchPredictionItem] = Field(..., description="List of predictions")
     summary: BatchPredictionSummary = Field(..., description="Batch summary statistics")
     model_version: str = Field(..., description="Model version used")
     batch_timestamp: str = Field(..., description="Batch processing timestamp")
@@ -213,14 +212,12 @@ class HealthResponse(BaseModel):
         Current CPU usage percentage
     """
 
-    status: Literal["healthy", "degraded", "unhealthy"] = Field(
-        ..., description="Health status"
-    )
+    status: Literal["healthy", "degraded", "unhealthy"] = Field(..., description="Health status")
     service: str = Field(..., description="Service name")
     version: str = Field(..., description="API version")
     timestamp: str = Field(..., description="Current timestamp")
     model_loaded: bool = Field(..., description="Model loaded status")
-    model_version: Optional[str] = Field(None, description="Model version")
+    model_version: str | None = Field(None, description="Model version")
     uptime_seconds: float = Field(..., description="Uptime in seconds")
     memory_usage_mb: float = Field(..., description="Memory usage in MB")
     cpu_usage_percent: float = Field(..., description="CPU usage percent")
@@ -257,8 +254,8 @@ class MetaModelInfo(BaseModel):
     """
 
     type: str = Field(..., description="Meta-model type")
-    max_depth: Optional[int] = Field(None, description="Maximum depth")
-    n_estimators: Optional[int] = Field(None, description="Number of estimators")
+    max_depth: int | None = Field(None, description="Maximum depth")
+    n_estimators: int | None = Field(None, description="Number of estimators")
 
 
 class FeatureInfo(BaseModel):
@@ -336,15 +333,11 @@ class ModelInfoResponse(BaseModel):
     model_version: str = Field(..., description="Model version")
     model_name: str = Field(..., description="Model name")
     trained_on: str = Field(..., description="Training timestamp")
-    training_dataset: TrainingDatasetInfo = Field(
-        ..., description="Training dataset info"
-    )
-    base_models: Optional[List[BaseModelInfo]] = Field(
-        None, description="Base models (ensembles)"
-    )
-    meta_model: Optional[MetaModelInfo] = Field(None, description="Meta-model info")
-    features: List[FeatureInfo] = Field(..., description="Feature list")
-    training_metrics: Dict[str, float] = Field(..., description="Training metrics")
+    training_dataset: TrainingDatasetInfo = Field(..., description="Training dataset info")
+    base_models: list[BaseModelInfo] | None = Field(None, description="Base models (ensembles)")
+    meta_model: MetaModelInfo | None = Field(None, description="Meta-model info")
+    features: list[FeatureInfo] = Field(..., description="Feature list")
+    training_metrics: dict[str, float] = Field(..., description="Training metrics")
     mlflow_run_id: str = Field(..., description="MLflow run ID")
     artifact_location: str = Field(..., description="Artifact location")
 
@@ -445,11 +438,9 @@ class ModelMetricsResponse(BaseModel):
 
     model_version: str = Field(..., description="Model version")
     timestamp: str = Field(..., description="Current timestamp")
-    training_metrics: Dict[str, Any] = Field(..., description="Training metrics")
+    training_metrics: dict[str, Any] = Field(..., description="Training metrics")
     production_metrics: ProductionMetrics = Field(..., description="Production metrics")
-    load_type_distribution: Dict[str, int] = Field(
-        ..., description="Load type distribution"
-    )
+    load_type_distribution: dict[str, int] = Field(..., description="Load type distribution")
     prediction_distribution: PredictionDistribution = Field(
         ..., description="Prediction distribution"
     )

@@ -64,13 +64,7 @@ def main():
     try:
         result = execute_job(
             defs.get_job_def("training_pipeline"),
-            run_config={
-                "ops": {
-                    "load_config": {
-                        "config": {"config_path": config_path}
-                    }
-                }
-            },
+            run_config={"ops": {"load_config": {"config": {"config_path": config_path}}}},
             instance=DagsterInstance.get(),
         )
 

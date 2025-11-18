@@ -39,17 +39,19 @@ comparison = {
 
 df = pd.DataFrame(comparison)
 
-print("\n" + "="*80)
+print("\n" + "=" * 80)
 print("MODEL COMPARISON: Chronos-2 vs XGBoost vs CUBIST")
-print("="*80)
+print("=" * 80)
 print(df.to_string(index=False))
-print("="*80)
+print("=" * 80)
 
 # Analysis
 print("\nKey Findings:")
 print(f"1. XGBoost RMSE normalized: {xgboost_rmse_norm:.4f}")
 print(f"2. Chronos-2 RMSE normalized: {chronos_rmse_norm:.4f}")
-print(f"3. Performance gap: Chronos-2 is {chronos_rmse_norm/xgboost_rmse_norm:.1f}x worse than XGBoost")
+print(
+    f"3. Performance gap: Chronos-2 is {chronos_rmse_norm/xgboost_rmse_norm:.1f}x worse than XGBoost"
+)
 print(f"4. Target RMSE: {target_rmse_norm:.4f} (not achieved by either)")
 print(f"5. CUBIST benchmark: {cubist_rmse_norm:.4f}")
 

@@ -12,7 +12,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
@@ -63,9 +63,7 @@ class DriftDetectionConfig:
     """Configuration for drift detection."""
 
     thresholds: DriftThresholds = field(default_factory=DriftThresholds)
-    statistical_tests: StatisticalTestThresholds = field(
-        default_factory=StatisticalTestThresholds
-    )
+    statistical_tests: StatisticalTestThresholds = field(default_factory=StatisticalTestThresholds)
 
 
 @dataclass
@@ -97,7 +95,7 @@ class EmailConfig:
     use_tls: bool = True
     sender: str = ""
     password: str = ""
-    recipients: List[str] = field(default_factory=list)
+    recipients: list[str] = field(default_factory=list)
     subject_template: str = "[ALERT] Data Drift Detected - {date}"
     html_template: bool = True
 
@@ -107,7 +105,7 @@ class AlertsConfig:
     """Configuration for alerts."""
 
     enabled: bool = True
-    channels: List[str] = field(default_factory=lambda: ["email"])
+    channels: list[str] = field(default_factory=lambda: ["email"])
     email: EmailConfig = field(default_factory=EmailConfig)
 
 
@@ -149,7 +147,7 @@ class MonitoringConfig:
 
         logger.info(f"Loading configuration from {config_path}")
 
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             config_dict = yaml.safe_load(f)
 
         if not config_dict or "monitoring" not in config_dict:
@@ -164,9 +162,7 @@ class MonitoringConfig:
         ref_data_config = ReferenceDataConfig(
             path=monitoring_config["reference_data"]["path"],
             size=monitoring_config["reference_data"].get("size", 10000),
-            stratify_column=monitoring_config["reference_data"].get(
-                "stratify_column", "Load_Type"
-            ),
+            stratify_column=monitoring_config["reference_data"].get("stratify_column", "Load_Type"),
         )
 
         # Parse production data config
@@ -178,33 +174,31 @@ class MonitoringConfig:
 
         # Parse drift detection config
         drift_thresholds = DriftThresholds(
-            drift_score=monitoring_config["drift_detection"]["thresholds"].get(
-                "drift_score", 0.7
+            drift_score=monitoring_config["drift_detection"]["thresholds"].get("drift_score", 0.7),
+            share_of_drifted_features=monitoring_config["drift_detection"]["thresholds"].get(
+                "share_of_drifted_features", 0.5
             ),
-            share_of_drifted_features=monitoring_config["drift_detection"][
-                "thresholds"
-            ].get("share_of_drifted_features", 0.5),
             feature_drift_score=monitoring_config["drift_detection"]["thresholds"].get(
                 "feature_drift_score", 0.5
             ),
             target_drift_score=monitoring_config["drift_detection"]["thresholds"].get(
                 "target_drift_score", 0.6
             ),
-            prediction_drift_score=monitoring_config["drift_detection"][
-                "thresholds"
-            ].get("prediction_drift_score", 0.6),
+            prediction_drift_score=monitoring_config["drift_detection"]["thresholds"].get(
+                "prediction_drift_score", 0.6
+            ),
         )
 
         stat_test_thresholds = StatisticalTestThresholds(
             psi_threshold=monitoring_config["drift_detection"]["statistical_tests"].get(
                 "psi_threshold", 0.2
             ),
-            ks_pvalue_threshold=monitoring_config["drift_detection"][
-                "statistical_tests"
-            ].get("ks_pvalue_threshold", 0.05),
-            wasserstein_threshold=monitoring_config["drift_detection"][
-                "statistical_tests"
-            ].get("wasserstein_threshold", 0.1),
+            ks_pvalue_threshold=monitoring_config["drift_detection"]["statistical_tests"].get(
+                "ks_pvalue_threshold", 0.05
+            ),
+            wasserstein_threshold=monitoring_config["drift_detection"]["statistical_tests"].get(
+                "wasserstein_threshold", 0.1
+            ),
         )
 
         drift_detection = DriftDetectionConfig(
@@ -226,16 +220,10 @@ class MonitoringConfig:
 
         # Parse reporting config
         reporting = ReportingConfig(
-            output_dir=monitoring_config["reporting"].get(
-                "output_dir", "reports/monitoring"
-            ),
+            output_dir=monitoring_config["reporting"].get("output_dir", "reports/monitoring"),
             retention_days=monitoring_config["reporting"].get("retention_days", 90),
-            compress_old_reports=monitoring_config["reporting"].get(
-                "compress_old_reports", True
-            ),
-            save_json_metrics=monitoring_config["reporting"].get(
-                "save_json_metrics", True
-            ),
+            compress_old_reports=monitoring_config["reporting"].get("compress_old_reports", True),
+            save_json_metrics=monitoring_config["reporting"].get("save_json_metrics", True),
             save_csv_history=monitoring_config["reporting"].get("save_csv_history", True),
         )
 
@@ -300,7 +288,7 @@ class MonitoringConfig:
 
         return value
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert configuration to dictionary.
 
@@ -361,7 +349,7 @@ class MonitoringConfig:
             },
         }
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """
         Validate configuration.
 
@@ -390,9 +378,7 @@ class MonitoringConfig:
                 errors.append("Email sender not configured (check SMTP_SENDER_EMAIL)")
 
             if not self.alerts.email.password:
-                errors.append(
-                    "Email password not configured (check SMTP_SENDER_PASSWORD)"
-                )
+                errors.append("Email password not configured (check SMTP_SENDER_PASSWORD)")
 
             if not self.alerts.email.recipients:
                 errors.append("No email recipients configured")

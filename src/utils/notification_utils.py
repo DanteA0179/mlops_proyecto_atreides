@@ -34,9 +34,7 @@ class NotificationManager:
         """
         self.channels = channels or ["console", "file"]
 
-    def send(
-        self, status: str, metrics: dict, run_id: str | None, config: dict
-    ) -> None:
+    def send(self, status: str, metrics: dict, run_id: str | None, config: dict) -> None:
         """
         Send notification to all configured channels.
 
@@ -69,9 +67,7 @@ class NotificationManager:
             if email_config.get("enabled", False):
                 self._send_email(message, config)
 
-    def _format_message(
-        self, status: str, metrics: dict, run_id: str | None, config: dict
-    ) -> str:
+    def _format_message(self, status: str, metrics: dict, run_id: str | None, config: dict) -> str:
         """
         Format notification message.
 

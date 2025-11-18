@@ -10,7 +10,6 @@ Date: 2025-11-16
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
 
 import pandas as pd
 import polars as pl
@@ -73,18 +72,14 @@ class DataLoader:
         if df_polars.height == 0:
             raise ValueError("Reference data is empty")
 
-        logger.info(
-            f"Loaded reference data: {df_polars.height} rows, {df_polars.width} columns"
-        )
+        logger.info(f"Loaded reference data: {df_polars.height} rows, {df_polars.width} columns")
 
         # Convert to Pandas (required by Evidently)
         df_pandas = df_polars.to_pandas()
 
         return df_pandas
 
-    def load_production_data(
-        self, production_data_path: Optional[Path] = None
-    ) -> pd.DataFrame:
+    def load_production_data(self, production_data_path: Path | None = None) -> pd.DataFrame:
         """
         Load production data (recent predictions).
 
@@ -129,9 +124,7 @@ class DataLoader:
                 f"Drift analysis may be unreliable."
             )
 
-        logger.info(
-            f"Loaded production data: {df_polars.height} rows, {df_polars.width} columns"
-        )
+        logger.info(f"Loaded production data: {df_polars.height} rows, {df_polars.width} columns")
 
         # Convert to Pandas (required by Evidently)
         df_pandas = df_polars.to_pandas()
@@ -140,7 +133,7 @@ class DataLoader:
 
     def validate_schemas(
         self, reference_data: pd.DataFrame, production_data: pd.DataFrame
-    ) -> Tuple[bool, list]:
+    ) -> tuple[bool, list]:
         """
         Validate that reference and production data have compatible schemas.
 
@@ -166,9 +159,7 @@ class DataLoader:
         extra_in_prod = prod_columns - ref_columns
 
         if missing_in_prod:
-            errors.append(
-                f"Columns missing in production data: {sorted(missing_in_prod)}"
-            )
+            errors.append(f"Columns missing in production data: {sorted(missing_in_prod)}")
 
         if extra_in_prod:
             logger.warning(
@@ -240,19 +231,15 @@ class DataLoader:
             if ref_dtype != prod_dtype:
                 try:
                     aligned_data[col] = aligned_data[col].astype(ref_dtype)
-                    logger.debug(
-                        f"Converted column '{col}' from {prod_dtype} to {ref_dtype}"
-                    )
+                    logger.debug(f"Converted column '{col}' from {prod_dtype} to {ref_dtype}")
                 except Exception as e:
-                    logger.warning(
-                        f"Could not convert column '{col}' to {ref_dtype}: {e}"
-                    )
+                    logger.warning(f"Could not convert column '{col}' to {ref_dtype}: {e}")
 
         return aligned_data
 
     def load_and_validate(
-        self, production_data_path: Optional[Path] = None
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        self, production_data_path: Path | None = None
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Load both reference and production data with validation.
 
@@ -292,9 +279,7 @@ class DataLoader:
             is_valid, errors = self.validate_schemas(reference_data, production_data)
 
             if not is_valid:
-                raise ValueError(
-                    f"Schema validation failed after alignment: {'; '.join(errors)}"
-                )
+                raise ValueError(f"Schema validation failed after alignment: {'; '.join(errors)}")
 
         logger.info("Data loading and validation completed successfully")
 

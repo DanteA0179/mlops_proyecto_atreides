@@ -314,7 +314,9 @@ class ONNXModelService:
 onnx_service_cache: dict[str, ONNXModelService] = {}
 
 
-def get_onnx_service(model_type: str = "lightgbm_ensemble", use_gpu: bool = True) -> ONNXModelService:
+def get_onnx_service(
+    model_type: str = "lightgbm_ensemble", use_gpu: bool = True
+) -> ONNXModelService:
     """
     Get or create ONNX model service (singleton pattern).
 

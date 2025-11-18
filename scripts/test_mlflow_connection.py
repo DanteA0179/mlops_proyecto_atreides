@@ -4,8 +4,9 @@ Test MLflow connection to docker-compose service.
 This script verifies that MLflow is accessible and functional.
 """
 
-import mlflow
 import sys
+
+import mlflow
 
 
 def test_mlflow_connection():
@@ -49,7 +50,7 @@ def test_mlflow_connection():
         return True
 
     except Exception as e:
-        print(f"\nMLflow connection test FAILED")
+        print("\nMLflow connection test FAILED")
         print(f"Error: {e}")
         return False
 

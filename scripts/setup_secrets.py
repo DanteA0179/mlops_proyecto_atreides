@@ -19,15 +19,13 @@ Uso:
 """
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Optional
 
 try:
-    from google.cloud import secretmanager
     from google.api_core import exceptions
+    from google.cloud import secretmanager
 except ImportError:
     print("Error: google-cloud-secret-manager no está instalado")
     print("Instalar con: poetry add google-cloud-secret-manager")
@@ -136,7 +134,7 @@ class SecretManagerHandler:
             print(f"Secreto no encontrado: {secret_id}")
 
 
-def get_default_secrets() -> Dict[str, str]:
+def get_default_secrets() -> dict[str, str]:
     """
     Define los secretos por defecto para el proyecto.
 
@@ -148,18 +146,14 @@ def get_default_secrets() -> Dict[str, str]:
         "GCP_PROJECT_ID": os.getenv("GCP_PROJECT_ID", ""),
         "GCP_REGION": os.getenv("GCP_REGION", "us-central1"),
         "GCS_BUCKET_NAME": os.getenv("GCS_BUCKET_NAME", ""),
-
         # DVC Configuration
         "DVC_REMOTE_URL": os.getenv("DVC_REMOTE_URL", ""),
-
         # MLflow Configuration
         "MLFLOW_TRACKING_URI": os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"),
         "MLFLOW_EXPERIMENT_NAME": os.getenv("MLFLOW_EXPERIMENT_NAME", "energy-optimization"),
-
         # API Keys (si son necesarias)
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "HUGGINGFACE_TOKEN": os.getenv("HUGGINGFACE_TOKEN", ""),
-
         # Database (si aplica)
         "DATABASE_URL": os.getenv("DATABASE_URL", ""),
     }
@@ -192,7 +186,7 @@ def load_secrets_command(args):
 
     secrets = get_default_secrets()
 
-    print(f"\nCargando secretos desde Secret Manager...")
+    print("\nCargando secretos desde Secret Manager...")
 
     env_vars = {}
     for secret_id in secrets.keys():
@@ -249,7 +243,7 @@ def setup_dvc_with_secrets(project_id: str, bucket_name: str):
         project_id: ID del proyecto de GCP
         bucket_name: Nombre del bucket de GCS
     """
-    handler = SecretManagerHandler(project_id)
+    SecretManagerHandler(project_id)
 
     # Cargar credenciales
     print("\nConfigurando DVC con Google Cloud Storage...")
@@ -263,55 +257,41 @@ def setup_dvc_with_secrets(project_id: str, bucket_name: str):
     print(f"DVC configurado con bucket: {bucket_name}")
     print(f"   Remote URL: {remote_url}")
 
+
 def main():
     """Función principal."""
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path='.env.local')
 
-    parser = argparse.ArgumentParser(
-        description="Gestión de secretos en Google Secret Manager"
-    )
+    load_dotenv(dotenv_path=".env.local")
+
+    parser = argparse.ArgumentParser(description="Gestión de secretos en Google Secret Manager")
 
     subparsers = parser.add_subparsers(dest="command", help="Comandos disponibles")
 
     # Comando: create
     create_parser = subparsers.add_parser("create", help="Crear secretos")
-    create_parser.add_argument(
-        "--project-id", required=True, help="ID del proyecto de GCP"
-    )
+    create_parser.add_argument("--project-id", required=True, help="ID del proyecto de GCP")
 
     # Comando: load
     load_parser = subparsers.add_parser("load", help="Cargar secretos")
-    load_parser.add_argument(
-        "--project-id", required=True, help="ID del proyecto de GCP"
-    )
+    load_parser.add_argument("--project-id", required=True, help="ID del proyecto de GCP")
     load_parser.add_argument(
         "--export-file", help="Archivo para exportar variables (opcional, NO RECOMENDADO)"
     )
 
     # Comando: list
     list_parser = subparsers.add_parser("list", help="Listar secretos")
-    list_parser.add_argument(
-        "--project-id", required=True, help="ID del proyecto de GCP"
-    )
+    list_parser.add_argument("--project-id", required=True, help="ID del proyecto de GCP")
 
     # Comando: delete
     delete_parser = subparsers.add_parser("delete", help="Eliminar secreto")
-    delete_parser.add_argument(
-        "--project-id", required=True, help="ID del proyecto de GCP"
-    )
-    delete_parser.add_argument(
-        "--secret-id", required=True, help="ID del secreto a eliminar"
-    )
+    delete_parser.add_argument("--project-id", required=True, help="ID del proyecto de GCP")
+    delete_parser.add_argument("--secret-id", required=True, help="ID del secreto a eliminar")
 
     # Comando: setup-dvc
     dvc_parser = subparsers.add_parser("setup-dvc", help="Configurar DVC con GCS")
-    dvc_parser.add_argument(
-        "--project-id", required=True, help="ID del proyecto de GCP"
-    )
-    dvc_parser.add_argument(
-        "--bucket-name", required=True, help="Nombre del bucket de GCS"
-    )
+    dvc_parser.add_argument("--project-id", required=True, help="ID del proyecto de GCP")
+    dvc_parser.add_argument("--bucket-name", required=True, help="Nombre del bucket de GCS")
 
     args = parser.parse_args()
 

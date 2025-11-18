@@ -73,7 +73,9 @@ def setup_directories() -> None:
     logger.info("Created output directories")
 
 
-def load_preprocessed_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]:
+def load_preprocessed_data() -> (
+    tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]
+):
     """
     Load preprocessed data from US-012.
 
@@ -141,6 +143,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         # Generate model version if not provided
         if model_version is None:
             from datetime import datetime
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             model_version = f"v_{timestamp}"
 
@@ -161,7 +164,9 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
         with mlflow.start_run(run_name=run_name) as run:
             run_id = run.info.run_id
             logger.info(f"MLflow Run ID: {run_id}")
-            logger.info(f"MLflow Run URL: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}")
+            logger.info(
+                f"MLflow Run URL: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}"
+            )
 
             # Add tags
             mlflow.set_tags(
@@ -309,6 +314,7 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
                 logger.warning(f"Could not log plot to MLflow: {e}")
 
             import matplotlib.pyplot as plt
+
             plt.close(fig)
 
             # Create evaluation visualizations
@@ -392,7 +398,9 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
 
             # Final summary
             logger.info("Training completed successfully")
-            logger.info(f"Test Set Results: RMSE={test_metrics['rmse']:.4f}, MAE={test_metrics['mae']:.4f}, R2={test_metrics['r2']:.4f}, MAPE={test_metrics['mape']:.2f}%")
+            logger.info(
+                f"Test Set Results: RMSE={test_metrics['rmse']:.4f}, MAE={test_metrics['mae']:.4f}, R2={test_metrics['r2']:.4f}, MAPE={test_metrics['mape']:.2f}%"
+            )
 
             # Check if target met
             target_rmse = 0.205
@@ -400,11 +408,15 @@ def main(n_trials: int = 100, cv_folds: int = 5, model_version: str = None) -> N
                 logger.info(f"Target met: RMSE ({test_metrics['rmse']:.4f}) < {target_rmse}")
             else:
                 gap = ((test_metrics["rmse"] / target_rmse) - 1) * 100
-                logger.info(f"Target not met: RMSE ({test_metrics['rmse']:.4f}) is {gap:.2f}% above target ({target_rmse})")
+                logger.info(
+                    f"Target not met: RMSE ({test_metrics['rmse']:.4f}) is {gap:.2f}% above target ({target_rmse})"
+                )
 
             logger.info(f"Model saved to: {model_path}")
             logger.info(f"Report saved to: {report_path}")
-            logger.info(f"MLflow Run: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}")
+            logger.info(
+                f"MLflow Run: http://localhost:5000/#/experiments/{experiment_id}/runs/{run_id}"
+            )
 
     except Exception as e:
         logger.error(f"Training failed with error: {e}", exc_info=True)

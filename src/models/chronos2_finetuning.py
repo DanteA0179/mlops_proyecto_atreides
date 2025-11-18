@@ -32,13 +32,13 @@ def finetune_chronos2(
 ) -> Chronos2Pipeline:
     """
     Fine-tune Chronos-2 model on custom data.
-    
+
     This function uses the official Chronos-2 `.fit()` method which handles:
     - Tokenization of time series values
     - Training loop with gradient descent
     - Validation monitoring (if validation data provided)
     - Model checkpointing
-    
+
     Args:
         pipeline: Pre-loaded Chronos2Pipeline
         df_train: Training DataFrame
@@ -51,21 +51,21 @@ def finetune_chronos2(
         logging_steps: Log training metrics every N steps
         past_covariates: Optional list of past covariate column names
         future_covariates: Optional list of future covariate column names
-        
+
     Returns:
         Fine-tuned Chronos2Pipeline
-        
+
     Examples:
         >>> from chronos import Chronos2Pipeline
         >>> import polars as pl
-        >>> 
+        >>>
         >>> # Load base model
         >>> pipeline = Chronos2Pipeline.from_pretrained("s3://autogluon/chronos-2")
-        >>> 
+        >>>
         >>> # Load data
         >>> df_train = pl.read_parquet("data/processed/steel_preprocessed_train.parquet")
         >>> df_val = pl.read_parquet("data/processed/steel_preprocessed_val.parquet")
-        >>> 
+        >>>
         >>> # Fine-tune
         >>> finetuned = finetune_chronos2(
         ...     pipeline=pipeline,
@@ -74,9 +74,9 @@ def finetune_chronos2(
         ...     num_steps=1000,
         ... )
     """
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("Chronos-2 Fine-Tuning")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     # Prepare training data
     logger.info("Preparing training data")
@@ -106,18 +106,19 @@ def finetune_chronos2(
         logger.info(f"Validation series: {val_stats['n_series']}")
 
     # Fine-tune
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("Starting fine-tuning")
     logger.info(f"  Steps: {num_steps}")
     logger.info(f"  Learning rate: {learning_rate}")
     logger.info(f"  Batch size: {batch_size}")
     logger.info(f"  Gradient accumulation: {gradient_accumulation_steps}")
     logger.info(f"  Prediction length: {prediction_length}")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     # Clear GPU cache before training
     if pipeline.model.device.type == "cuda":
         import torch
+
         torch.cuda.empty_cache()
         logger.info("GPU cache cleared before training")
 
@@ -133,9 +134,9 @@ def finetune_chronos2(
             logging_steps=logging_steps,
         )
 
-        logger.info("="*70)
+        logger.info("=" * 70)
         logger.info("Fine-tuning completed successfully!")
-        logger.info("="*70)
+        logger.info("=" * 70)
 
         return finetuned_pipeline
 
@@ -150,14 +151,14 @@ def save_finetuned_pipeline(
 ) -> None:
     """
     Save fine-tuned pipeline to disk.
-    
+
     The pipeline is saved in HuggingFace format and can be reloaded
     using Chronos2Pipeline.from_pretrained().
-    
+
     Args:
         pipeline: Fine-tuned Chronos2Pipeline
         save_path: Directory to save model
-        
+
     Examples:
         >>> save_finetuned_pipeline(finetuned, Path("models/foundation/chronos2_finetuned"))
     """
@@ -171,13 +172,13 @@ def save_finetuned_pipeline(
         pipeline.model.save_pretrained(save_path)
 
         # Also save tokenizer if available
-        if hasattr(pipeline, 'tokenizer'):
+        if hasattr(pipeline, "tokenizer"):
             pipeline.tokenizer.save_pretrained(save_path)
 
         logger.info(f"Model saved successfully to: {save_path}")
 
         # Log file size
-        total_size = sum(f.stat().st_size for f in save_path.rglob('*') if f.is_file())
+        total_size = sum(f.stat().st_size for f in save_path.rglob("*") if f.is_file())
         size_mb = total_size / (1024 * 1024)
         logger.info(f"Total size: {size_mb:.2f} MB")
 
@@ -192,14 +193,14 @@ def load_finetuned_pipeline(
 ) -> Chronos2Pipeline:
     """
     Load fine-tuned pipeline from disk.
-    
+
     Args:
         load_path: Directory containing saved model
         device: Device to load model on ('cuda' or 'cpu')
-        
+
     Returns:
         Loaded Chronos2Pipeline
-        
+
     Examples:
         >>> pipeline = load_finetuned_pipeline(
         ...     Path("models/foundation/chronos2_finetuned"),

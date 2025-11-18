@@ -5,7 +5,8 @@ This module contains all request models used by the API endpoints,
 with comprehensive validation using Pydantic.
 """
 
-from typing import List, Literal
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
@@ -60,9 +61,7 @@ class PredictionRequest(BaseModel):
         description="Potencia reactiva en adelanto (kVarh)",
         examples=[12.30],
     )
-    co2: float = Field(
-        ..., ge=0.0, description="Emisiones de CO2 (tCO2)", examples=[0.05]
-    )
+    co2: float = Field(..., ge=0.0, description="Emisiones de CO2 (tCO2)", examples=[0.05])
     lagging_power_factor: float = Field(
         ...,
         ge=0.0,
@@ -157,7 +156,7 @@ class PredictionRequest(BaseModel):
                         "nsm": 7200,
                         "day_of_week": 1,
                         "load_type": "Light",
-                    }
+                    },
                 },
                 {
                     "summary": "Carga Medium - Turno Diurno",
@@ -171,7 +170,7 @@ class PredictionRequest(BaseModel):
                         "nsm": 36000,
                         "day_of_week": 1,
                         "load_type": "Medium",
-                    }
+                    },
                 },
                 {
                     "summary": "Carga Maximum - Pico de Producción",
@@ -185,7 +184,7 @@ class PredictionRequest(BaseModel):
                         "nsm": 50400,
                         "day_of_week": 3,
                         "load_type": "Maximum",
-                    }
+                    },
                 },
                 {
                     "summary": "Carga Medium - Fin de Semana",
@@ -199,7 +198,7 @@ class PredictionRequest(BaseModel):
                         "nsm": 43200,
                         "day_of_week": 5,
                         "load_type": "Medium",
-                    }
+                    },
                 },
                 {
                     "summary": "Carga Maximum - Turno Tarde Completo",
@@ -213,8 +212,8 @@ class PredictionRequest(BaseModel):
                         "nsm": 57600,
                         "day_of_week": 2,
                         "load_type": "Maximum",
-                    }
-                }
+                    },
+                },
             ]
         }
     }
@@ -241,7 +240,7 @@ class BatchPredictionRequest(BaseModel):
     ... )
     """
 
-    predictions: List[PredictionRequest] = Field(
+    predictions: list[PredictionRequest] = Field(
         ...,
         max_length=1000,
         description="List of prediction requests (max 1000)",
@@ -249,7 +248,7 @@ class BatchPredictionRequest(BaseModel):
 
     @field_validator("predictions")
     @classmethod
-    def validate_batch_not_empty(cls, v: List[PredictionRequest]) -> List[PredictionRequest]:
+    def validate_batch_not_empty(cls, v: list[PredictionRequest]) -> list[PredictionRequest]:
         """
         Ensure batch is not empty and within limits.
 
@@ -301,9 +300,9 @@ class BatchPredictionRequest(BaseModel):
                                 "nsm": 36000,
                                 "day_of_week": 1,
                                 "load_type": "Medium",
-                            }
+                            },
                         ]
-                    }
+                    },
                 },
                 {
                     "summary": "Batch Turno Completo - 3 Predicciones",
@@ -339,10 +338,10 @@ class BatchPredictionRequest(BaseModel):
                                 "nsm": 72000,
                                 "day_of_week": 1,
                                 "load_type": "Light",
-                            }
+                            },
                         ]
-                    }
-                }
+                    },
+                },
             ]
         }
     }

@@ -38,7 +38,7 @@ def main():
     logger.info(f"\nExporting {len(models_to_export)} models...")
     exported = exporter.export_all_models(models=models_to_export)
 
-    logger.info(f"\nExport complete!")
+    logger.info("\nExport complete!")
     logger.info(f"Successfully exported {len(exported)} models:")
     for name, path in exported.items():
         if isinstance(path, dict):

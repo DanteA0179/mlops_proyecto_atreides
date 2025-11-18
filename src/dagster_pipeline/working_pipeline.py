@@ -5,7 +5,7 @@ This version has separate ops for each step so you can see them individually in 
 """
 
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import polars as pl
 import yaml
@@ -40,7 +40,9 @@ def load_config(context: OpExecutionContext, config: PipelineConfig) -> dict:
 
 
 @op(description="Load preprocessed train/val/test data", tags={"stage": "data"})
-def load_data(context: OpExecutionContext, cfg: dict) -> Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+def load_data(
+    context: OpExecutionContext, cfg: dict
+) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     """Load preprocessed data from parquet files."""
     train = pl.read_parquet(cfg["data"]["train"])
     val = pl.read_parquet(cfg["data"]["val"])
@@ -57,7 +59,7 @@ def load_data(context: OpExecutionContext, cfg: dict) -> Tuple[pl.DataFrame, pl.
 
 @op(description="Validate data quality", tags={"stage": "validation"})
 def validate_data(
-    context: OpExecutionContext, data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]
+    context: OpExecutionContext, data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]
 ) -> dict:
     """Validate data quality."""
     from src.utils.data_quality import analyze_nulls
@@ -85,7 +87,7 @@ def validate_data(
 def train_model(
     context: OpExecutionContext,
     cfg: dict,
-    data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
+    data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
 ) -> Any:
     """Train model using existing trainer infrastructure."""
     from src.models.xgboost_trainer import check_gpu_availability, create_xgboost_pipeline
@@ -133,7 +135,7 @@ def evaluate_model(
     context: OpExecutionContext,
     model: Any,
     cfg: dict,
-    data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
+    data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
 ) -> dict:
     """Evaluate model on validation and test sets."""
     from src.models.xgboost_trainer import evaluate_model as eval_fn
@@ -174,9 +176,13 @@ def check_threshold(context: OpExecutionContext, metrics: dict, cfg: dict) -> di
     passed = (val_rmse < threshold_rmse) and (val_r2 > threshold_r2)
 
     if passed:
-        context.log.info(f"Threshold PASSED: RMSE={val_rmse:.4f}<{threshold_rmse}, R²={val_r2:.4f}>{threshold_r2}")
+        context.log.info(
+            f"Threshold PASSED: RMSE={val_rmse:.4f}<{threshold_rmse}, R²={val_r2:.4f}>{threshold_r2}"
+        )
     else:
-        context.log.warning(f"Threshold FAILED: RMSE={val_rmse:.4f}>={threshold_rmse} or R²={val_r2:.4f}<={threshold_r2}")
+        context.log.warning(
+            f"Threshold FAILED: RMSE={val_rmse:.4f}>={threshold_rmse} or R²={val_r2:.4f}<={threshold_r2}"
+        )
 
     return {"passed": passed, "val_rmse": val_rmse, "val_r2": val_r2}
 
@@ -190,7 +196,6 @@ def check_threshold(context: OpExecutionContext, metrics: dict, cfg: dict) -> di
 def log_mlflow(context: OpExecutionContext, model: Any, metrics: dict, cfg: dict) -> str:
     """Log to MLflow using existing utilities."""
     import mlflow
-
     from src.utils.mlflow_utils import log_model_metrics, log_model_params, save_and_log_model
 
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
@@ -258,7 +263,7 @@ def dvc_add(context: OpExecutionContext, model_path: Path) -> Path:
     import subprocess
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["dvc", "add", str(model_path)],
             capture_output=True,
             text=True,
@@ -318,7 +323,7 @@ def complete_training_job():
     data = load_data(cfg)
 
     # Step 3: Validate data
-    validation = validate_data(data)
+    validate_data(data)
 
     # Step 4: Train model
     model = train_model(cfg, data)
@@ -327,7 +332,7 @@ def complete_training_job():
     metrics = evaluate_model(model, cfg, data)
 
     # Step 6: Check threshold
-    threshold_result = check_threshold(metrics, cfg)
+    check_threshold(metrics, cfg)
 
     # Step 7: Log to MLflow
     run_id = log_mlflow(model, metrics, cfg)
@@ -336,7 +341,7 @@ def complete_training_job():
     model_path = save_artifacts(model, metrics, cfg)
 
     # Step 9: DVC add
-    dvc_file = dvc_add(model_path)
+    dvc_add(model_path)
 
     # Step 10: Send notification
     send_notification(metrics, run_id, cfg)

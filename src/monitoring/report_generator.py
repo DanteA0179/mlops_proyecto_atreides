@@ -14,11 +14,10 @@ import logging
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 # Note: In Evidently 0.7.15, report.run() returns a Snapshot object
 # We don't need to import Report here, just work with Snapshot
-
 from src.monitoring.config import MonitoringConfig
 
 logger = logging.getLogger(__name__)
@@ -118,9 +117,9 @@ class ReportGenerator:
 
         except Exception as e:
             logger.error(f"Failed to save HTML report: {e}")
-            raise IOError(f"Could not save HTML report: {e}") from e
+            raise OSError(f"Could not save HTML report: {e}") from e
 
-    def save_metrics_json(self, metrics: Dict[str, Any], timestamp: datetime) -> Path:
+    def save_metrics_json(self, metrics: dict[str, Any], timestamp: datetime) -> Path:
         """
         Save metrics as JSON file.
 
@@ -153,14 +152,14 @@ class ReportGenerator:
             with open(metrics_path, "w", encoding="utf-8") as f:
                 json.dump(metrics, f, indent=2, default=str)
 
-            logger.info(f"Metrics JSON saved successfully")
+            logger.info("Metrics JSON saved successfully")
             return metrics_path
 
         except Exception as e:
             logger.error(f"Failed to save metrics JSON: {e}")
-            raise IOError(f"Could not save metrics JSON: {e}") from e
+            raise OSError(f"Could not save metrics JSON: {e}") from e
 
-    def append_to_history_csv(self, metrics: Dict[str, Any]) -> Path:
+    def append_to_history_csv(self, metrics: dict[str, Any]) -> Path:
         """
         Append metrics to historical CSV file.
 
@@ -218,11 +217,11 @@ class ReportGenerator:
 
         except Exception as e:
             logger.error(f"Failed to append to history CSV: {e}")
-            raise IOError(f"Could not append to history CSV: {e}") from e
+            raise OSError(f"Could not append to history CSV: {e}") from e
 
     def save_all(
-        self, snapshot, metrics: Dict[str, Any], timestamp: datetime = None
-    ) -> Dict[str, Path]:
+        self, snapshot, metrics: dict[str, Any], timestamp: datetime = None
+    ) -> dict[str, Path]:
         """
         Save all report artifacts.
 

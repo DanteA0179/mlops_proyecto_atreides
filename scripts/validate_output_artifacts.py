@@ -265,7 +265,7 @@ def validate_plot_quality():
 
                 # Check if dimensions are reasonable
                 if width < 500 or height < 300:
-                    print(f"  ⚠ Image dimensions seem too small")
+                    print("  ⚠ Image dimensions seem too small")
                     results.append(False)
                 else:
                     results.append(True)

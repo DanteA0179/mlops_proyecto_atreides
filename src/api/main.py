@@ -16,13 +16,10 @@ Or directly:
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime
-from typing import Dict
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from src.api.middleware.error_handler import (
     general_exception_handler,
@@ -153,7 +150,7 @@ app.openapi = lambda: get_custom_openapi_schema(app)
     summary="Root Endpoint",
     description="Welcome message and API information",
 )
-async def root() -> Dict:
+async def root() -> dict:
     """
     Root endpoint with API information.
 

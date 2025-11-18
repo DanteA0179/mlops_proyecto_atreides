@@ -85,7 +85,7 @@ def check_docstrings():
     filepath = Path("src/utils/feature_importance.py")
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             tree = ast.parse(f.read())
 
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
@@ -116,15 +116,15 @@ def check_docstrings():
             if has_params and has_returns and has_dashes:
                 print(f"✓ {func.name}(): Complete Google-style docstring")
                 if has_examples:
-                    print(f"  (includes examples)")
+                    print("  (includes examples)")
             else:
                 print(f"⚠ {func.name}(): Docstring exists but may be incomplete")
                 if not has_params:
-                    print(f"    - Missing Parameters section")
+                    print("    - Missing Parameters section")
                 if not has_returns:
-                    print(f"    - Missing Returns section")
+                    print("    - Missing Returns section")
                 if not has_dashes:
-                    print(f"    - Missing section separators (---)")
+                    print("    - Missing section separators (---)")
                 all_valid = False
 
         print()
@@ -144,7 +144,7 @@ def check_type_hints():
     filepath = Path("src/utils/feature_importance.py")
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             tree = ast.parse(f.read())
 
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
@@ -178,7 +178,7 @@ def check_type_hints():
             else:
                 print(f"✗ {func.name}(): Missing type hints")
                 if not has_return_hint:
-                    print(f"    - Missing return type hint")
+                    print("    - Missing return type hint")
                 if params_without_hints:
                     print(f"    - Parameters without hints: {params_without_hints}")
                 all_valid = False
@@ -200,16 +200,16 @@ def check_code_duplication():
     filepath = Path("src/utils/feature_importance.py")
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         # Look for repeated code patterns (simple heuristic)
         # Check for repeated validation patterns
         validation_patterns = [
-            r'if .+ not in .+\.columns:',
-            r'raise ValueError\(',
-            r'\.head\(top_n\)',
-            r'\.to_list\(\)',
+            r"if .+ not in .+\.columns:",
+            r"raise ValueError\(",
+            r"\.head\(top_n\)",
+            r"\.to_list\(\)",
         ]
 
         print("Checking for common patterns (DRY principle)...")
@@ -239,7 +239,7 @@ def check_code_duplication():
         print()
 
         # Check function lengths (long functions may indicate duplication opportunities)
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             tree = ast.parse(f.read())
 
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
@@ -279,11 +279,13 @@ def check_module_structure():
     filepath = Path("src/utils/feature_importance.py")
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         # Check for module docstring
-        has_module_docstring = content.strip().startswith('"""') or content.strip().startswith("'''")
+        has_module_docstring = content.strip().startswith('"""') or content.strip().startswith(
+            "'''"
+        )
 
         if has_module_docstring:
             print("✓ Module has docstring")
@@ -308,7 +310,7 @@ def check_module_structure():
             print("  No module constants (optional)")
 
         # Count functions
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             tree = ast.parse(f.read())
 
         functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]

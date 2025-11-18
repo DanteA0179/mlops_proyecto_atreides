@@ -6,9 +6,9 @@ This module provides middleware for structured request/response logging.
 
 import logging
 import time
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 
 logger = logging.getLogger(__name__)
 

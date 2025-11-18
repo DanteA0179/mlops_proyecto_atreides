@@ -387,17 +387,21 @@ class ONNXBenchmark:
         except ImportError:
             hardware_info["gpu"] = "Unknown"
 
-        avg_latency_improvement = np.mean([
-            r["improvement"]["latency_reduction_pct"]
-            for r in benchmark_results.values()
-            if "improvement" in r
-        ])
+        avg_latency_improvement = np.mean(
+            [
+                r["improvement"]["latency_reduction_pct"]
+                for r in benchmark_results.values()
+                if "improvement" in r
+            ]
+        )
 
-        avg_throughput_improvement = np.mean([
-            r["improvement"]["throughput_increase_pct"]
-            for r in benchmark_results.values()
-            if "improvement" in r
-        ])
+        avg_throughput_improvement = np.mean(
+            [
+                r["improvement"]["throughput_increase_pct"]
+                for r in benchmark_results.values()
+                if "improvement" in r
+            ]
+        )
 
         fastest_model = min(
             [
@@ -457,4 +461,4 @@ if __name__ == "__main__":
 
     benchmark.generate_report(results, "models/benchmarks/onnx_comparison.json")
 
-    print(f"\nBenchmark complete. Results saved to models/benchmarks/onnx_comparison.json")
+    print("\nBenchmark complete. Results saved to models/benchmarks/onnx_comparison.json")

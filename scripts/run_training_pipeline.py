@@ -73,13 +73,13 @@ def parse_args() -> argparse.Namespace:
 Examples:
   # Run XGBoost training
   python scripts/run_training_pipeline.py --model-type xgboost
-  
+
   # Run with custom config
   python scripts/run_training_pipeline.py --config config/training/custom.yaml
-  
+
   # Run without DVC push (testing)
   python scripts/run_training_pipeline.py --model-type xgboost --skip-dvc-push
-  
+
   # Run all models sequentially
   python scripts/run_training_pipeline.py --model-type all
         """,

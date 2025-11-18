@@ -7,7 +7,7 @@ These ops reuse all the existing logic from utils and models.
 
 import logging
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import numpy as np
 import polars as pl
@@ -71,7 +71,9 @@ def load_config_op(context: OpExecutionContext) -> dict:
     out=Out(tuple, description="(train, val, test) dataframes"),
     tags={"stage": "data"},
 )
-def load_data_op(context: OpExecutionContext, config: dict) -> Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+def load_data_op(
+    context: OpExecutionContext, config: dict
+) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
     """
     Load preprocessed data from parquet files.
 
@@ -109,7 +111,9 @@ def load_data_op(context: OpExecutionContext, config: dict) -> Tuple[pl.DataFram
     out=Out(dict, description="Validation results"),
     tags={"stage": "validation"},
 )
-def validate_data_op(context: OpExecutionContext, data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]) -> dict:
+def validate_data_op(
+    context: OpExecutionContext, data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]
+) -> dict:
     """
     Validate data quality using existing utilities.
 
@@ -151,7 +155,9 @@ def validate_data_op(context: OpExecutionContext, data: Tuple[pl.DataFrame, pl.D
             if split_validation["valid"]:
                 context.log.info("Check 2/2: Splits validated")
             else:
-                context.log.warning(f"Check 2/2: Split warnings: {split_validation.get('issues', [])}")
+                context.log.warning(
+                    f"Check 2/2: Split warnings: {split_validation.get('issues', [])}"
+                )
         except Exception as e:
             context.log.warning(f"Check 2/2: Split validation skipped: {e}")
 
@@ -174,7 +180,7 @@ def validate_data_op(context: OpExecutionContext, data: Tuple[pl.DataFrame, pl.D
     tags={"stage": "training"},
 )
 def train_model_op(
-    context: OpExecutionContext, data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame], config: dict
+    context: OpExecutionContext, data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame], config: dict
 ) -> Any:
     """
     Train model using existing trainer infrastructure from US-013.
@@ -306,35 +312,37 @@ def _train_catboost(context: OpExecutionContext, X_train, y_train, config: dict)
     return pipeline
 
 
-def _train_ensemble(context: OpExecutionContext, X_train, y_train, config: dict, data: tuple) -> Any:
+def _train_ensemble(
+    context: OpExecutionContext, X_train, y_train, config: dict, data: tuple
+) -> Any:
     """
     Train ensemble model (stacking).
-    
+
     Ensemble training requires:
     1. Train multiple base models (XGBoost, LightGBM, CatBoost)
     2. Generate predictions from base models
     3. Train meta-model on base model predictions
     """
     context.log.info("Training ensemble model (this will take longer)...")
-    
+
     # Import base model trainers
-    from src.models.xgboost_trainer import create_xgboost_pipeline
-    from src.models.lightgbm_trainer import create_lightgbm_pipeline
     from src.models.catboost_trainer import create_catboost_pipeline
-    
+    from src.models.lightgbm_trainer import create_lightgbm_pipeline
+    from src.models.xgboost_trainer import create_xgboost_pipeline
+
     # Get base models config
     base_models_config = config.get("base_models", [])
     if not base_models_config:
         raise ValueError("Ensemble config must have 'base_models' section")
-    
+
     # Train base models
     base_models = []
     for i, base_config in enumerate(base_models_config):
         model_type = base_config["type"]
         hyperparams = base_config["hyperparameters"]
-        
+
         context.log.info(f"Training base model {i+1}/{len(base_models_config)}: {model_type}")
-        
+
         if model_type == "xgboost":
             pipeline = create_xgboost_pipeline(hyperparams)
         elif model_type == "lightgbm":
@@ -343,41 +351,39 @@ def _train_ensemble(context: OpExecutionContext, X_train, y_train, config: dict,
             pipeline = create_catboost_pipeline(hyperparams)
         else:
             raise ValueError(f"Unsupported base model type: {model_type}")
-        
+
         pipeline.fit(X_train, y_train)
         base_models.append(pipeline)
         context.log.info(f"Base model {i+1} trained: {model_type}")
-    
+
     # Generate predictions from base models for meta-model training
     context.log.info("Generating meta-features from base models...")
     base_predictions = np.column_stack([model.predict(X_train) for model in base_models])
-    
+
     # Train meta-model
     meta_model_type = config["model"]["type"]
     meta_hyperparams = config["hyperparameters"]
-    
+
     context.log.info(f"Training meta-model: {meta_model_type}")
-    
+
     if "lightgbm" in meta_model_type:
         from src.models.lightgbm_trainer import create_lightgbm_pipeline
+
         meta_model = create_lightgbm_pipeline(meta_hyperparams)
     elif "ridge" in meta_model_type:
         from sklearn.linear_model import Ridge
         from sklearn.pipeline import Pipeline
+
         meta_model = Pipeline([("regressor", Ridge(**meta_hyperparams))])
     else:
         raise ValueError(f"Unsupported meta-model type: {meta_model_type}")
-    
+
     meta_model.fit(base_predictions, y_train)
     context.log.info("Meta-model trained")
-    
+
     # Create ensemble wrapper
-    ensemble = {
-        "base_models": base_models,
-        "meta_model": meta_model,
-        "type": "stacking_ensemble"
-    }
-    
+    ensemble = {"base_models": base_models, "meta_model": meta_model, "type": "stacking_ensemble"}
+
     context.log.info(f"Ensemble complete: {len(base_models)} base models + meta-model")
     return ensemble
 
@@ -396,7 +402,7 @@ def _train_ensemble(context: OpExecutionContext, X_train, y_train, config: dict,
 def evaluate_model_op(
     context: OpExecutionContext,
     model: Any,
-    data: Tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
+    data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame],
     config: dict,
 ) -> dict:
     """
@@ -456,26 +462,19 @@ def evaluate_model_op(
 def _evaluate_ensemble(ensemble: dict, X: np.ndarray, y: np.ndarray, split_name: str) -> dict:
     """Evaluate ensemble model by generating predictions from base models and meta-model."""
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-    
+
     # Get predictions from base models
-    base_predictions = np.column_stack([
-        model.predict(X) for model in ensemble["base_models"]
-    ])
-    
+    base_predictions = np.column_stack([model.predict(X) for model in ensemble["base_models"]])
+
     # Get final predictions from meta-model
     y_pred = ensemble["meta_model"].predict(base_predictions)
-    
+
     # Calculate metrics
     rmse = np.sqrt(mean_squared_error(y, y_pred))
     mae = mean_absolute_error(y, y_pred)
     r2 = r2_score(y, y_pred)
-    
-    return {
-        "rmse": rmse,
-        "mae": mae,
-        "r2": r2,
-        "split": split_name
-    }
+
+    return {"rmse": rmse, "mae": mae, "r2": r2, "split": split_name}
 
 
 # ==============================================================================
@@ -525,9 +524,13 @@ def check_threshold_op(context: OpExecutionContext, metrics: dict, config: dict)
         }
 
         if passed:
-            context.log.info(f"Threshold PASSED: RMSE={val_rmse:.4f}<{threshold_rmse}, R²={val_r2:.4f}>{threshold_r2}")
+            context.log.info(
+                f"Threshold PASSED: RMSE={val_rmse:.4f}<{threshold_rmse}, R²={val_r2:.4f}>{threshold_r2}"
+            )
         else:
-            context.log.warning(f"Threshold FAILED: RMSE={val_rmse:.4f}>={threshold_rmse} or R²={val_r2:.4f}<={threshold_r2}")
+            context.log.warning(
+                f"Threshold FAILED: RMSE={val_rmse:.4f}>={threshold_rmse} or R²={val_r2:.4f}<={threshold_r2}"
+            )
 
         return result
 
@@ -566,7 +569,6 @@ def log_mlflow_op(context: OpExecutionContext, model: Any, metrics: dict, config
         MLflow run ID
     """
     import mlflow
-
     from src.utils.mlflow_utils import log_model_metrics, log_model_params, save_and_log_model
 
     try:
@@ -682,7 +684,7 @@ def dvc_add_op(context: OpExecutionContext, model_path: Path) -> Path:
     import subprocess
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["dvc", "add", str(model_path)],
             capture_output=True,
             text=True,

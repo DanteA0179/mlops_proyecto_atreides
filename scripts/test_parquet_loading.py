@@ -94,7 +94,7 @@ def test_mutual_information_compatibility():
 
         # Calculate mutual information
         mi_scores = calculate_mutual_information(df, target_column="Usage_kWh")
-        print(f"✓ Successfully calculated mutual information scores")
+        print("✓ Successfully calculated mutual information scores")
         print(f"  Number of features: {len(mi_scores)}")
         print()
 
@@ -136,7 +136,7 @@ def test_pearson_correlation_compatibility():
 
         # Calculate Pearson correlations
         correlations = calculate_pearson_correlation(df, target_column="Usage_kWh")
-        print(f"✓ Successfully calculated Pearson correlations")
+        print("✓ Successfully calculated Pearson correlations")
         print(f"  Number of features: {len(correlations)}")
         print()
 
@@ -157,7 +157,7 @@ def test_pearson_correlation_compatibility():
         max_corr = correlations["correlation"].max()
         assert -1 <= min_corr <= 1, f"Correlation out of range: min={min_corr}"
         assert -1 <= max_corr <= 1, f"Correlation out of range: max={max_corr}"
-        print(f"✓ All correlations are in valid range [-1, 1]")
+        print("✓ All correlations are in valid range [-1, 1]")
         print(f"  Range: [{min_corr:.4f}, {max_corr:.4f}]")
         print()
 
@@ -215,7 +215,9 @@ def test_special_characters_handling():
                 corr = correlations.filter(pl.col("feature") == col)["correlation"][0]
                 print(f"✓ Column '{col}' handled correctly (correlation: {corr:.4f})")
             else:
-                print(f"  Column '{col}' not in correlation results (might be target or non-numeric)")
+                print(
+                    f"  Column '{col}' not in correlation results (might be target or non-numeric)"
+                )
         print()
 
         return True
@@ -246,14 +248,14 @@ def test_all_functions_integration():
         # Get top features
         top_mi = get_top_features(mi_scores, "mi_score", top_n=5)
         top_corr = get_top_features(correlations, "abs_correlation", top_n=5)
-        print(f"✓ Top features extracted successfully")
+        print("✓ Top features extracted successfully")
         print(f"  Top 5 by MI: {top_mi}")
         print(f"  Top 5 by correlation: {top_corr}")
         print()
 
         # Compare methods
         comparison = compare_importance_methods(mi_scores, correlations, top_n=10)
-        print(f"✓ Methods compared successfully")
+        print("✓ Methods compared successfully")
         print(f"  Common features: {len(comparison['common_features'])}")
         print(f"  MI-only features: {len(comparison['mi_only'])}")
         print(f"  Correlation-only features: {len(comparison['corr_only'])}")

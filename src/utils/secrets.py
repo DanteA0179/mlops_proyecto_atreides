@@ -9,11 +9,10 @@ Este módulo proporciona utilidades para:
 
 import os
 from functools import lru_cache
-from typing import Optional
 
 try:
-    from google.cloud import secretmanager
     from google.api_core import exceptions
+    from google.cloud import secretmanager
 
     SECRETS_AVAILABLE = True
 except ImportError:
@@ -23,7 +22,7 @@ except ImportError:
 class SecretsManager:
     """Gestiona el acceso a secretos con fallback a variables de entorno."""
 
-    def __init__(self, project_id: Optional[str] = None):
+    def __init__(self, project_id: str | None = None):
         """
         Inicializa el gestor de secretos.
 
@@ -43,8 +42,8 @@ class SecretsManager:
 
     @lru_cache(maxsize=128)
     def get_secret(
-        self, secret_id: str, default: Optional[str] = None, version: str = "latest"
-    ) -> Optional[str]:
+        self, secret_id: str, default: str | None = None, version: str = "latest"
+    ) -> str | None:
         """
         Obtiene un secreto de Secret Manager o variable de entorno.
 
@@ -64,9 +63,7 @@ class SecretsManager:
         # Si hay cliente de Secret Manager, intentar desde allí
         if self.client and self.project_id:
             try:
-                name = (
-                    f"projects/{self.project_id}/secrets/{secret_id}/versions/{version}"
-                )
+                name = f"projects/{self.project_id}/secrets/{secret_id}/versions/{version}"
                 response = self.client.access_secret_version(request={"name": name})
                 return response.payload.data.decode("UTF-8")
             except exceptions.NotFound:
@@ -118,7 +115,7 @@ class SecretsManager:
 
 
 # Instancia global del gestor de secretos
-_secrets_manager: Optional[SecretsManager] = None
+_secrets_manager: SecretsManager | None = None
 
 
 def get_secrets_manager() -> SecretsManager:
@@ -134,7 +131,7 @@ def get_secrets_manager() -> SecretsManager:
     return _secrets_manager
 
 
-def get_secret(secret_id: str, default: Optional[str] = None) -> Optional[str]:
+def get_secret(secret_id: str, default: str | None = None) -> str | None:
     """
     Función helper para obtener un secreto.
 
