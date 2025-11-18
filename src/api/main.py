@@ -26,7 +26,7 @@ from src.api.middleware.error_handler import (
     validation_exception_handler,
 )
 from src.api.middleware.logging_middleware import LoggingMiddleware
-from src.api.routes import health, model, predict
+from src.api.routes import health, model, predict, chat
 from src.api.services.feature_engineering import FeatureService
 from src.api.services.model_service import ModelService
 from src.api.utils.config import config, setup_logging
@@ -139,6 +139,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 app.include_router(predict.router)
 app.include_router(health.router)
 app.include_router(model.router)
+app.include_router(chat.router)
 
 # Override default OpenAPI schema with custom one
 app.openapi = lambda: get_custom_openapi_schema(app)

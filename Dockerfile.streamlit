@@ -1,0 +1,80 @@
+# ============================================================================
+# Dockerfile para Streamlit Application
+# Energy Optimization AI - Steel Industry
+# ============================================================================
+#
+# Este Dockerfile crea una imagen optimizada para la aplicación Streamlit
+# del sistema de optimización energética con IA.
+#
+# Build:
+#   docker build -f Dockerfile.streamlit -t energy-streamlit:latest .
+#
+# Run:
+#   docker run -p 8501:8501 energy-streamlit:latest
+#
+# Autor: Equipo Atreides
+# User Story: US-033 - Deployment de Streamlit
+# ============================================================================
+
+# Usar imagen base oficial de Python
+FROM python:3.11-slim
+
+# Metadata de la imagen
+LABEL maintainer="Equipo Atreides <equipo.atreides@mlops.com>"
+LABEL version="1.0.0"
+LABEL description="Streamlit Frontend para Energy Optimization AI"
+
+# Establecer variables de entorno
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    POETRY_VERSION=1.8.0 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false
+
+# Agregar Poetry al PATH
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+# Configurar directorio de trabajo
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    software-properties-common \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Copiar archivos de dependencias
+COPY pyproject.toml poetry.lock ./
+
+# Instalar dependencias de Python
+# --no-dev: solo dependencias de producción
+# --no-interaction: no preguntar
+# --no-ansi: sin colores en output
+RUN poetry install --no-dev --no-interaction --no-ansi
+
+# Copiar código de la aplicación
+COPY src/streamlit_app ./src/streamlit_app
+COPY src/api ./src/api
+COPY src/utils ./src/utils
+COPY .streamlit ./.streamlit
+
+# Crear directorio para datos si es necesario
+RUN mkdir -p /app/data
+
+# Exponer puerto de Streamlit
+EXPOSE 8501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+# Comando para ejecutar la aplicación
+ENTRYPOINT ["streamlit", "run", "src/streamlit_app/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
