@@ -1,0 +1,153 @@
+# LLM Configuration for Energy Optimization Copilot
+#
+# This file contains configuration for LLM providers and prompt templates
+# used by the AI copilot for energy consumption analysis
+
+# Provider configuration
+providers:
+  ollama:
+    host: "http://localhost:11434"
+    model: "llama3.2:3b"
+    timeout: 120
+    temperature: 0.7
+    max_tokens: 1000
+
+  gemini:
+    model: "gemini-2.0-flash"
+    temperature: 0.7
+    max_tokens: 1000
+    safety_settings:
+      harassment: "BLOCK_NONE"
+      hate_speech: "BLOCK_NONE"
+      sexually_explicit: "BLOCK_NONE"
+      dangerous_content: "BLOCK_NONE"
+
+# Default provider (ollama for dev, gemini for prod)
+default_provider: "ollama"
+
+# Prompt templates
+prompts:
+  # System prompt for energy copilot
+  system_prompt: |
+    You are an AI assistant specialized in energy consumption analysis for industrial steel manufacturing plants.
+    You have access to historical energy usage data and can help operators:
+    - Understand energy consumption patterns
+    - Predict future energy usage
+    - Optimize production schedules
+    - Reduce energy costs
+    - Analyze the impact of different operational parameters
+
+    Be concise, technical, and data-driven in your responses.
+    Always provide specific numbers and insights when available.
+
+  # Template for prediction queries
+  prediction_template: |
+    Based on the following parameters:
+    - Time: {time_period}
+    - Load Type: {load_type}
+    - Day of Week: {day_of_week}
+
+    Predict the expected energy consumption in kWh.
+    Provide the prediction value and explain the key factors influencing it.
+
+  # Template for historical analysis
+  historical_template: |
+    Analyze the historical energy consumption data for:
+    - Time Period: {time_period}
+    - Load Type: {load_type}
+
+    Provide insights on:
+    1. Average consumption during this period
+    2. Peak consumption times
+    3. Comparison to typical usage patterns
+
+  # Template for what-if scenarios
+  whatif_template: |
+    Scenario Analysis:
+    Current Condition: {current_condition}
+    Proposed Change: {proposed_change}
+
+    Analyze the impact of this change on:
+    1. Energy consumption (kWh)
+    2. Cost savings (if applicable)
+    3. CO2 emissions
+    4. Operational considerations
+
+  # Template for explanation queries
+  explanation_template: |
+    Explain why energy consumption showed the following pattern:
+    - Observation: {observation}
+    - Time Period: {time_period}
+    - Context: {context}
+
+    Provide possible reasons and contributing factors.
+
+  # Template for optimization recommendations
+  optimization_template: |
+    Provide energy optimization recommendations for:
+    - Current Situation: {current_situation}
+    - Optimization Goal: {goal}
+    - Constraints: {constraints}
+
+    Suggest specific, actionable steps to achieve the goal.
+
+# Response formatting
+response_format:
+  max_length: 500
+  include_confidence: true
+  include_sources: false
+
+# Query parsing configuration
+query_parsing:
+  intent_keywords:
+    prediction:
+      - predict
+      - forecast
+      - will be
+      - tomorrow
+      - next week
+    historical:
+      - was
+      - yesterday
+      - last week
+      - historical
+      - past
+    explanation:
+      - why
+      - explain
+      - reason
+      - cause
+    optimization:
+      - optimize
+      - reduce
+      - improve
+      - save
+    comparison:
+      - compare
+      - difference
+      - versus
+      - vs
+
+  entity_patterns:
+    time:
+      - morning
+      - afternoon
+      - evening
+      - night
+      - today
+      - yesterday
+      - tomorrow
+      - week
+      - month
+    load_type:
+      - light
+      - medium
+      - maximum
+      - max
+    metric:
+      - consumption
+      - energy
+      - co2
+      - emissions
+      - power factor
+      - reactive power
