@@ -151,15 +151,17 @@ def load_base_models(base_models_dir: Path) -> dict:
             if name == "xgboost":
                 # Handle both Pipeline and direct XGBRegressor
                 xgb_model = model
-                if hasattr(model, 'named_steps'):  # It's a Pipeline
+                if hasattr(model, "named_steps"):  # It's a Pipeline
                     # Get the final estimator from the pipeline
                     xgb_model = model.steps[-1][1]
 
-                if hasattr(xgb_model, 'get_params'):
+                if hasattr(xgb_model, "get_params"):
                     params = xgb_model.get_params()
-                    if params.get('tree_method') == 'gpu_hist':
-                        logger.warning("Updating deprecated 'gpu_hist' to 'hist' with device='cuda'")
-                        xgb_model.set_params(tree_method='hist', device='cuda')
+                    if params.get("tree_method") == "gpu_hist":
+                        logger.warning(
+                            "Updating deprecated 'gpu_hist' to 'hist' with device='cuda'"
+                        )
+                        xgb_model.set_params(tree_method="hist", device="cuda")
 
             base_models[name] = model
         else:

@@ -4,10 +4,12 @@ Unit tests for Energy Optimization API endpoints.
 Tests all API endpoints with valid and invalid requests.
 """
 
-import pytest
+from unittest.mock import Mock
+
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+import pytest
 from fastapi.testclient import TestClient
+
 
 # Mock the services before importing the app
 def mock_predict_func(features):
@@ -18,20 +20,25 @@ def mock_predict_func(features):
         # Return predictions for batch
         return np.array([45.67 + i for i in range(features.shape[0])])
 
+
 mock_model_service = Mock()
 mock_model_service.model_version = "test_model_v1"
 mock_model_service.model_type = "test_model"
 mock_model_service.predict = Mock(side_effect=mock_predict_func)
 mock_model_service.predict_interval = Mock(return_value=(None, None))  # Return tuple for unpacking
-mock_model_service.get_model_info = Mock(return_value={
-    "model_version": "test_model_v1",
-    "training_metrics": {"rmse": 12.79, "r2": 0.87},
-    "features": []
-})
-mock_model_service.get_metrics = Mock(return_value={
-    "training_metrics": {"rmse": 12.79},
-    "production_metrics": {"total_predictions": 100}
-})
+mock_model_service.get_model_info = Mock(
+    return_value={
+        "model_version": "test_model_v1",
+        "training_metrics": {"rmse": 12.79, "r2": 0.87},
+        "features": [],
+    }
+)
+mock_model_service.get_metrics = Mock(
+    return_value={
+        "training_metrics": {"rmse": 12.79},
+        "production_metrics": {"total_predictions": 100},
+    }
+)
 
 mock_feature_service = Mock()
 mock_feature_service.transform_request = Mock(return_value=np.array([[1.0] * 18]))
@@ -41,13 +48,13 @@ mock_feature_service.get_feature_count = Mock(return_value=18)
 # Import app after ensuring model files exist
 try:
     from src.api.main import app
-    from src.api.routes import predict, health, model
-    
+    from src.api.routes import health, model, predict
+
     # Inject mocked services
     predict.set_services(mock_model_service, mock_feature_service)
     health.set_services(mock_model_service)
     model.set_services(mock_model_service, mock_feature_service)
-    
+
     client = TestClient(app, raise_server_exceptions=False)
     API_AVAILABLE = True
 except Exception as e:

@@ -18,25 +18,23 @@ Date: 2025-11-16
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional
 
 import joblib
 import polars as pl
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
 def generate_reference_data(
     train_data_path: Path,
-    model_path: Optional[Path],
+    model_path: Path | None,
     output_path: Path,
     sample_size: int = 10000,
     stratify_column: str = "Load_Type",
-    seed: int = 42
+    seed: int = 42,
 ) -> None:
     """
     Generate reference data for drift monitoring.
@@ -74,9 +72,7 @@ def generate_reference_data(
         logger.info(f"Performing stratified sampling by '{stratify_column}'")
 
         # Get proportions of each class
-        class_counts = train_df.group_by(stratify_column).agg(
-            pl.count().alias("count")
-        )
+        class_counts = train_df.group_by(stratify_column).agg(pl.count().alias("count"))
         total_count = train_df.height
 
         # Sample from each stratum proportionally
@@ -87,9 +83,9 @@ def generate_reference_data(
             stratum_proportion = stratum_count / total_count
             stratum_sample_size = int(sample_size * stratum_proportion)
 
-            stratum_df = train_df.filter(
-                pl.col(stratify_column) == stratum_value
-            ).sample(n=min(stratum_sample_size, stratum_count), seed=seed)
+            stratum_df = train_df.filter(pl.col(stratify_column) == stratum_value).sample(
+                n=min(stratum_sample_size, stratum_count), seed=seed
+            )
 
             samples.append(stratum_df)
             logger.info(
@@ -121,9 +117,7 @@ def generate_reference_data(
         predictions = model.predict(X)
 
         # Add predictions to sample
-        train_sample = train_sample.with_columns(
-            pl.Series("predictions", predictions)
-        )
+        train_sample = train_sample.with_columns(pl.Series("predictions", predictions))
         logger.info("Predictions added successfully")
     else:
         if model_path:
@@ -147,67 +141,52 @@ def generate_reference_data(
     logger.info(f"  Memory size: {train_sample.estimated_size('mb'):.2f} MB")
 
     if stratify_column and stratify_column in train_sample.columns:
-        class_distribution = train_sample.group_by(stratify_column).agg(
-            pl.count().alias("count")
-        ).with_columns(
-            (pl.col("count") / train_sample.height * 100).alias("percentage")
-        ).sort(stratify_column)
+        class_distribution = (
+            train_sample.group_by(stratify_column)
+            .agg(pl.count().alias("count"))
+            .with_columns((pl.col("count") / train_sample.height * 100).alias("percentage"))
+            .sort(stratify_column)
+        )
 
         logger.info(f"\n  Distribution by {stratify_column}:")
         for row in class_distribution.iter_rows(named=True):
-            logger.info(
-                f"    {row[stratify_column]}: {row['count']} ({row['percentage']:.2f}%)"
-            )
+            logger.info(f"    {row[stratify_column]}: {row['count']} ({row['percentage']:.2f}%)")
 
 
 def main():
     """Main function to parse arguments and generate reference data."""
     parser = argparse.ArgumentParser(
         description="Generate reference data for drift monitoring",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
         "--train-data",
         type=Path,
         default=Path("data/processed/steel_preprocessed_train.parquet"),
-        help="Path to training data parquet file"
+        help="Path to training data parquet file",
     )
 
     parser.add_argument(
-        "--model-path",
-        type=Path,
-        default=None,
-        help="Path to trained model pickle file (optional)"
+        "--model-path", type=Path, default=None, help="Path to trained model pickle file (optional)"
     )
 
     parser.add_argument(
         "--output",
         type=Path,
         default=Path("reports/monitoring/reference_data/train_data_sample.parquet"),
-        help="Path to save reference data"
+        help="Path to save reference data",
     )
 
     parser.add_argument(
-        "--sample-size",
-        type=int,
-        default=10000,
-        help="Number of samples to extract"
+        "--sample-size", type=int, default=10000, help="Number of samples to extract"
     )
 
     parser.add_argument(
-        "--stratify-column",
-        type=str,
-        default="Load_Type",
-        help="Column to stratify sampling"
+        "--stratify-column", type=str, default="Load_Type", help="Column to stratify sampling"
     )
 
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="Random seed for reproducibility"
-    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 
     args = parser.parse_args()
 
@@ -217,7 +196,7 @@ def main():
         output_path=args.output,
         sample_size=args.sample_size,
         stratify_column=args.stratify_column,
-        seed=args.seed
+        seed=args.seed,
     )
 
 

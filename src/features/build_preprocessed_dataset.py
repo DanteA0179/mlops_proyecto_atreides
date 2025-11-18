@@ -706,9 +706,7 @@ def main():
         save_pipeline(pipeline)
 
         # Step 11: Generate reports
-        generate_reports(
-            eda_results, split_validation, pipeline, X_train, X_val, X_test
-        )
+        generate_reports(eda_results, split_validation, pipeline, X_train, X_val, X_test)
 
         logger.info("=" * 80)
         logger.info("PREPROCESSING PIPELINE COMPLETED SUCCESSFULLY")

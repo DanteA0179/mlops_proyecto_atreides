@@ -135,13 +135,13 @@ class ONNXValidator:
         logger.info(f"Validating LightGBM model: {onnx_path}")
 
         original_model = joblib.load(original_path)
-        
-        if hasattr(original_model, 'named_steps'):
+
+        if hasattr(original_model, "named_steps"):
             logger.info("Detected sklearn Pipeline, extracting final estimator")
-            model_for_inference = original_model.named_steps['model']
+            model_for_inference = original_model.named_steps["model"]
         else:
             model_for_inference = original_model
-        
+
         onnx_session = ort.InferenceSession(onnx_path)
 
         if test_data is None:
@@ -244,10 +244,10 @@ class ONNXValidator:
         onnx_dir_path = Path(onnx_dir)
 
         if test_data is None:
-            if hasattr(ensemble, 'base_models_'):
+            if hasattr(ensemble, "base_models_"):
                 first_base = list(ensemble.base_models_.values())[0]
-                if hasattr(first_base, 'named_steps'):
-                    first_base = first_base.named_steps['model']
+                if hasattr(first_base, "named_steps"):
+                    first_base = first_base.named_steps["model"]
                 test_data = self._generate_test_data(model=first_base)
             else:
                 test_data = self._generate_test_data(num_features=18)
@@ -322,8 +322,8 @@ class ONNXValidator:
         logger.warning("Chronos-2 validation is experimental and may not be fully accurate")
 
         try:
-            from chronos import ChronosPipeline
             import torch
+            from chronos import ChronosPipeline
         except ImportError as e:
             logger.error("chronos-forecasting and torch required for validation")
             raise ImportError("chronos-forecasting and torch required") from e
@@ -382,11 +382,11 @@ class ONNXValidator:
         np.ndarray
             Test data array of shape (num_samples, num_features)
         """
-        if model is not None and hasattr(model, 'n_features_'):
+        if model is not None and hasattr(model, "n_features_"):
             num_features = model.n_features_
-        elif model is not None and hasattr(model, 'n_features_in_'):
+        elif model is not None and hasattr(model, "n_features_in_"):
             num_features = model.n_features_in_
-        
+
         np.random.seed(42)
         return np.random.randn(self.num_samples, num_features).astype(np.float32)
 
@@ -478,7 +478,9 @@ class ONNXValidator:
             "total_models": len(validation_results),
             "passed": passed,
             "failed": failed,
-            "success_rate_pct": (passed / len(validation_results) * 100) if validation_results else 0,
+            "success_rate_pct": (
+                (passed / len(validation_results) * 100) if validation_results else 0
+            ),
             "tolerance": self.tolerance,
             "num_samples": self.num_samples,
             "results": validation_results,
@@ -540,12 +542,14 @@ class ONNXValidator:
 
             except Exception as e:
                 logger.error(f"Failed to validate {model_name}: {e}")
-                results.append({
-                    "model_type": model_name,
-                    "status": "ERROR",
-                    "error": str(e),
-                    "validation_date": datetime.now().isoformat(),
-                })
+                results.append(
+                    {
+                        "model_type": model_name,
+                        "status": "ERROR",
+                        "error": str(e),
+                        "validation_date": datetime.now().isoformat(),
+                    }
+                )
 
         return results
 
@@ -574,4 +578,4 @@ if __name__ == "__main__":
 
     validator.generate_report(results, "models/benchmarks/validation_report.json")
 
-    print(f"\nValidation complete. Results saved to models/benchmarks/validation_report.json")
+    print("\nValidation complete. Results saved to models/benchmarks/validation_report.json")

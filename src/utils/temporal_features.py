@@ -37,7 +37,6 @@ Requirements:
     - numpy >= 1.26.0
 """
 
-
 import numpy as np
 import polars as pl
 

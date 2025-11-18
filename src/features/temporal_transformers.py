@@ -13,7 +13,6 @@ CyclicalEncoder : Generic cyclical encoding using sin/cos (highly reusable)
 TemporalFeatureEngineer : Complete pipeline combining all transformers
 """
 
-
 import numpy as np
 import polars as pl
 from sklearn.base import BaseEstimator, TransformerMixin

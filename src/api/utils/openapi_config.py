@@ -5,55 +5,50 @@ Centralizes OpenAPI metadata, tags, and custom schema generation.
 """
 
 from typing import Any
+
 from fastapi.openapi.utils import get_openapi
 
 # OpenAPI Tags with descriptions
 OPENAPI_TAGS = [
-    {
-        "name": "Root",
-        "description": "Endpoint raíz con información general de la API"
-    },
+    {"name": "Root", "description": "Endpoint raíz con información general de la API"},
     {
         "name": "Predictions",
         "description": """
         Endpoints para predicción de consumo energético.
-        
+
         Soporta predicciones individuales y batch con modelos ensemble de ML.
         Incluye intervalos de confianza y metadata completa de predicción.
-        """
+        """,
     },
     {
         "name": "Health",
         "description": """
         Health check y monitoreo del servicio.
-        
+
         Útil para load balancers, sistemas de orquestación (Kubernetes),
         y monitoreo de disponibilidad del servicio.
-        """
+        """,
     },
     {
         "name": "Model",
         "description": """
         Información y métricas del modelo de ML.
-        
+
         Proporciona metadata del modelo, métricas de entrenamiento y producción,
         información de features y arquitectura del ensemble.
-        """
-    }
+        """,
+    },
 ]
 
 # API Contact Information
 API_CONTACT = {
     "name": "MLOps Team - Proyecto Atreides",
     "email": "mlops@atreides.com",
-    "url": "https://github.com/DanteA0179/mlops_proyecto_atreides"
+    "url": "https://github.com/DanteA0179/mlops_proyecto_atreides",
 }
 
 # License Information
-API_LICENSE = {
-    "name": "MIT License",
-    "url": "https://opensource.org/licenses/MIT"
-}
+API_LICENSE = {"name": "MIT License", "url": "https://opensource.org/licenses/MIT"}
 
 # Extended API Description
 API_DESCRIPTION = """
@@ -148,17 +143,17 @@ API_TERMS_OF_SERVICE = "https://github.com/DanteA0179/mlops_proyecto_atreides/bl
 def get_custom_openapi_schema(app) -> dict[str, Any]:
     """
     Generate custom OpenAPI schema with enhanced metadata.
-    
+
     Parameters
     ----------
     app : FastAPI
         FastAPI application instance
-        
+
     Returns
     -------
     Dict[str, Any]
         Custom OpenAPI schema
-        
+
     Examples
     --------
     >>> from fastapi import FastAPI
@@ -184,51 +179,45 @@ def get_custom_openapi_schema(app) -> dict[str, Any]:
     # Add custom fields
     openapi_schema["info"]["x-logo"] = {
         "url": "https://raw.githubusercontent.com/DanteA0179/mlops_proyecto_atreides/main/docs/assets/logo.png",
-        "altText": "Energy Optimization Copilot Logo"
+        "altText": "Energy Optimization Copilot Logo",
     }
-    
+
     # Add servers
     openapi_schema["servers"] = [
-        {
-            "url": "http://localhost:8000",
-            "description": "Development server (Local)"
-        },
-        {
-            "url": "http://0.0.0.0:8000",
-            "description": "Development server (Docker)"
-        },
+        {"url": "http://localhost:8000", "description": "Development server (Local)"},
+        {"url": "http://0.0.0.0:8000", "description": "Development server (Docker)"},
         {
             "url": "https://energy-optimization-api.run.app",
-            "description": "Production server (GCP Cloud Run)"
-        }
+            "description": "Production server (GCP Cloud Run)",
+        },
     ]
-    
+
     # Add external documentation
     openapi_schema["externalDocs"] = {
         "description": "Documentación completa del proyecto",
-        "url": "https://github.com/DanteA0179/mlops_proyecto_atreides/tree/main/docs"
+        "url": "https://github.com/DanteA0179/mlops_proyecto_atreides/tree/main/docs",
     }
-    
+
     # Add security schemes (for future use)
     openapi_schema["components"]["securitySchemes"] = {
         "ApiKeyAuth": {
             "type": "apiKey",
             "in": "header",
             "name": "X-API-Key",
-            "description": "API Key para autenticación (próximamente)"
+            "description": "API Key para autenticación (próximamente)",
         },
         "BearerAuth": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "JWT Bearer token (próximamente)"
-        }
+            "description": "JWT Bearer token (próximamente)",
+        },
     }
-    
+
     # Add additional metadata
     openapi_schema["info"]["x-api-id"] = "energy-optimization-api"
     openapi_schema["info"]["x-audience"] = "external-public"
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -237,13 +226,7 @@ def get_custom_openapi_schema(app) -> dict[str, Any]:
 ERROR_RESPONSES = {
     400: {
         "description": "Bad Request - Invalid input",
-        "content": {
-            "application/json": {
-                "example": {
-                    "detail": "Invalid input parameters"
-                }
-            }
-        }
+        "content": {"application/json": {"example": {"detail": "Invalid input parameters"}}},
     },
     422: {
         "description": "Unprocessable Entity - Validation error",
@@ -254,32 +237,23 @@ ERROR_RESPONSES = {
                         {
                             "loc": ["body", "load_type"],
                             "msg": "load_type must be one of ['Light', 'Medium', 'Maximum']",
-                            "type": "value_error"
+                            "type": "value_error",
                         }
                     ]
                 }
             }
-        }
+        },
     },
     500: {
         "description": "Internal Server Error",
         "content": {
             "application/json": {
-                "example": {
-                    "detail": "Internal server error occurred",
-                    "error_id": "err_abc123"
-                }
+                "example": {"detail": "Internal server error occurred", "error_id": "err_abc123"}
             }
-        }
+        },
     },
     503: {
         "description": "Service Unavailable - Model not loaded",
-        "content": {
-            "application/json": {
-                "example": {
-                    "detail": "Model service is not available"
-                }
-            }
-        }
-    }
+        "content": {"application/json": {"example": {"detail": "Model service is not available"}}},
+    },
 }

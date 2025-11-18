@@ -10,7 +10,7 @@ Date: 2025-11-16
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 
@@ -46,7 +46,7 @@ class MetricsTracker:
         self.config = config
         self.history_path = Path(config.reporting.output_dir) / "metrics_history.csv"
 
-    def load_history(self, limit: Optional[int] = None) -> pd.DataFrame:
+    def load_history(self, limit: int | None = None) -> pd.DataFrame:
         """
         Load historical metrics.
 
@@ -83,7 +83,7 @@ class MetricsTracker:
 
         return df
 
-    def get_latest_metrics(self) -> Optional[Dict[str, Any]]:
+    def get_latest_metrics(self) -> dict[str, Any] | None:
         """
         Get most recent metrics.
 
@@ -99,9 +99,7 @@ class MetricsTracker:
 
         return df.iloc[0].to_dict()
 
-    def calculate_trend(
-        self, metric_name: str, window: int = 5
-    ) -> Optional[str]:
+    def calculate_trend(self, metric_name: str, window: int = 5) -> str | None:
         """
         Calculate trend for a metric over recent history.
 
@@ -145,7 +143,7 @@ class MetricsTracker:
             return "stable"
 
     @staticmethod
-    def _calculate_slope(x: List[float], y: List[float]) -> float:
+    def _calculate_slope(x: list[float], y: list[float]) -> float:
         """
         Calculate slope of simple linear regression.
 
@@ -176,9 +174,7 @@ class MetricsTracker:
 
         return numerator / denominator
 
-    def get_summary_statistics(
-        self, metric_name: str, window: int = 30
-    ) -> Optional[Dict[str, float]]:
+    def get_summary_statistics(self, metric_name: str, window: int = 30) -> dict[str, float] | None:
         """
         Get summary statistics for a metric.
 
@@ -215,7 +211,7 @@ class MetricsTracker:
 
     def detect_anomalies(
         self, metric_name: str, window: int = 30, std_threshold: float = 2.0
-    ) -> Tuple[bool, Optional[float]]:
+    ) -> tuple[bool, float | None]:
         """
         Detect if latest value is anomalous based on historical data.
 
@@ -261,7 +257,7 @@ class MetricsTracker:
 
         return is_anomalous, z_score
 
-    def get_drift_trends_report(self, window: int = 10) -> Dict[str, Any]:
+    def get_drift_trends_report(self, window: int = 10) -> dict[str, Any]:
         """
         Generate comprehensive drift trends report.
 

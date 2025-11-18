@@ -320,9 +320,7 @@ def map_binary_feature(df: pl.DataFrame, feature: str, mapping: dict[str, int]) 
     return df.with_columns(mapping_expr.cast(pl.Int32).alias(feature))
 
 
-def get_feature_name_after_ohe(
-    feature: str, category: str, prefix_sep: str = "_"
-) -> str:
+def get_feature_name_after_ohe(feature: str, category: str, prefix_sep: str = "_") -> str:
     """
     Generate feature name after OneHotEncoding.
 

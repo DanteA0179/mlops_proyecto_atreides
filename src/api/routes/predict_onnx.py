@@ -75,9 +75,9 @@ async def predict_onnx(
         if feature_service is None:
             raise HTTPException(
                 status_code=503,
-                detail="Feature service not available. Check preprocessing pipeline."
+                detail="Feature service not available. Check preprocessing pipeline.",
             )
-        
+
         onnx_service = get_onnx_service(model_type=model_type, use_gpu=True)
 
         # Use centralized feature engineering service
@@ -140,7 +140,7 @@ async def predict_onnx_batch(
         if feature_service is None:
             raise HTTPException(
                 status_code=503,
-                detail="Feature service not available. Check preprocessing pipeline."
+                detail="Feature service not available. Check preprocessing pipeline.",
             )
 
         onnx_service = get_onnx_service(model_type=model_type, use_gpu=True)
@@ -154,12 +154,11 @@ async def predict_onnx_batch(
 
         prediction_items = [
             BatchPredictionItem(
-                predicted_usage_kwh=float(pred),
-                prediction_id=f"pred_{uuid.uuid4().hex[:8]}"
+                predicted_usage_kwh=float(pred), prediction_id=f"pred_{uuid.uuid4().hex[:8]}"
             )
             for pred in predictions
         ]
-        
+
         summary = BatchPredictionSummary(
             total_predictions=len(predictions),
             avg_predicted_usage=float(np.mean(predictions)),
@@ -167,7 +166,7 @@ async def predict_onnx_batch(
             max_predicted_usage=float(np.max(predictions)),
             processing_time_ms=elapsed_ms,
         )
-        
+
         return BatchPredictionResponse(
             predictions=prediction_items,
             summary=summary,
@@ -208,23 +207,27 @@ async def list_onnx_models() -> dict[str, Any]:
             else:
                 size_mb = 0
 
-            models.append({
-                "name": model_name,
-                "type": model_info["type"],
-                "size_mb": size_mb,
-                "available": model_info["exists"],
-                "is_ensemble": model_info["is_ensemble"],
-            })
+            models.append(
+                {
+                    "name": model_name,
+                    "type": model_info["type"],
+                    "size_mb": size_mb,
+                    "available": model_info["exists"],
+                    "is_ensemble": model_info["is_ensemble"],
+                }
+            )
 
         except Exception as e:
             logger.error(f"Error getting info for {model_name}: {e}")
-            models.append({
-                "name": model_name,
-                "type": "unknown",
-                "size_mb": 0,
-                "available": False,
-                "error": str(e),
-            })
+            models.append(
+                {
+                    "name": model_name,
+                    "type": "unknown",
+                    "size_mb": 0,
+                    "available": False,
+                    "error": str(e),
+                }
+            )
 
     return {
         "total_models": len(models),
@@ -271,7 +274,9 @@ async def get_onnx_benchmark() -> dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error reading benchmark data: {e}")
-        raise HTTPException(status_code=500, detail=f"Error reading benchmark data: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Error reading benchmark data: {str(e)}"
+        ) from e
 
 
 @router.get("/info/{model_name}")
@@ -310,7 +315,11 @@ async def get_model_info(model_name: str) -> dict[str, Any]:
             size_mb = 0
             num_files = 0
 
-        metadata_path = model_path.with_suffix(".json") if model_path.is_file() else model_path / "metadata.json"
+        metadata_path = (
+            model_path.with_suffix(".json")
+            if model_path.is_file()
+            else model_path / "metadata.json"
+        )
         metadata = {}
         if metadata_path.exists():
             with open(metadata_path) as f:

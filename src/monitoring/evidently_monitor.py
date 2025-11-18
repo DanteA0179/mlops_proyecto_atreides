@@ -25,7 +25,6 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from src.monitoring.alert_manager import AlertManager
 from src.monitoring.config import MonitoringConfig
@@ -133,14 +132,10 @@ class MonitoringPipeline:
 
             # Step 2: Analyze drift
             logger.info("\n[2/7] Analyzing drift with Evidently AI")
-            report, metrics = self.drift_analyzer.analyze_drift(
-                reference_data, production_data
-            )
+            report, metrics = self.drift_analyzer.analyze_drift(reference_data, production_data)
 
             logger.info(f"  Drift score: {metrics.get('drift_score', 'N/A'):.3f}")
-            logger.info(
-                f"  Drifted features: {metrics.get('number_of_drifted_features', 'N/A')}"
-            )
+            logger.info(f"  Drifted features: {metrics.get('number_of_drifted_features', 'N/A')}")
 
             # Step 3: Generate and save reports
             logger.info("\n[3/7] Generating and saving reports")
@@ -190,9 +185,7 @@ class MonitoringPipeline:
             logger.info("DRIFT MONITORING PIPELINE - COMPLETED SUCCESSFULLY")
             logger.info("=" * 70)
             logger.info(f"  Drift Score: {metrics.get('drift_score', 0.0):.3f}")
-            logger.info(
-                f"  Drifted Features: {metrics.get('share_of_drifted_features', 0.0):.1%}"
-            )
+            logger.info(f"  Drifted Features: {metrics.get('share_of_drifted_features', 0.0):.1%}")
             logger.info(f"  Alert Severity: {alert_context.severity.value}")
             logger.info(f"  Report: {saved_paths.get('html')}")
             logger.info("=" * 70)

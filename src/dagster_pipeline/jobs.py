@@ -51,7 +51,7 @@ def training_job():
     data = load_data_op(config)
 
     # Step 3: Validate data
-    validation = validate_data_op(data)
+    validate_data_op(data)
 
     # Step 4: Train model
     model = train_model_op(data, config)
@@ -60,7 +60,7 @@ def training_job():
     metrics = evaluate_model_op(model, data, config)
 
     # Step 6: Check threshold
-    threshold_result = check_threshold_op(metrics, config)
+    check_threshold_op(metrics, config)
 
     # Step 7: Log to MLflow
     run_id = log_mlflow_op(model, metrics, config)
@@ -69,7 +69,7 @@ def training_job():
     model_path = save_artifacts_op(model, metrics, config)
 
     # Step 9: DVC add
-    dvc_file = dvc_add_op(model_path)
+    dvc_add_op(model_path)
 
     # Step 10: Send notification
     send_notification_op(metrics, run_id, config)

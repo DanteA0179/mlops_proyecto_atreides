@@ -1,0 +1,78 @@
+"""
+Configuration module for Energy Optimization Copilot.
+
+Centralized configuration for paths, constants, and model settings.
+"""
+
+from src.config.constants import (
+    CORRELATION_THRESHOLD,
+    DRIFT_DETECTION_THRESHOLD,
+    HOURS_PER_DAY,
+    MAX_BATCH_SIZE,
+    MAX_POWER_FACTOR,
+    MIN_CONFIDENCE_SCORE,
+    MIN_POWER_FACTOR,
+    MINUTES_PER_HOUR,
+    MODEL_TIMEOUT_SECONDS,
+    OUTLIER_Z_SCORE_THRESHOLD,
+    SECONDS_PER_DAY,
+    VALID_LOAD_TYPES,
+    VALID_WEEK_STATUS,
+)
+from src.config.model_config import (
+    DEFAULT_MODEL_TYPE,
+    DEFAULT_MODEL_VERSION,
+    LIGHTGBM_CONFIG,
+    XGBOOST_CONFIG,
+    ModelConfig,
+)
+from src.config.paths import (
+    DATA_DIR,
+    DATA_PROCESSED_DIR,
+    DATA_PRODUCTION_DIR,
+    DATA_RAW_DIR,
+    DUCKDB_PATH,
+    LOGS_DIR,
+    MODELS_DIR,
+    MODELS_ENSEMBLES_DIR,
+    MODELS_ONNX_DIR,
+    PROJECT_ROOT,
+    REPORTS_DIR,
+    REPORTS_MONITORING_DIR,
+)
+
+__all__ = [
+    # Paths
+    "PROJECT_ROOT",
+    "DATA_DIR",
+    "DATA_RAW_DIR",
+    "DATA_PROCESSED_DIR",
+    "DATA_PRODUCTION_DIR",
+    "DUCKDB_PATH",
+    "MODELS_DIR",
+    "MODELS_ENSEMBLES_DIR",
+    "MODELS_ONNX_DIR",
+    "REPORTS_DIR",
+    "REPORTS_MONITORING_DIR",
+    "LOGS_DIR",
+    # Constants
+    "SECONDS_PER_DAY",
+    "MINUTES_PER_HOUR",
+    "HOURS_PER_DAY",
+    "OUTLIER_Z_SCORE_THRESHOLD",
+    "DRIFT_DETECTION_THRESHOLD",
+    "CORRELATION_THRESHOLD",
+    "MAX_BATCH_SIZE",
+    "MODEL_TIMEOUT_SECONDS",
+    "MIN_CONFIDENCE_SCORE",
+    "VALID_LOAD_TYPES",
+    "VALID_WEEK_STATUS",
+    "MIN_POWER_FACTOR",
+    "MAX_POWER_FACTOR",
+    # Model Config
+    "ModelConfig",
+    "DEFAULT_MODEL_TYPE",
+    "DEFAULT_MODEL_VERSION",
+    "LIGHTGBM_CONFIG",
+    "XGBOOST_CONFIG",
+]

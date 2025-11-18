@@ -6,17 +6,17 @@ Using Matplotlib/Seaborn for static visualizations that render well in GitHub.
 Following project standards for code reusability and clean code.
 """
 
-import polars as pl
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pathlib import Path
-from typing import Optional, Dict, Tuple, List
 import logging
-from statsmodels.tsa.seasonal import STL
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import acf, pacf
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import polars as pl
+import seaborn as sns
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.stattools import acf, pacf
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,9 @@ def perform_stl_decomposition(
     value_column: str,
     period: int,
     seasonal: int = 7,
-    trend: Optional[int] = None,
-    robust: bool = True
-) -> Tuple[pd.DataFrame, Dict]:
+    trend: int | None = None,
+    robust: bool = True,
+) -> tuple[pd.DataFrame, dict]:
     """
     Performs STL (Seasonal-Trend decomposition using Loess) on time series data.
 
@@ -76,35 +76,33 @@ def perform_stl_decomposition(
     series = ts_data[value_column].astype(float)
 
     # Perform STL decomposition
-    stl = STL(
-        series,
-        period=period,
-        seasonal=seasonal,
-        trend=trend,
-        robust=robust
-    )
+    stl = STL(series, period=period, seasonal=seasonal, trend=trend, robust=robust)
 
     result = stl.fit()
 
     # Create result DataFrame
-    decomp_df = pd.DataFrame({
-        'observed': result.observed,
-        'trend': result.trend,
-        'seasonal': result.seasonal,
-        'resid': result.resid
-    })
+    decomp_df = pd.DataFrame(
+        {
+            "observed": result.observed,
+            "trend": result.trend,
+            "seasonal": result.seasonal,
+            "resid": result.resid,
+        }
+    )
 
     # Calculate metadata
     metadata = {
-        'period': period,
-        'seasonal_strength': _calculate_seasonal_strength(result),
-        'trend_strength': _calculate_trend_strength(result),
-        'seasonal_peak_to_trough': result.seasonal.max() - result.seasonal.min(),
-        'residual_std': result.resid.std(),
-        'residual_mean': result.resid.mean()
+        "period": period,
+        "seasonal_strength": _calculate_seasonal_strength(result),
+        "trend_strength": _calculate_trend_strength(result),
+        "seasonal_peak_to_trough": result.seasonal.max() - result.seasonal.min(),
+        "residual_std": result.resid.std(),
+        "residual_mean": result.resid.mean(),
     }
 
-    logger.info(f"STL decomposition completed. Seasonal strength: {metadata['seasonal_strength']:.4f}")
+    logger.info(
+        f"STL decomposition completed. Seasonal strength: {metadata['seasonal_strength']:.4f}"
+    )
 
     return decomp_df, metadata
 
@@ -204,8 +202,8 @@ def _calculate_trend_strength(stl_result) -> float:
 def plot_stl_components(
     decomp_df: pd.DataFrame,
     title: str = "STL Decomposition",
-    figsize: Tuple[int, int] = (14, 10),
-    output_path: Optional[str] = None
+    figsize: tuple[int, int] = (14, 10),
+    output_path: str | None = None,
 ) -> plt.Figure:
     """
     Creates a plot of STL decomposition components using Matplotlib.
@@ -235,29 +233,29 @@ def plot_stl_components(
     fig, axes = plt.subplots(4, 1, figsize=figsize, sharex=True)
 
     # Observed
-    axes[0].plot(decomp_df.index, decomp_df['observed'], color='#3498db', linewidth=1)
-    axes[0].set_ylabel('Observed', fontsize=11, fontweight='bold')
+    axes[0].plot(decomp_df.index, decomp_df["observed"], color="#3498db", linewidth=1)
+    axes[0].set_ylabel("Observed", fontsize=11, fontweight="bold")
     axes[0].grid(True, alpha=0.3)
 
     # Trend
-    axes[1].plot(decomp_df.index, decomp_df['trend'], color='#e74c3c', linewidth=2)
-    axes[1].set_ylabel('Trend', fontsize=11, fontweight='bold')
+    axes[1].plot(decomp_df.index, decomp_df["trend"], color="#e74c3c", linewidth=2)
+    axes[1].set_ylabel("Trend", fontsize=11, fontweight="bold")
     axes[1].grid(True, alpha=0.3)
 
     # Seasonal
-    axes[2].plot(decomp_df.index, decomp_df['seasonal'], color='#2ecc71', linewidth=1)
-    axes[2].set_ylabel('Seasonal', fontsize=11, fontweight='bold')
+    axes[2].plot(decomp_df.index, decomp_df["seasonal"], color="#2ecc71", linewidth=1)
+    axes[2].set_ylabel("Seasonal", fontsize=11, fontweight="bold")
     axes[2].grid(True, alpha=0.3)
 
     # Residual
-    axes[3].scatter(decomp_df.index, decomp_df['resid'], color='#95a5a6', s=10, alpha=0.5)
-    axes[3].axhline(y=0, color='red', linestyle='--', linewidth=1, alpha=0.5)
-    axes[3].set_ylabel('Residual', fontsize=11, fontweight='bold')
-    axes[3].set_xlabel('Time', fontsize=11)
+    axes[3].scatter(decomp_df.index, decomp_df["resid"], color="#95a5a6", s=10, alpha=0.5)
+    axes[3].axhline(y=0, color="red", linestyle="--", linewidth=1, alpha=0.5)
+    axes[3].set_ylabel("Residual", fontsize=11, fontweight="bold")
+    axes[3].set_xlabel("Time", fontsize=11)
     axes[3].grid(True, alpha=0.3)
 
     # Add title
-    fig.suptitle(title, fontsize=14, fontweight='bold', y=0.995)
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=0.995)
 
     plt.tight_layout()
 
@@ -268,10 +266,8 @@ def plot_stl_components(
 
 
 def calculate_acf_pacf(
-    series: pl.Series,
-    nlags: int = 40,
-    alpha: float = 0.05
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    series: pl.Series, nlags: int = 40, alpha: float = 0.05
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates ACF and PACF for a time series.
 
@@ -311,9 +307,7 @@ def calculate_acf_pacf(
         acf_vals = acf_values
         # Calculate confidence intervals manually
         n = len(data)
-        acf_confint = np.array([
-            [-1.96/np.sqrt(n), 1.96/np.sqrt(n)] for _ in range(nlags + 1)
-        ])
+        acf_confint = np.array([[-1.96 / np.sqrt(n), 1.96 / np.sqrt(n)] for _ in range(nlags + 1)])
 
     # Calculate PACF
     pacf_values = pacf(data, nlags=nlags, alpha=alpha)
@@ -323,9 +317,7 @@ def calculate_acf_pacf(
         pacf_vals = pacf_values
         # Calculate confidence intervals manually
         n = len(data)
-        pacf_confint = np.array([
-            [-1.96/np.sqrt(n), 1.96/np.sqrt(n)] for _ in range(nlags + 1)
-        ])
+        pacf_confint = np.array([[-1.96 / np.sqrt(n), 1.96 / np.sqrt(n)] for _ in range(nlags + 1)])
 
     return acf_vals, acf_confint, pacf_vals, pacf_confint
 
@@ -334,8 +326,8 @@ def plot_acf_pacf(
     series: pl.Series,
     nlags: int = 40,
     title: str = "ACF and PACF Analysis",
-    figsize: Tuple[int, int] = (14, 5),
-    output_path: Optional[str] = None
+    figsize: tuple[int, int] = (14, 5),
+    output_path: str | None = None,
 ) -> plt.Figure:
     """
     Creates ACF and PACF plots using statsmodels visualization.
@@ -372,20 +364,20 @@ def plot_acf_pacf(
 
     # ACF plot
     plot_acf(data, lags=nlags, ax=axes[0], alpha=0.05)
-    axes[0].set_title('Autocorrelation Function (ACF)', fontsize=12, fontweight='bold')
-    axes[0].set_xlabel('Lag', fontsize=11)
-    axes[0].set_ylabel('Correlation', fontsize=11)
+    axes[0].set_title("Autocorrelation Function (ACF)", fontsize=12, fontweight="bold")
+    axes[0].set_xlabel("Lag", fontsize=11)
+    axes[0].set_ylabel("Correlation", fontsize=11)
     axes[0].grid(True, alpha=0.3)
 
     # PACF plot
     plot_pacf(data, lags=nlags, ax=axes[1], alpha=0.05)
-    axes[1].set_title('Partial Autocorrelation Function (PACF)', fontsize=12, fontweight='bold')
-    axes[1].set_xlabel('Lag', fontsize=11)
-    axes[1].set_ylabel('Correlation', fontsize=11)
+    axes[1].set_title("Partial Autocorrelation Function (PACF)", fontsize=12, fontweight="bold")
+    axes[1].set_xlabel("Lag", fontsize=11)
+    axes[1].set_ylabel("Correlation", fontsize=11)
     axes[1].grid(True, alpha=0.3)
 
     # Add main title
-    fig.suptitle(title, fontsize=14, fontweight='bold', y=1.02)
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
 
     plt.tight_layout()
 
@@ -401,8 +393,8 @@ def analyze_seasonality_by_group(
     value_column: str,
     time_column: str,
     period: int,
-    seasonal: int = 7
-) -> Dict[str, Dict]:
+    seasonal: int = 7,
+) -> dict[str, dict]:
     """
     Analyzes seasonality patterns separately for each group in a categorical variable.
 
@@ -453,7 +445,7 @@ def analyze_seasonality_by_group(
                 time_column=time_column,
                 value_column=value_column,
                 period=period,
-                seasonal=seasonal
+                seasonal=seasonal,
             )
 
             results[group] = metadata
@@ -461,17 +453,17 @@ def analyze_seasonality_by_group(
 
         except Exception as e:
             logger.warning(f"Failed to analyze group {group}: {e}")
-            results[group] = {'error': str(e)}
+            results[group] = {"error": str(e)}
 
     return results
 
 
 def plot_seasonality_comparison(
-    seasonality_results: Dict[str, Dict],
-    metric: str = 'seasonal_strength',
+    seasonality_results: dict[str, dict],
+    metric: str = "seasonal_strength",
     title: str = "Seasonality Comparison by Group",
-    figsize: Tuple[int, int] = (10, 6),
-    output_path: Optional[str] = None
+    figsize: tuple[int, int] = (10, 6),
+    output_path: str | None = None,
 ) -> plt.Figure:
     """
     Creates a bar chart comparing seasonality metrics across groups.
@@ -504,28 +496,34 @@ def plot_seasonality_comparison(
     values = []
 
     for group, data in seasonality_results.items():
-        if 'error' not in data and metric in data:
+        if "error" not in data and metric in data:
             groups.append(group)
             values.append(data[metric])
 
     fig, ax = plt.subplots(figsize=figsize)
 
-    bars = ax.bar(groups, values, color='#3498db', alpha=0.7, edgecolor='black')
+    bars = ax.bar(groups, values, color="#3498db", alpha=0.7, edgecolor="black")
 
     # Add value labels on bars
-    for i, (bar, value) in enumerate(zip(bars, values)):
+    for _i, (bar, value) in enumerate(zip(bars, values, strict=False)):
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{value:.3f}',
-                ha='center', va='bottom', fontsize=10, fontweight='bold')
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            fontweight="bold",
+        )
 
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel('Group', fontsize=12)
-    ax.set_ylabel(metric.replace('_', ' ').title(), fontsize=12)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title(title, fontsize=14, fontweight="bold", pad=15)
+    ax.set_xlabel("Group", fontsize=12)
+    ax.set_ylabel(metric.replace("_", " ").title(), fontsize=12)
+    ax.grid(True, alpha=0.3, axis="y")
     ax.set_axisbelow(True)
 
-    plt.xticks(rotation=15, ha='right')
+    plt.xticks(rotation=15, ha="right")
     plt.tight_layout()
 
     if output_path:
@@ -534,10 +532,7 @@ def plot_seasonality_comparison(
     return fig
 
 
-def extract_seasonal_pattern(
-    decomp_df: pd.DataFrame,
-    period: int
-) -> pd.DataFrame:
+def extract_seasonal_pattern(decomp_df: pd.DataFrame, period: int) -> pd.DataFrame:
     """
     Extracts the average seasonal pattern from decomposition.
 
@@ -557,27 +552,24 @@ def extract_seasonal_pattern(
     --------
     >>> pattern = extract_seasonal_pattern(decomp_df, period=24)
     """
-    seasonal = decomp_df['seasonal'].values
+    seasonal = decomp_df["seasonal"].values
     n_periods = len(seasonal) // period
 
     # Reshape to get all periods
-    seasonal_matrix = seasonal[:n_periods * period].reshape(n_periods, period)
+    seasonal_matrix = seasonal[: n_periods * period].reshape(n_periods, period)
 
     # Calculate average pattern
     avg_pattern = seasonal_matrix.mean(axis=0)
 
-    return pd.DataFrame({
-        'period_index': np.arange(period),
-        'seasonal_value': avg_pattern
-    })
+    return pd.DataFrame({"period_index": np.arange(period), "seasonal_value": avg_pattern})
 
 
 def plot_seasonal_pattern(
     seasonal_pattern: pd.DataFrame,
     period_label: str = "Hour of Day",
     title: str = "Average Seasonal Pattern",
-    figsize: Tuple[int, int] = (12, 5),
-    output_path: Optional[str] = None
+    figsize: tuple[int, int] = (12, 5),
+    output_path: str | None = None,
 ) -> plt.Figure:
     """
     Plots the average seasonal pattern.
@@ -607,17 +599,25 @@ def plot_seasonal_pattern(
     """
     fig, ax = plt.subplots(figsize=figsize)
 
-    ax.plot(seasonal_pattern['period_index'],
-            seasonal_pattern['seasonal_value'],
-            marker='o', linewidth=2, markersize=6, color='#2ecc71')
+    ax.plot(
+        seasonal_pattern["period_index"],
+        seasonal_pattern["seasonal_value"],
+        marker="o",
+        linewidth=2,
+        markersize=6,
+        color="#2ecc71",
+    )
 
-    ax.fill_between(seasonal_pattern['period_index'],
-                     seasonal_pattern['seasonal_value'],
-                     alpha=0.3, color='#2ecc71')
+    ax.fill_between(
+        seasonal_pattern["period_index"],
+        seasonal_pattern["seasonal_value"],
+        alpha=0.3,
+        color="#2ecc71",
+    )
 
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=15)
+    ax.set_title(title, fontsize=14, fontweight="bold", pad=15)
     ax.set_xlabel(period_label, fontsize=12)
-    ax.set_ylabel('Seasonal Component', fontsize=12)
+    ax.set_ylabel("Seasonal Component", fontsize=12)
     ax.grid(True, alpha=0.3)
     ax.set_axisbelow(True)
 
@@ -645,5 +645,5 @@ def _save_figure(fig: plt.Figure, output_path: str) -> None:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig.savefig(output_path, dpi=300, bbox_inches='tight')
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
     logger.info(f"📊 Figure saved to: {output_path}")

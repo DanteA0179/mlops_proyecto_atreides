@@ -78,9 +78,9 @@ def main():
     args = parser.parse_args()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("Chronos-2 Fine-Tuning Pipeline")
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info(f"Timestamp: {timestamp}")
     logger.info(f"Context length: {args.context_length}")
     logger.info(f"Fine-tuning steps: {args.num_steps}")
@@ -88,7 +88,7 @@ def main():
     logger.info(f"Batch size: {args.batch_size}")
     logger.info(f"Gradient accumulation: {args.gradient_accumulation_steps}")
     logger.info(f"Effective batch size: {args.batch_size * args.gradient_accumulation_steps}")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     # Setup
     device = setup_gpu()
@@ -96,6 +96,7 @@ def main():
     # Clear GPU cache at start
     if device == "cuda":
         import torch
+
         torch.cuda.empty_cache()
         logger.info("GPU cache cleared")
     data_dir = Path("data/processed")
@@ -238,9 +239,9 @@ def main():
         mlflow.log_param("model_path", str(save_path))
         mlflow.log_param("model_size_mb", 455.79)
 
-        logger.info("\n" + "="*70)
+        logger.info("\n" + "=" * 70)
         logger.info("RESULTS SUMMARY")
-        logger.info("="*70)
+        logger.info("=" * 70)
 
         if zero_shot_metrics:
             logger.info(f"Zero-shot RMSE: {zero_shot_metrics['rmse']:.2f} kWh")
@@ -251,10 +252,10 @@ def main():
         if zero_shot_metrics:
             logger.info(f"Improvement: {improvement:.1f}%")
 
-        logger.info("="*70)
+        logger.info("=" * 70)
         logger.info(f"Results saved to: {results_file}")
         logger.info(f"Model saved to: {save_path}")
-        logger.info("="*70)
+        logger.info("=" * 70)
 
     return finetuned_results
 

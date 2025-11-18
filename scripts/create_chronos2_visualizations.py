@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import polars as pl
 
 # Load results
@@ -38,7 +37,7 @@ colors = ["#2ecc71", "#3498db", "#f39c12", "#e74c3c"]
 bars = ax.bar(models, rmse_norm, color=colors, alpha=0.8, edgecolor="black", linewidth=1.5)
 
 # Add value labels on bars
-for bar, value in zip(bars, rmse_norm):
+for bar, value in zip(bars, rmse_norm, strict=False):
     height = bar.get_height()
     ax.text(
         bar.get_x() + bar.get_width() / 2.0,
@@ -112,5 +111,5 @@ print(f"Saved: {output_dir / 'chronos2_metrics_table.png'}")
 
 print("\nVisualization creation completed!")
 print(f"Chronos-2 RMSE: {results['metrics']['rmse']:.2f} kWh")
-print(f"XGBoost RMSE: 12.84 kWh")
-print(f"Performance gap: 3.3x worse")
+print("XGBoost RMSE: 12.84 kWh")
+print("Performance gap: 3.3x worse")

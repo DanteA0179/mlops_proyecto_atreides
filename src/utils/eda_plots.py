@@ -5,13 +5,13 @@ Reusable interactive plotting functions using Plotly for exploratory data analys
 
 """
 
-import polars as pl
+import logging
+from pathlib import Path
+
 import plotly.express as px
 import plotly.graph_objects as go
+import polars as pl
 from plotly.subplots import make_subplots
-from pathlib import Path
-from typing import Optional, List, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 def plot_distribution(
     df: pl.DataFrame,
     column: str,
-    title: Optional[str] = None,
+    title: str | None = None,
     nbins: int = 50,
     show_kde: bool = True,
     color: str = "#636EFA",
-    output_path: Optional[str] = None
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates a distribution plot (histogram + KDE) for a single variable.
@@ -67,17 +67,12 @@ def plot_distribution(
         x=column,
         nbins=nbins,
         title=title,
-        labels={column: column.replace('_', ' ')},
+        labels={column: column.replace("_", " ")},
         marginal="box" if show_kde else None,
-        color_discrete_sequence=[color]
+        color_discrete_sequence=[color],
     )
 
-    fig.update_layout(
-        template="plotly_white",
-        showlegend=False,
-        height=500,
-        font=dict(size=12)
-    )
+    fig.update_layout(template="plotly_white", showlegend=False, height=500, font={"size": 12})
 
     if output_path:
         _save_figure(fig, output_path)
@@ -87,10 +82,10 @@ def plot_distribution(
 
 def plot_correlation_heatmap(
     df: pl.DataFrame,
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
     title: str = "Correlation Matrix",
     colorscale: str = "RdBu_r",
-    output_path: Optional[str] = None
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates an interactive correlation heatmap.
@@ -120,7 +115,11 @@ def plot_correlation_heatmap(
     """
     # Select numeric columns
     if columns is None:
-        numeric_cols = [col for col in df.columns if df[col].dtype in [pl.Float64, pl.Float32, pl.Int64, pl.Int32]]
+        numeric_cols = [
+            col
+            for col in df.columns
+            if df[col].dtype in [pl.Float64, pl.Float32, pl.Int64, pl.Int32]
+        ]
     else:
         numeric_cols = columns
 
@@ -129,25 +128,27 @@ def plot_correlation_heatmap(
     corr_matrix = data.corr()
 
     # Create heatmap
-    fig = go.Figure(data=go.Heatmap(
-        z=corr_matrix.values,
-        x=corr_matrix.columns,
-        y=corr_matrix.columns,
-        colorscale=colorscale,
-        zmid=0,
-        text=corr_matrix.values.round(2),
-        texttemplate='%{text}',
-        textfont={"size": 10},
-        colorbar=dict(title="Correlation")
-    ))
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=corr_matrix.values,
+            x=corr_matrix.columns,
+            y=corr_matrix.columns,
+            colorscale=colorscale,
+            zmid=0,
+            text=corr_matrix.values.round(2),
+            texttemplate="%{text}",
+            textfont={"size": 10},
+            colorbar={"title": "Correlation"},
+        )
+    )
 
     fig.update_layout(
         title=title,
         template="plotly_white",
         height=700,
         width=800,
-        xaxis=dict(tickangle=-45),
-        font=dict(size=11)
+        xaxis={"tickangle": -45},
+        font={"size": 11},
     )
 
     if output_path:
@@ -160,9 +161,9 @@ def plot_time_series(
     df: pl.DataFrame,
     time_column: str,
     value_column: str,
-    title: Optional[str] = None,
-    aggregation: Optional[str] = None,
-    output_path: Optional[str] = None
+    title: str | None = None,
+    aggregation: str | None = None,
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates a time series line plot.
@@ -197,12 +198,14 @@ def plot_time_series(
 
     # Aggregate if requested
     if aggregation:
-        if aggregation == 'mean':
+        if aggregation == "mean":
             plot_df = df.group_by(time_column).agg(pl.col(value_column).mean().alias(value_column))
-        elif aggregation == 'sum':
+        elif aggregation == "sum":
             plot_df = df.group_by(time_column).agg(pl.col(value_column).sum().alias(value_column))
-        elif aggregation == 'median':
-            plot_df = df.group_by(time_column).agg(pl.col(value_column).median().alias(value_column))
+        elif aggregation == "median":
+            plot_df = df.group_by(time_column).agg(
+                pl.col(value_column).median().alias(value_column)
+            )
         else:
             raise ValueError(f"Invalid aggregation: {aggregation}")
         plot_df = plot_df.sort(time_column)
@@ -217,18 +220,13 @@ def plot_time_series(
         y=value_column,
         title=title,
         labels={
-            time_column: time_column.replace('_', ' ').title(),
-            value_column: value_column.replace('_', ' ')
-        }
+            time_column: time_column.replace("_", " ").title(),
+            value_column: value_column.replace("_", " "),
+        },
     )
 
-    fig.update_traces(line=dict(width=2))
-    fig.update_layout(
-        template="plotly_white",
-        hovermode="x unified",
-        height=500,
-        font=dict(size=12)
-    )
+    fig.update_traces(line={"width": 2})
+    fig.update_layout(template="plotly_white", hovermode="x unified", height=500, font={"size": 12})
 
     if output_path:
         _save_figure(fig, output_path)
@@ -240,9 +238,9 @@ def plot_box_by_category(
     df: pl.DataFrame,
     category_column: str,
     value_column: str,
-    title: Optional[str] = None,
-    color_discrete_sequence: Optional[List[str]] = None,
-    output_path: Optional[str] = None
+    title: str | None = None,
+    color_discrete_sequence: list[str] | None = None,
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates box plots grouped by a categorical variable.
@@ -283,19 +281,14 @@ def plot_box_by_category(
         y=value_column,
         title=title,
         labels={
-            category_column: category_column.replace('_', ' ').title(),
-            value_column: value_column.replace('_', ' ')
+            category_column: category_column.replace("_", " ").title(),
+            value_column: value_column.replace("_", " "),
         },
         color=category_column,
-        color_discrete_sequence=color_discrete_sequence
+        color_discrete_sequence=color_discrete_sequence,
     )
 
-    fig.update_layout(
-        template="plotly_white",
-        showlegend=False,
-        height=500,
-        font=dict(size=12)
-    )
+    fig.update_layout(template="plotly_white", showlegend=False, height=500, font={"size": 12})
 
     if output_path:
         _save_figure(fig, output_path)
@@ -307,10 +300,10 @@ def plot_scatter(
     df: pl.DataFrame,
     x_column: str,
     y_column: str,
-    color_column: Optional[str] = None,
-    title: Optional[str] = None,
+    color_column: str | None = None,
+    title: str | None = None,
     trendline: bool = False,
-    output_path: Optional[str] = None
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates a scatter plot with optional color coding and trendline.
@@ -353,19 +346,12 @@ def plot_scatter(
         y=y_column,
         color=color_column,
         title=title,
-        labels={
-            x_column: x_column.replace('_', ' '),
-            y_column: y_column.replace('_', ' ')
-        },
+        labels={x_column: x_column.replace("_", " "), y_column: y_column.replace("_", " ")},
         trendline="ols" if trendline else None,
-        opacity=0.6
+        opacity=0.6,
     )
 
-    fig.update_layout(
-        template="plotly_white",
-        height=500,
-        font=dict(size=12)
-    )
+    fig.update_layout(template="plotly_white", height=500, font={"size": 12})
 
     if output_path:
         _save_figure(fig, output_path)
@@ -375,10 +361,10 @@ def plot_scatter(
 
 def plot_scatter_matrix(
     df: pl.DataFrame,
-    columns: List[str],
-    color_column: Optional[str] = None,
+    columns: list[str],
+    color_column: str | None = None,
     title: str = "Scatter Matrix",
-    output_path: Optional[str] = None
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Creates a scatter matrix (pairplot) for multiple variables.
@@ -409,21 +395,10 @@ def plot_scatter_matrix(
     """
     data = df.select(columns + ([color_column] if color_column else [])).to_pandas()
 
-    fig = px.scatter_matrix(
-        data,
-        dimensions=columns,
-        color=color_column,
-        title=title,
-        opacity=0.5
-    )
+    fig = px.scatter_matrix(data, dimensions=columns, color=color_column, title=title, opacity=0.5)
 
     fig.update_traces(diagonal_visible=False, showupperhalf=False)
-    fig.update_layout(
-        template="plotly_white",
-        height=800,
-        width=1000,
-        font=dict(size=10)
-    )
+    fig.update_layout(template="plotly_white", height=800, width=1000, font={"size": 10})
 
     if output_path:
         _save_figure(fig, output_path)
@@ -432,12 +407,12 @@ def plot_scatter_matrix(
 
 
 def create_multi_plot(
-    figures: List[go.Figure],
+    figures: list[go.Figure],
     rows: int,
     cols: int,
-    subplot_titles: Optional[List[str]] = None,
+    subplot_titles: list[str] | None = None,
     main_title: str = "Dashboard",
-    output_path: Optional[str] = None
+    output_path: str | None = None,
 ) -> go.Figure:
     """
     Combines multiple figures into a single subplot layout.
@@ -468,11 +443,7 @@ def create_multi_plot(
     >>> figs = [fig1, fig2, fig3, fig4]
     >>> combined = create_multi_plot(figs, rows=2, cols=2)
     """
-    fig = make_subplots(
-        rows=rows,
-        cols=cols,
-        subplot_titles=subplot_titles
-    )
+    fig = make_subplots(rows=rows, cols=cols, subplot_titles=subplot_titles)
 
     for idx, single_fig in enumerate(figures):
         row = (idx // cols) + 1
@@ -486,7 +457,7 @@ def create_multi_plot(
         template="plotly_white",
         showlegend=False,
         height=400 * rows,
-        font=dict(size=11)
+        font={"size": 11},
     )
 
     if output_path:
@@ -516,11 +487,8 @@ def _save_figure(fig: go.Figure, output_path: str) -> None:
 
 
 def get_top_correlated_features(
-    df: pl.DataFrame,
-    target_column: str,
-    n: int = 5,
-    exclude_columns: Optional[List[str]] = None
-) -> List[Tuple[str, float]]:
+    df: pl.DataFrame, target_column: str, n: int = 5, exclude_columns: list[str] | None = None
+) -> list[tuple[str, float]]:
     """
     Finds the top N features most correlated with the target.
 
@@ -548,7 +516,9 @@ def get_top_correlated_features(
     [('CO2(tCO2)', 0.98), ('Lagging_Current_Reactive.Power_kVarh', 0.75), ...]
     """
     # Get numeric columns
-    numeric_cols = [col for col in df.columns if df[col].dtype in [pl.Float64, pl.Float32, pl.Int64, pl.Int32]]
+    numeric_cols = [
+        col for col in df.columns if df[col].dtype in [pl.Float64, pl.Float32, pl.Int64, pl.Int32]
+    ]
 
     # Remove target and excluded columns
     numeric_cols = [col for col in numeric_cols if col != target_column]

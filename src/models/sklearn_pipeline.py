@@ -21,7 +21,7 @@ from src.features.build_features import create_feature_engineering_pipeline
 def get_feature_groups():
     """
     Defines feature groups for preprocessing.
-    
+
     Returns
     -------
     dict
@@ -31,35 +31,32 @@ def get_feature_groups():
         - temporal: Time-based features (will be engineered)
     """
     return {
-        'numeric': [
-            'Lagging_Current_Reactive.Power_kVarh',
-            'Leading_Current_Reactive_Power_kVarh',
-            'CO2(tCO2)',
-            'Lagging_Current_Power_Factor',
-            'Leading_Current_Power_Factor'
+        "numeric": [
+            "Lagging_Current_Reactive.Power_kVarh",
+            "Leading_Current_Reactive_Power_kVarh",
+            "CO2(tCO2)",
+            "Lagging_Current_Power_Factor",
+            "Leading_Current_Power_Factor",
         ],
-        'categorical': [
-            'Load_Type',
-            'WeekStatus'
-        ],
-        'temporal': ['NSM', 'Day_of_week']
+        "categorical": ["Load_Type", "WeekStatus"],
+        "temporal": ["NSM", "Day_of_week"],
     }
 
 
 def create_preprocessing_pipeline():
     """
     Creates preprocessing pipeline with feature engineering.
-    
+
     This pipeline:
     1. Engineers temporal features
     2. Scales numerical features
     3. One-hot encodes categorical features
-    
+
     Returns
     -------
     Pipeline
         Complete preprocessing pipeline
-        
+
     Examples
     --------
     >>> from src.models.sklearn_pipeline import create_preprocessing_pipeline
@@ -69,58 +66,57 @@ def create_preprocessing_pipeline():
     feature_groups = get_feature_groups()
 
     # Numeric transformer
-    numeric_transformer = Pipeline(steps=[
-        ('scaler', StandardScaler())
-    ])
+    numeric_transformer = Pipeline(steps=[("scaler", StandardScaler())])
 
     # Categorical transformer
-    categorical_transformer = Pipeline(steps=[
-        ('onehot', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'))
-    ])
+    categorical_transformer = Pipeline(
+        steps=[
+            ("onehot", OneHotEncoder(drop="first", sparse_output=False, handle_unknown="ignore"))
+        ]
+    )
 
     # Column transformer
     preprocessor = ColumnTransformer(
         transformers=[
-            ('num', numeric_transformer, feature_groups['numeric']),
-            ('cat', categorical_transformer, feature_groups['categorical'])
+            ("num", numeric_transformer, feature_groups["numeric"]),
+            ("cat", categorical_transformer, feature_groups["categorical"]),
         ],
-        remainder='passthrough'  # Keep other columns (temporal features)
+        remainder="passthrough",  # Keep other columns (temporal features)
     )
 
     return preprocessor
 
 
-
-def create_full_pipeline(model, model_name='model'):
+def create_full_pipeline(model, model_name="model"):
     """
     Creates complete ML pipeline: feature engineering + preprocessing + model.
-    
+
     This is the MAIN pipeline that should be used for training and prediction.
     It ensures consistency between training and inference.
-    
+
     Parameters
     ----------
     model : sklearn-compatible estimator
         Model to use (XGBoost, LightGBM, sklearn model, etc.)
     model_name : str, default='model'
         Name for the model step in the pipeline
-        
+
     Returns
     -------
     Pipeline
         Complete ML pipeline
-        
+
     Examples
     --------
     >>> from xgboost import XGBRegressor
     >>> from src.models.sklearn_pipeline import create_full_pipeline
-    >>> 
+    >>>
     >>> model = XGBRegressor(n_estimators=100, random_state=42)
     >>> pipeline = create_full_pipeline(model, 'xgboost')
-    >>> 
+    >>>
     >>> # Training
     >>> pipeline.fit(X_train, y_train)
-    >>> 
+    >>>
     >>> # Prediction
     >>> y_pred = pipeline.predict(X_test)
     """
@@ -131,11 +127,13 @@ def create_full_pipeline(model, model_name='model'):
     preprocessor = create_preprocessing_pipeline()
 
     # Complete pipeline
-    full_pipeline = Pipeline(steps=[
-        ('feature_engineering', feature_engineer),
-        ('preprocessing', preprocessor),
-        (model_name, model)
-    ])
+    full_pipeline = Pipeline(
+        steps=[
+            ("feature_engineering", feature_engineer),
+            ("preprocessing", preprocessor),
+            (model_name, model),
+        ]
+    )
 
     return full_pipeline
 
@@ -143,7 +141,7 @@ def create_full_pipeline(model, model_name='model'):
 def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
     """
     Evaluates a pipeline with cross-validation and test metrics.
-    
+
     Parameters
     ----------
     pipeline : Pipeline
@@ -158,7 +156,7 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
         Test target
     cv : int, default=5
         Number of cross-validation folds
-        
+
     Returns
     -------
     dict
@@ -173,10 +171,7 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
 
     # Cross-validation
     cv_scores = cross_val_score(
-        pipeline, X_train, y_train,
-        cv=cv,
-        scoring='neg_root_mean_squared_error',
-        n_jobs=-1
+        pipeline, X_train, y_train, cv=cv, scoring="neg_root_mean_squared_error", n_jobs=-1
     )
     cv_rmse = -cv_scores
 
@@ -189,11 +184,11 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
     test_cv = (test_rmse / y_test.mean()) * 100
 
     results = {
-        'cv_rmse_mean': cv_rmse.mean(),
-        'cv_rmse_std': cv_rmse.std(),
-        'test_rmse': test_rmse,
-        'test_mae': test_mae,
-        'test_cv_percent': test_cv
+        "cv_rmse_mean": cv_rmse.mean(),
+        "cv_rmse_std": cv_rmse.std(),
+        "test_rmse": test_rmse,
+        "test_mae": test_mae,
+        "test_cv_percent": test_cv,
     }
 
     return results
@@ -202,30 +197,30 @@ def evaluate_pipeline(pipeline, X_train, y_train, X_test, y_test, cv=5):
 def print_pipeline_structure(pipeline):
     """
     Prints the structure of a pipeline for debugging.
-    
+
     Parameters
     ----------
     pipeline : Pipeline
         Sklearn pipeline to inspect
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("PIPELINE STRUCTURE")
-    print("="*60)
+    print("=" * 60)
 
     for i, (name, step) in enumerate(pipeline.steps, 1):
         print(f"\nStep {i}: {name}")
         print(f"  Type: {type(step).__name__}")
 
-        if hasattr(step, 'transformers'):
+        if hasattr(step, "transformers"):
             print("  Transformers:")
             for trans_name, trans, cols in step.transformers:
                 print(f"    - {trans_name}: {type(trans).__name__}")
                 if isinstance(cols, list):
                     print(f"      Columns: {', '.join(cols)}")
 
-        if hasattr(step, 'steps'):
+        if hasattr(step, "steps"):
             print("  Sub-steps:")
             for sub_name, sub_step in step.steps:
                 print(f"    - {sub_name}: {type(sub_step).__name__}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)

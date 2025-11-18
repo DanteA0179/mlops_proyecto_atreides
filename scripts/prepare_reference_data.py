@@ -37,8 +37,7 @@ def prepare_reference_data() -> None:
     # Validate input exists
     if not train_data_path.exists():
         raise FileNotFoundError(
-            f"Training data not found: {train_data_path}. "
-            f"Run preprocessing pipeline first."
+            f"Training data not found: {train_data_path}. " f"Run preprocessing pipeline first."
         )
 
     logger.info(f"Loading training data from {train_data_path}")

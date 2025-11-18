@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.monitoring.config import MonitoringConfig
 
@@ -55,7 +55,7 @@ class AlertContext:
     severity: AlertSeverity
     drift_score: float
     share_of_drifted_features: float
-    drifted_features: List[str]
+    drifted_features: list[str]
     performance_degradation: float
     report_path: str
     timestamp: str
@@ -87,7 +87,7 @@ class AlertManager:
         self.smtp_config = config.alerts.email
 
     def evaluate_alert_conditions(
-        self, metrics: Dict[str, Any], reference_rmse: Optional[float] = None
+        self, metrics: dict[str, Any], reference_rmse: float | None = None
     ) -> AlertContext:
         """
         Evaluate if alert should be triggered.
@@ -384,9 +384,7 @@ class AlertManager:
         str
             Plain text email body
         """
-        drifted_features_text = "\n".join(
-            f"  - {feat}" for feat in context.drifted_features[:10]
-        )
+        drifted_features_text = "\n".join(f"  - {feat}" for feat in context.drifted_features[:10])
 
         if len(context.drifted_features) > 10:
             remaining = len(context.drifted_features) - 10
@@ -445,9 +443,7 @@ Report generated on {context.timestamp}
             f"Sending email via {self.smtp_config.smtp_server}:{self.smtp_config.smtp_port}"
         )
 
-        with smtplib.SMTP(
-            self.smtp_config.smtp_server, self.smtp_config.smtp_port
-        ) as server:
+        with smtplib.SMTP(self.smtp_config.smtp_server, self.smtp_config.smtp_port) as server:
             if self.smtp_config.use_tls:
                 server.starttls()
 

@@ -50,14 +50,18 @@ def main():
     output_path = "models/benchmarks/onnx_comparison.json"
     benchmark.generate_report(results, output_path)
 
-    logger.info(f"\nBenchmark complete!")
+    logger.info("\nBenchmark complete!")
     logger.info(f"Results saved to: {output_path}")
 
     for model_name, result in results.items():
         if "improvement" in result:
             logger.info(f"\n{model_name}:")
-            logger.info(f"  Latency improvement: {result['improvement']['latency_reduction_pct']:.1f}%")
-            logger.info(f"  Throughput improvement: {result['improvement']['throughput_increase_pct']:.1f}%")
+            logger.info(
+                f"  Latency improvement: {result['improvement']['latency_reduction_pct']:.1f}%"
+            )
+            logger.info(
+                f"  Throughput improvement: {result['improvement']['throughput_increase_pct']:.1f}%"
+            )
 
 
 if __name__ == "__main__":

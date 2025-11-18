@@ -6,23 +6,24 @@ Unit tests for src/utils/time_series.py functions.
 
 # Configure matplotlib backend FIRST, before any other imports
 import matplotlib
-matplotlib.use('Agg')  # Non-GUI backend for testing
 
-import pytest
-import polars as pl
+matplotlib.use("Agg")  # Non-GUI backend for testing
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import polars as pl
+import pytest
 
 from src.utils.time_series import (
-    perform_stl_decomposition,
-    plot_stl_components,
-    calculate_acf_pacf,
-    plot_acf_pacf,
     analyze_seasonality_by_group,
-    plot_seasonality_comparison,
+    calculate_acf_pacf,
     extract_seasonal_pattern,
-    plot_seasonal_pattern
+    perform_stl_decomposition,
+    plot_acf_pacf,
+    plot_seasonal_pattern,
+    plot_seasonality_comparison,
+    plot_stl_components,
 )
 
 
@@ -53,13 +54,15 @@ def sample_time_series_df():
     values = trend + seasonal + noise
 
     # Create date range
-    dates = pd.date_range('2024-01-01', periods=n_points, freq='h')
+    dates = pd.date_range("2024-01-01", periods=n_points, freq="h")
 
-    return pl.DataFrame({
-        'date': dates,
-        'value': values,
-        'category': ['A' if i % 2 == 0 else 'B' for i in range(n_points)]
-    })
+    return pl.DataFrame(
+        {
+            "date": dates,
+            "value": values,
+            "category": ["A" if i % 2 == 0 else "B" for i in range(n_points)],
+        }
+    )
 
 
 @pytest.fixture
@@ -78,9 +81,9 @@ def sample_series():
     data = np.zeros(n)
     data[0] = np.random.normal(0, 1)
     for i in range(1, n):
-        data[i] = 0.7 * data[i-1] + np.random.normal(0, 1)
+        data[i] = 0.7 * data[i - 1] + np.random.normal(0, 1)
 
-    return pl.Series('value', data)
+    return pl.Series("value", data)
 
 
 class TestPerformSTLDecomposition:
@@ -89,11 +92,7 @@ class TestPerformSTLDecomposition:
     def test_basic_decomposition(self, sample_time_series_df):
         """Test basic STL decomposition."""
         decomp_df, metadata = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24,
-            seasonal=7
+            sample_time_series_df, time_column="date", value_column="value", period=24, seasonal=7
         )
 
         # Check output types
@@ -101,23 +100,20 @@ class TestPerformSTLDecomposition:
         assert isinstance(metadata, dict)
 
         # Check DataFrame columns
-        assert 'observed' in decomp_df.columns
-        assert 'trend' in decomp_df.columns
-        assert 'seasonal' in decomp_df.columns
-        assert 'resid' in decomp_df.columns
+        assert "observed" in decomp_df.columns
+        assert "trend" in decomp_df.columns
+        assert "seasonal" in decomp_df.columns
+        assert "resid" in decomp_df.columns
 
         # Check metadata keys
-        assert 'period' in metadata
-        assert 'seasonal_strength' in metadata
-        assert 'trend_strength' in metadata
+        assert "period" in metadata
+        assert "seasonal_strength" in metadata
+        assert "trend_strength" in metadata
 
     def test_decomposition_shape(self, sample_time_series_df):
         """Test that decomposition preserves data length."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         assert len(decomp_df) == len(sample_time_series_df)
@@ -125,35 +121,27 @@ class TestPerformSTLDecomposition:
     def test_decomposition_reconstruction(self, sample_time_series_df):
         """Test that decomposition components sum to original."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         # Trend + Seasonal + Residual should equal Observed
-        reconstructed = decomp_df['trend'] + decomp_df['seasonal'] + decomp_df['resid']
+        reconstructed = decomp_df["trend"] + decomp_df["seasonal"] + decomp_df["resid"]
         np.testing.assert_array_almost_equal(
-            reconstructed.values,
-            decomp_df['observed'].values,
-            decimal=10
+            reconstructed.values, decomp_df["observed"].values, decimal=10
         )
 
     def test_metadata_values(self, sample_time_series_df):
         """Test that metadata values are in valid ranges."""
         _, metadata = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         # Seasonal and trend strength should be between 0 and 1
-        assert 0 <= metadata['seasonal_strength'] <= 1
-        assert 0 <= metadata['trend_strength'] <= 1
+        assert 0 <= metadata["seasonal_strength"] <= 1
+        assert 0 <= metadata["trend_strength"] <= 1
 
         # Period should match input
-        assert metadata['period'] == 24
+        assert metadata["period"] == 24
 
 
 class TestPlotSTLComponents:
@@ -162,10 +150,7 @@ class TestPlotSTLComponents:
     def test_basic_plot(self, sample_time_series_df):
         """Test basic STL plot creation."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         fig = plot_stl_components(decomp_df)
@@ -179,10 +164,7 @@ class TestPlotSTLComponents:
     def test_custom_title(self, sample_time_series_df):
         """Test STL plot with custom title."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         custom_title = "Custom STL Decomposition"
@@ -197,10 +179,7 @@ class TestCalculateACFPACF:
 
     def test_basic_calculation(self, sample_series):
         """Test basic ACF/PACF calculation."""
-        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(
-            sample_series,
-            nlags=20
-        )
+        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(sample_series, nlags=20)
 
         # Check output shapes
         assert len(acf_vals) == 21  # nlags + 1
@@ -212,20 +191,14 @@ class TestCalculateACFPACF:
     def test_custom_nlags(self, sample_series):
         """Test ACF/PACF with custom number of lags."""
         nlags = 30
-        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(
-            sample_series,
-            nlags=nlags
-        )
+        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(sample_series, nlags=nlags)
 
         assert len(acf_vals) == nlags + 1
         assert len(pacf_vals) == nlags + 1
 
     def test_confidence_intervals(self, sample_series):
         """Test that confidence intervals are returned."""
-        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(
-            sample_series,
-            nlags=10
-        )
+        acf_vals, acf_ci, pacf_vals, pacf_ci = calculate_acf_pacf(sample_series, nlags=10)
 
         # Confidence intervals should be 2D arrays
         assert acf_ci.ndim == 2
@@ -260,37 +233,37 @@ class TestAnalyzeSeasonalityByGroup:
         """Test basic seasonality analysis by group."""
         results = analyze_seasonality_by_group(
             sample_time_series_df,
-            group_column='category',
-            value_column='value',
-            time_column='date',
-            period=24
+            group_column="category",
+            value_column="value",
+            time_column="date",
+            period=24,
         )
 
         # Should have results for both categories
-        assert 'A' in results
-        assert 'B' in results
+        assert "A" in results
+        assert "B" in results
 
         # Each result should have metadata
-        for group, metadata in results.items():
-            if 'error' not in metadata:
-                assert 'seasonal_strength' in metadata
-                assert 'trend_strength' in metadata
+        for _group, metadata in results.items():
+            if "error" not in metadata:
+                assert "seasonal_strength" in metadata
+                assert "trend_strength" in metadata
 
     def test_group_metadata(self, sample_time_series_df):
         """Test that group metadata is valid."""
         results = analyze_seasonality_by_group(
             sample_time_series_df,
-            group_column='category',
-            value_column='value',
-            time_column='date',
-            period=24
+            group_column="category",
+            value_column="value",
+            time_column="date",
+            period=24,
         )
 
-        for group, metadata in results.items():
-            if 'error' not in metadata:
+        for _group, metadata in results.items():
+            if "error" not in metadata:
                 # Check value ranges
-                assert 0 <= metadata['seasonal_strength'] <= 1
-                assert 0 <= metadata['trend_strength'] <= 1
+                assert 0 <= metadata["seasonal_strength"] <= 1
+                assert 0 <= metadata["trend_strength"] <= 1
 
 
 class TestPlotSeasonalityComparison:
@@ -301,13 +274,13 @@ class TestPlotSeasonalityComparison:
         # First get seasonality results
         results = analyze_seasonality_by_group(
             sample_time_series_df,
-            group_column='category',
-            value_column='value',
-            time_column='date',
-            period=24
+            group_column="category",
+            value_column="value",
+            time_column="date",
+            period=24,
         )
 
-        fig = plot_seasonality_comparison(results, metric='seasonal_strength')
+        fig = plot_seasonality_comparison(results, metric="seasonal_strength")
 
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
@@ -316,13 +289,13 @@ class TestPlotSeasonalityComparison:
         """Test comparison plot with custom metric."""
         results = analyze_seasonality_by_group(
             sample_time_series_df,
-            group_column='category',
-            value_column='value',
-            time_column='date',
-            period=24
+            group_column="category",
+            value_column="value",
+            time_column="date",
+            period=24,
         )
 
-        fig = plot_seasonality_comparison(results, metric='trend_strength')
+        fig = plot_seasonality_comparison(results, metric="trend_strength")
 
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
@@ -334,33 +307,27 @@ class TestExtractSeasonalPattern:
     def test_basic_extraction(self, sample_time_series_df):
         """Test basic seasonal pattern extraction."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         pattern = extract_seasonal_pattern(decomp_df, period=24)
 
         # Check output
         assert isinstance(pattern, pd.DataFrame)
-        assert 'period_index' in pattern.columns
-        assert 'seasonal_value' in pattern.columns
+        assert "period_index" in pattern.columns
+        assert "seasonal_value" in pattern.columns
         assert len(pattern) == 24
 
     def test_pattern_values(self, sample_time_series_df):
         """Test that extracted pattern has valid values."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         pattern = extract_seasonal_pattern(decomp_df, period=24)
 
         # All values should be finite
-        assert np.all(np.isfinite(pattern['seasonal_value']))
+        assert np.all(np.isfinite(pattern["seasonal_value"]))
 
 
 class TestPlotSeasonalPattern:
@@ -369,14 +336,11 @@ class TestPlotSeasonalPattern:
     def test_basic_plot(self, sample_time_series_df):
         """Test basic seasonal pattern plot."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         pattern = extract_seasonal_pattern(decomp_df, period=24)
-        fig = plot_seasonal_pattern(pattern, period_label='Hour of Day')
+        fig = plot_seasonal_pattern(pattern, period_label="Hour of Day")
 
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
@@ -384,19 +348,11 @@ class TestPlotSeasonalPattern:
     def test_custom_labels(self, sample_time_series_df):
         """Test pattern plot with custom labels."""
         decomp_df, _ = perform_stl_decomposition(
-            sample_time_series_df,
-            time_column='date',
-            value_column='value',
-            period=24
+            sample_time_series_df, time_column="date", value_column="value", period=24
         )
 
         pattern = extract_seasonal_pattern(decomp_df, period=24)
-        fig = plot_seasonal_pattern(
-            pattern,
-            period_label='Hour',
-            title='Custom Title'
-        )
+        fig = plot_seasonal_pattern(pattern, period_label="Hour", title="Custom Title")
 
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
-

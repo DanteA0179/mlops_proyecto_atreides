@@ -8,7 +8,6 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import List
 
 from fastapi import APIRouter, HTTPException, status
 
@@ -159,7 +158,7 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
         logger.info(f"Batch prediction completed: {len(predictions)} predictions")
 
         # Generate prediction items
-        prediction_items: List[BatchPredictionItem] = []
+        prediction_items: list[BatchPredictionItem] = []
         for pred in predictions:
             prediction_items.append(
                 BatchPredictionItem(

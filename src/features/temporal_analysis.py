@@ -141,7 +141,7 @@ class TemporalAnalysisPipeline:
 
         # Plot components
         suffix = f"_{self.load_type.replace(' ', '_')}" if self.load_type else ""
-        fig = plot_stl_components(
+        plot_stl_components(
             decomp_df,
             title=f'STL Decomposition{f" - {self.load_type}" if self.load_type else ""}',
             output_path=str(self.output_path / f"stl_decomposition{suffix}.png"),
@@ -167,7 +167,7 @@ class TemporalAnalysisPipeline:
         usage_series = self.df.select("Usage_kWh").to_series()
 
         suffix = f"_{self.load_type.replace(' ', '_')}" if self.load_type else ""
-        fig = plot_acf_pacf(
+        plot_acf_pacf(
             usage_series,
             nlags=nlags,
             title=f'ACF/PACF Analysis{f" - {self.load_type}" if self.load_type else ""}',
@@ -203,7 +203,7 @@ class TemporalAnalysisPipeline:
         )
 
         # Plot comparison
-        fig = plot_seasonality_comparison(
+        plot_seasonality_comparison(
             results,
             metric="seasonal_strength",
             title=f"Seasonal Strength by {group_column}",
@@ -245,7 +245,7 @@ class TemporalAnalysisPipeline:
         pattern = extract_seasonal_pattern(decomp_df, period=period)
 
         suffix = f"_{self.load_type.replace(' ', '_')}" if self.load_type else ""
-        fig = plot_seasonal_pattern(
+        plot_seasonal_pattern(
             pattern,
             period_label=period_label,
             title=f'Seasonal Pattern{f" - {self.load_type}" if self.load_type else ""}',
@@ -425,9 +425,7 @@ def main():
             data_path=args.dataset, output_path=args.output, load_type=args.load_type
         )
 
-        results = pipeline.run_full_pipeline(
-            period=args.period, seasonal=args.seasonal, nlags=args.nlags
-        )
+        pipeline.run_full_pipeline(period=args.period, seasonal=args.seasonal, nlags=args.nlags)
 
         logger.info(f"\n✓ Analysis complete! Results saved to: {args.output}")
         return 0

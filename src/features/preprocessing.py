@@ -76,9 +76,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
         # Filter out target if requested
         if self.drop_target and self.target_col in self.features_:
-            self.selected_features_ = [
-                f for f in self.features_ if f != self.target_col
-            ]
+            self.selected_features_ = [f for f in self.features_ if f != self.target_col]
         else:
             self.selected_features_ = self.features_
 
@@ -172,9 +170,7 @@ class NumericScaler(BaseEstimator, TransformerMixin):
             X = pl.from_pandas(X)
 
         # Determine features to scale
-        self.features_to_scale_ = [
-            f for f in self.features if f not in self.exclude_features
-        ]
+        self.features_to_scale_ = [f for f in self.features if f not in self.exclude_features]
 
         # Validate features exist
         missing = set(self.features_to_scale_) - set(X.columns)
@@ -372,9 +368,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                     if i == 0:
                         mapping_expr = pl.when(pl.col(feat) == category).then(value)
                     else:
-                        mapping_expr = mapping_expr.when(pl.col(feat) == category).then(
-                            value
-                        )
+                        mapping_expr = mapping_expr.when(pl.col(feat) == category).then(value)
                 mapping_expr = mapping_expr.otherwise(None)
 
                 X = X.with_columns(mapping_expr.cast(pl.Int32).alias(feat))
@@ -492,9 +486,7 @@ class PreprocessingPipeline(BaseEstimator, TransformerMixin):
 
         # 1. Feature Selection
         all_features = (
-            self.numeric_features
-            + self.categorical_features
-            + list(self.binary_features.keys())
+            self.numeric_features + self.categorical_features + list(self.binary_features.keys())
         )
         self.selector_ = FeatureSelector(
             features=all_features, drop_target=True, target_col=self.target_col
@@ -649,9 +641,7 @@ class PreprocessingPipeline(BaseEstimator, TransformerMixin):
             "excluded_from_scaling": self.exclude_from_scaling,
             "categorical_features": self.categorical_features,
             "binary_features": self.binary_features,
-            "ohe_features": (
-                self.encoder_.feature_names_out_ if self.encoder_.encoder_ else []
-            ),
+            "ohe_features": (self.encoder_.feature_names_out_ if self.encoder_.encoder_ else []),
             "ohe_categories": self.encoder_.categories_,
             "scaling_statistics": self.scaler_.scaling_statistics_,
         }

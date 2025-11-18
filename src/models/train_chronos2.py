@@ -80,7 +80,9 @@ def evaluate_chronos2(
         dict with predictions and metrics
     """
 
-    logger.info(f"Evaluating Chronos-2 with context_length={context_length}, batch_size={batch_size}")
+    logger.info(
+        f"Evaluating Chronos-2 with context_length={context_length}, batch_size={batch_size}"
+    )
 
     y_true = df[target_col].to_numpy()
     predictions = []
@@ -129,7 +131,9 @@ def evaluate_chronos2(
         # Progress logging
         if (batch_idx + 1) % 10 == 0 or batch_idx == n_batches - 1:
             completed = min(end_idx, n_predictions)
-            logger.info(f"Progress: {completed}/{n_predictions} predictions ({100 * completed / n_predictions:.1f}%)")
+            logger.info(
+                f"Progress: {completed}/{n_predictions} predictions ({100 * completed / n_predictions:.1f}%)"
+            )
 
     predictions = np.array(predictions)
     y_true_eval = y_true[context_length : context_length + n_predictions]

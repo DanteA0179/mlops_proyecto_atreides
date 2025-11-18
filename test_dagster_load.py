@@ -1,4 +1,5 @@
 """Quick test to verify Dagster jobs load correctly."""
+
 from src.dagster_pipeline.definitions import defs
 
 print("✓ Dagster definitions loaded successfully")

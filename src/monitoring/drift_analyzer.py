@@ -13,10 +13,10 @@ Date: 2025-11-16
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
-from evidently import Dataset, DataDefinition, Regression, Report
+from evidently import DataDefinition, Dataset, Regression, Report
 from evidently.presets import DataDriftPreset, RegressionPreset
 
 from src.monitoring.config import MonitoringConfig
@@ -94,9 +94,7 @@ class DriftAnalyzer:
             categorical_columns=categorical_columns,
         )
 
-    def create_drift_report(
-        self, reference_data: pd.DataFrame, current_data: pd.DataFrame
-    ):
+    def create_drift_report(self, reference_data: pd.DataFrame, current_data: pd.DataFrame):
         """
         Create comprehensive drift report using Evidently.
 
@@ -159,7 +157,7 @@ class DriftAnalyzer:
             logger.error(f"Failed to generate drift report: {e}")
             raise ValueError(f"Drift report generation failed: {e}") from e
 
-    def extract_drift_metrics(self, snapshot) -> Dict[str, Any]:
+    def extract_drift_metrics(self, snapshot) -> dict[str, Any]:
         """
         Extract key drift metrics from Evidently Snapshot.
 
@@ -195,7 +193,7 @@ class DriftAnalyzer:
                 "error": str(e),
             }
 
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -280,9 +278,7 @@ class DriftAnalyzer:
 
         return metrics
 
-    def analyze_drift(
-        self, reference_data: pd.DataFrame, current_data: pd.DataFrame
-    ) -> tuple:
+    def analyze_drift(self, reference_data: pd.DataFrame, current_data: pd.DataFrame) -> tuple:
         """
         Perform complete drift analysis.
 
@@ -309,8 +305,8 @@ class DriftAnalyzer:
         return snapshot, metrics
 
     def get_drifted_features_summary(
-        self, metrics: Dict[str, Any], threshold: float = 0.5
-    ) -> List[tuple[str, float]]:
+        self, metrics: dict[str, Any], threshold: float = 0.5
+    ) -> list[tuple[str, float]]:
         """
         Get summary of drifted features above threshold.
 
@@ -329,9 +325,7 @@ class DriftAnalyzer:
         drifted_features = metrics.get("drifted_features", {})
 
         summary = [
-            (feature, score)
-            for feature, score in drifted_features.items()
-            if score >= threshold
+            (feature, score) for feature, score in drifted_features.items() if score >= threshold
         ]
 
         # Sort by drift score descending

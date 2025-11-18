@@ -12,7 +12,6 @@ validate_splits : Validate split correctness
 get_split_statistics : Calculate statistics for each split
 """
 
-
 from typing import Any
 
 import numpy as np
@@ -72,9 +71,7 @@ def stratified_train_val_test_split(
     """
     # Validate inputs
     if not np.isclose(train_size + val_size + test_size, 1.0):
-        raise ValueError(
-            f"Split sizes must sum to 1.0, got {train_size + val_size + test_size}"
-        )
+        raise ValueError(f"Split sizes must sum to 1.0, got {train_size + val_size + test_size}")
 
     if target_col not in df.columns:
         raise ValueError(f"Target column '{target_col}' not found in dataframe")
@@ -164,9 +161,7 @@ def temporal_train_val_test_split(
     """
     # Validate inputs
     if not np.isclose(train_size + val_size + test_size, 1.0):
-        raise ValueError(
-            f"Split sizes must sum to 1.0, got {train_size + val_size + test_size}"
-        )
+        raise ValueError(f"Split sizes must sum to 1.0, got {train_size + val_size + test_size}")
 
     if date_col not in df.columns:
         raise ValueError(f"Date column '{date_col}' not found in dataframe")

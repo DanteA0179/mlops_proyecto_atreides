@@ -23,10 +23,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -68,16 +65,16 @@ def prepare_base_models() -> None:
 
     # Define source directory
     source_dir = Path("models/baselines")
-    
+
     # Define target directory
     target_dir = Path("models/gradient_boosting")
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Model mapping: (source_pattern, target_name)
     model_mappings = {
-        'xgboost': ('xgboost_*.pkl', 'xgboost_model.pkl'),
-        'lightgbm': ('lightgbm_*.pkl', 'lightgbm_model.pkl'),
-        'catboost': ('catboost_*.pkl', 'catboost_model.pkl'),
+        "xgboost": ("xgboost_*.pkl", "xgboost_model.pkl"),
+        "lightgbm": ("lightgbm_*.pkl", "lightgbm_model.pkl"),
+        "catboost": ("catboost_*.pkl", "catboost_model.pkl"),
     }
 
     copied_models = []
@@ -103,9 +100,9 @@ def prepare_base_models() -> None:
         logger.info(f"Successfully copied {model_type}")
 
     # Summary
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("SUMMARY")
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info(f"Target directory: {target_dir}")
     logger.info(f"Models copied: {len(copied_models)}/{len(model_mappings)}")
 
@@ -123,7 +120,7 @@ def prepare_base_models() -> None:
             logger.warning(f"  {model_type}")
         logger.warning("\nTrain missing models before running ensemble training")
 
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     if len(copied_models) >= 2:
         logger.info("✓ Ready for ensemble training (minimum 2 base models)")

@@ -81,7 +81,7 @@ def simulate_drift(
         if col not in df_pandas.columns:
             continue
 
-        mean = df_pandas[col].mean()
+        df_pandas[col].mean()
         std = df_pandas[col].std()
 
         if std == 0:

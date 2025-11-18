@@ -7,10 +7,9 @@ This module provides logging setup and configuration utilities.
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 
-def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
+def setup_logging(log_level: str = "INFO", log_file: str | None = None) -> None:
     """
     Configure structured logging for API.
 
@@ -93,7 +92,7 @@ class Config:
     APP_VERSION: str = "1.0.0"
     API_PREFIX: str = "/api/v1"
     LOG_LEVEL: str = "INFO"
-    LOG_FILE: Optional[str] = None
+    LOG_FILE: str | None = None
 
     # Model configuration
     MODEL_PATH: str = "models/ensembles/ensemble_lightgbm_v3.pkl"
